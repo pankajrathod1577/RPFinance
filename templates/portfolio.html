@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portfolio — RP Finance</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+    <header class="top-bar">
+        <a href="/" class="logo" style="text-decoration:none;"><span>RP</span> Finance</a>
+        <nav class="nav-links">
+            <a href="/">Dashboard</a>
+            <a href="/portfolio" class="active">Portfolio</a>
+            <a href="/watchlist">Watchlist</a>
+            <a href="/algo_trading">Algo Trading</a>
+            <a href="/tutorials">Tutorials</a>
+            <a href="/news">News</a>
+        </nav>
+        <div class="user-options">
+            <div class="search-bar">
+                <button onclick="searchStock()" class="magnifier">🔍</button>
+                <input type="text" id="search" placeholder="Search ticker…">
+            </div>
+            {% if logged_in %}
+                <a href="/logout">Logout</a>
+            {% else %}
+                <a href="/auth?mode=login">Login</a>
+                <a href="/auth?mode=signup" class="btn-signup">Sign Up</a>
+            {% endif %}
+        </div>
+    </header>
+
+    <main>
+        {% if logged_in %}
+            <div class="portfolio">
+
+                <!-- Header -->
+                <div class="dashboard-header">
+                    <div>
+                        <h1>Portfolio</h1>
+                        <p style="color:var(--text-secondary);font-size:13px;margin-top:4px;">Manage your holdings</p>
+                    </div>
+                    <div style="text-align:right;">
+                        <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:4px;">Cash Balance</div>
+                        <div class="balance-amount" id="portfolio-header-cash">₹{{ "%.2f"|format(balance) }}</div>
+                    </div>
+                </div>
+
+                <!-- Summary Stats -->
+                <div class="stat-cards">
+                    <div class="stat-card">
+                        <div class="stat-label">Cash Available</div>
+                        <div class="stat-value cyan" id="portfolio-cash-value">₹{{ "%.2f"|format(balance) }}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Holdings Value</div>
+                        <div class="stat-value" id="portfolio-holdings-value">₹{{ "%.2f"|format(total_holdings_value) }}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Total Net Worth</div>
+                        <div class="stat-value green" id="portfolio-net-worth">₹{{ "%.2f"|format(total_portfolio_value) }}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Positions</div>
+                        <div class="stat-value">{{ portfolio|length }}</div>
+                    </div>
+                </div>
+
+                {% if error %}
+                    <p class="error">{{ error }}</p>
+                {% endif %}
+
+                <!-- Buy Stock Bar -->
+                <div class="add-portfolio">
+                    <div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;color:var(--text-muted);margin-right:8px;">Buy Stock</div>
+                    <input type="text" id="buy-ticker" placeholder="Ticker (e.g. TCS.NSE)" style="text-transform:uppercase;">
+                    <input type="number" id="buy-shares" placeholder="Qty" min="1">
+                    <button onclick="buyStock()" class="cta-btn">Buy</button>
+                    <span style="font-size:12px;color:var(--text-muted);margin-left:4px;">* Track and trade in Indian Stocks (NSE & BSE)</span>
+                </div>
+
+                <!-- Holdings Table -->
+                <div class="portfolio-table-wrap">
+                    <div class="section-header">
+                        <h2>Holdings</h2>
+                        <span style="font-size:12px;color:var(--text-muted);">{{ portfolio_data|length }} position{{ 's' if portfolio_data|length != 1 }}</span>
+                    </div>
+                    {% if portfolio_data %}
+                        <table class="portfolio-table">
+                            <thead>
+                                <tr>
+                                    <th>Ticker</th>
+                                    <th>Shares</th>
+                                    <th>Avg Buy</th>
+                                    <th>LTP</th>
+                                    <th>Value (₹)</th>
+                                    <th>P&L %</th>
+                                    <th>Sell</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in portfolio_data %}
+                                <tr>
+                                    <td>
+                                        <a href="/stock-details/{{ item.ticker }}"
+                                           style="font-family:var(--font-mono);font-weight:700;color:var(--cyan);text-decoration:none;">
+                                            {{ item.ticker }}
+                                        </a>
+                                    </td>
+                                    <td style="font-family:var(--font-mono);">{{ item.shares }}</td>
+                                    <td style="font-family:var(--font-mono);color:var(--text-muted);">
+                                        ₹{{ "%.2f"|format(item.avg_buy_price) }}
+                                    </td>
+                                    <td style="font-family:var(--font-mono);font-weight:600;" data-live-price="{{ item.ticker }}">
+                                        ₹{{ "%.2f"|format(item.current_price) }}
+                                    </td>
+                                    <td style="font-family:var(--font-mono);" data-live-holding-value="{{ item.ticker }}" data-shares="{{ item.shares }}">₹{{ "%.2f"|format(item.value_inr) }}</td>
+                                    <td>
+                                        <span class="{% if item.gain_loss >= 0 %}badge-green{% else %}badge-red{% endif %}" data-live-pnl="{{ item.ticker }}" data-avg-buy="{{ item.avg_buy_price }}">
+                                            {{ '+' if item.gain_loss >= 0 }}{{ "%.2f"|format(item.gain_loss) }}%
+                                        </span>
+                                    </td>
+                                    <td style="display:flex;gap:8px;align-items:center;">
+                                        <input type="number" id="sell-shares-{{ item.ticker }}" placeholder="Qty" min="1" max="{{ item.shares }}">
+                                        <button onclick="sellStock('{{ item.ticker }}')">Sell</button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    {% else %}
+                        <div style="padding:48px;text-align:center;">
+                            <div style="font-size:36px;margin-bottom:12px;">📭</div>
+                            <p style="color:var(--text-muted);">No holdings yet. Buy your first stock above!</p>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Trade History -->
+                {% if trade_history %}
+                <div class="portfolio-table-wrap">
+                    <div class="section-header">
+                        <h2>Trade History</h2>
+                        <span style="font-size:12px;color:var(--text-muted);">Last 20 trades</span>
+                    </div>
+                    <table class="portfolio-table">
+                        <thead>
+                            <tr>
+                                <th>Date / Time</th>
+                                <th>Ticker</th>
+                                <th>Action</th>
+                                <th>Qty</th>
+                                <th>Price</th>
+                                <th>Total (₹)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for t in trade_history %}
+                            <tr>
+                                <td style="font-size:12px;color:var(--text-muted);font-family:var(--font-mono);">{{ t[5] }}</td>
+                                <td style="font-family:var(--font-mono);font-weight:700;color:var(--cyan);">{{ t[0] }}</td>
+                                <td>
+                                    <span class="{% if t[1] == 'BUY' %}badge-green{% else %}badge-red{% endif %}">
+                                        {{ t[1] }}
+                                    </span>
+                                </td>
+                                <td style="font-family:var(--font-mono);">{{ t[2] }}</td>
+                                <td style="font-family:var(--font-mono);">₹{{ "%.2f"|format(t[3]) }}</td>
+                                <td style="font-family:var(--font-mono);font-weight:600;">₹{{ "%.2f"|format(t[4]) }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% endif %}
+
+            </div>
+
+        {% else %}
+            <section class="intro">
+                <h1>Manage Your <span>Investments</span></h1>
+                <p>Log in to view holdings, buy & sell stocks, and track your trade history.</p>
+                <div class="cta-buttons">
+                    <a href="/auth?mode=login" class="cta-btn">Login</a>
+                    <a href="/auth?mode=signup" class="btn-outline">Sign Up</a>
+                </div>
+            </section>
+        {% endif %}
+    </main>
+
+    <!-- Chatbot -->
+    <button class="chatbot-toggle" onclick="toggleChatbot()" title="RP Assistant">💬</button>
+    <div class="chatbot-container" id="chatbot-container">
+        <div class="chatbot-header"><span>RP Assistant</span><button class="close-btn" onclick="toggleChatbot()">×</button></div>
+        <div class="chatbot-messages" id="chatbot-messages"></div>
+        <div class="chatbot-input">
+            <input type="text" id="chatbot-input" placeholder="Ask me anything…">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <footer>
+        <a href="/about">About</a>
+        <a href="/contact">Contact</a>
+        <a href="/privacy">Privacy Policy</a>
+        <a href="/terms">Terms of Use</a>
+    </footer>
+
+    <script>
+        const userHoldings = [
+            {% for item in portfolio_data %}
+            { ticker: "{{ item.ticker }}", shares: {{ item.shares }} },
+            {% endfor %}
+        ];
+    </script>
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

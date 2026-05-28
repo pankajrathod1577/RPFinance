@@ -1,0 +1,2474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ details.name }} ({{ ticker }}) — RP Finance</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .details-wrapper {
+            display: grid;
+            grid-template-columns: 1fr 340px;
+            gap: 24px;
+            align-items: start;
+            margin-top: 12px;
+        }
+        @media (max-width: 960px) {
+            .details-wrapper {
+                grid-template-columns: 1fr;
+            }
+        }
+        .details-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 24px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            padding: 24px;
+            border-radius: var(--radius-lg);
+        }
+        .details-header-left h1 {
+            font-size: 24px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .badge-nse {
+            font-size: 11px;
+            background: var(--border-light);
+            color: var(--text-secondary);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .details-header-left p {
+            color: var(--text-secondary);
+            font-size: 14px;
+            margin-top: 4px;
+        }
+        .price-large {
+            font-size: 28px;
+            font-weight: 700;
+            font-family: var(--font-mono);
+            text-align: right;
+        }
+        .change-badge {
+            font-size: 13px;
+            font-weight: 600;
+            margin-top: 4px;
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+        .change-positive {
+            color: var(--green);
+            background: var(--green-dim);
+        }
+        .change-negative {
+            color: var(--red);
+            background: var(--red-dim);
+        }
+        
+        /* Tabs */
+        .details-tabs {
+            display: flex;
+            gap: 4px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 20px;
+        }
+        .tab-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 13.5px;
+            font-weight: 600;
+            padding: 10px 16px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+        }
+        .tab-btn:hover {
+            color: var(--text-primary);
+        }
+        .tab-btn.active {
+            color: var(--cyan);
+            border-bottom-color: var(--cyan);
+        }
+
+        /* Metrics grid */
+        .metrics-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+        .metrics-section h2 {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 8px;
+        }
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+        }
+        @media (max-width: 600px) {
+            .metrics-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        .metric-item {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .metric-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+        }
+        .metric-value {
+            font-size: 14px;
+            font-weight: 600;
+            font-family: var(--font-mono);
+            color: var(--text-primary);
+        }
+
+        /* Progress bars ranges */
+        .range-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            margin-bottom: 24px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 32px;
+        }
+        @media (max-width: 600px) {
+            .range-card {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+        }
+        .range-slider-container {
+            margin-top: 10px;
+        }
+        .range-track {
+            position: relative;
+            height: 6px;
+            background: var(--border-light);
+            border-radius: 3px;
+            margin: 12px 0;
+        }
+        .range-fill {
+            position: absolute;
+            left: 0;
+            height: 100%;
+            background: linear-gradient(90deg, var(--red), var(--green));
+            border-radius: 3px;
+        }
+        .range-marker {
+            position: absolute;
+            top: -4px;
+            width: 14px;
+            height: 14px;
+            background: var(--cyan);
+            border-radius: 50%;
+            border: 2px solid var(--bg-card);
+            transform: translateX(-50%);
+            box-shadow: 0 0 8px rgba(0, 200, 255, 0.6);
+        }
+
+        /* About / Description */
+        .about-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+        .about-card h2 {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-bottom: 16px;
+        }
+        .about-card p {
+            color: var(--text-secondary);
+            font-size: 13.5px;
+            line-height: 1.7;
+        }
+
+        /* Trade Card panel */
+        .trade-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            box-shadow: var(--shadow-card);
+            position: sticky;
+            top: 84px;
+        }
+        .trade-card h2 {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .trade-balance {
+            font-size: 12px;
+            color: var(--text-secondary);
+            border-top: 1px solid var(--border);
+            padding-top: 12px;
+            margin-top: 16px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .trade-input-group {
+            margin-bottom: 16px;
+        }
+        .trade-input-group label {
+            display: block;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+        .trade-input-wrap {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        .trade-input-wrap input {
+            width: 100%;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 10px 14px;
+            font-family: var(--font-mono);
+            font-size: 14px;
+            color: var(--text-primary);
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .trade-input-wrap input:focus {
+            border-color: var(--cyan-dim);
+        }
+        .trade-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 20px;
+        }
+        .trade-btn-buy {
+            background: var(--green);
+            color: #0b0f1a;
+            border: none;
+            padding: 11px;
+            font-weight: 700;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: opacity 0.2s;
+            text-align: center;
+        }
+        .trade-btn-sell {
+            background: var(--red);
+            color: #ffffff;
+            border: none;
+            padding: 11px;
+            font-weight: 700;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: opacity 0.2s;
+            text-align: center;
+        }
+        .trade-btn-buy:hover, .trade-btn-sell:hover {
+            opacity: 0.9;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .chart-time-btn, .chart-type-btn {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-secondary) !important;
+            font-size: 11.5px;
+            font-weight: 600;
+            padding: 5px 12px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.2s;
+            outline: none;
+        }
+        .chart-time-btn.active, .chart-type-btn.active {
+            background: var(--cyan-glow) !important;
+            border-color: var(--cyan) !important;
+            color: var(--cyan) !important;
+        }
+        .chart-time-btn:not(.active):hover, .chart-type-btn:not(.active):hover {
+            color: var(--text-primary) !important;
+            background: var(--bg-hover);
+            border-color: var(--border-light);
+        }
+        
+        /* Dropdown custom CSS */
+        .dropdown-item {
+            padding: 8px 14px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: background 0.15s, color 0.15s;
+            font-size: 12px;
+        }
+        .dropdown-item:hover {
+            background: var(--bg-hover) !important;
+            color: var(--text-primary) !important;
+        }
+        .dropdown-item.active {
+            background: var(--cyan-glow) !important;
+            color: var(--cyan) !important;
+            font-weight: 600;
+        }
+        
+        .chart-period-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary) !important;
+            padding: 5px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 700;
+            outline: none;
+            font-size: 11px;
+        }
+        .chart-period-btn:not(.active):hover {
+            color: var(--text-primary) !important;
+            background: var(--bg-hover);
+        }
+        .chart-period-btn.active {
+            background: var(--cyan-glow) !important;
+            color: var(--cyan) !important;
+        }
+    </style>
+</head>
+<body>
+
+    <header class="top-bar">
+        <a href="/" class="logo" style="text-decoration:none;"><span>RP</span> Finance</a>
+        <nav class="nav-links">
+            <a href="/">Dashboard</a>
+            <a href="/portfolio">Portfolio</a>
+            <a href="/watchlist">Watchlist</a>
+            <a href="/algo_trading">Algo Trading</a>
+            <a href="/tutorials">Tutorials</a>
+            <a href="/news">News</a>
+        </nav>
+        <div class="user-options">
+            <div class="search-bar">
+                <button onclick="searchStock()" class="magnifier">🔍</button>
+                <input type="text" id="search" placeholder="Search ticker…">
+            </div>
+            {% if logged_in %}
+                <a href="/logout">Logout</a>
+            {% else %}
+                <a href="/login">Login</a>
+                <a href="/signup" class="btn-signup">Sign Up</a>
+            {% endif %}
+        </div>
+    </header>
+
+    <main>
+        {% set is_bse = details.get('ticker', '').endswith('.BSE') %}
+        {% set symbol = '₹' %}
+        
+        <!-- Header Info -->
+        <div class="details-header">
+            <div class="details-header-left">
+                <h1>{{ details.get('name', ticker) }}</h1>
+                <p>{{ ticker }} — {{ 'Bombay Stock Exchange' if is_bse else 'National Stock Exchange' }}</p>
+            </div>
+            <div class="details-header-right">
+                <div class="price-large" data-live-price="{{ ticker }}">₹{{ "%.2f" | format(details.get('price', 100.0)) }}</div>
+                <div class="change-badge {% if details.get('change', 0.0) >= 0 %}change-positive{% else %}change-negative{% endif %}" data-live-change="{{ ticker }}">
+                    {{ '+' if details.get('change', 0.0) >= 0 }}{{ "%.2f" | format(details.get('change', 0.0)) }}%
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="details-tabs">
+            <button class="tab-btn active" onclick="switchTab('chart', this)">Chart</button>
+            <button class="tab-btn" onclick="switchTab('overview', this)">Overview</button>
+            <button class="tab-btn" onclick="switchTab('options', this)">Option Chain</button>
+        </div>
+
+        <div class="details-wrapper">
+            <!-- Left Info Panel (Overview Tab) -->
+            <!-- Left Info Panel (Overview Tab) -->
+            <div id="tab-overview" class="tab-content" style="display: none; width: 100%;">
+                
+                <!-- Quick Sub-navigation tabs (Activity, Circuits, etc.) -->
+                <div style="display: flex; gap: 8px; overflow-x: auto; margin-bottom: 20px; padding-bottom: 8px; border-bottom: 1px solid var(--border-light);">
+                    <a href="#section-activity" style="padding: 6px 14px; border-radius: 20px; background: var(--bg-secondary); border: 1px solid var(--border); color: var(--text-secondary); text-decoration: none; font-size: 11px; font-weight: 600; white-space: nowrap; transition: all 0.2s;" onmouseover="this.style.color='var(--cyan)';" onmouseout="this.style.color='var(--text-secondary)';">Activity</a>
+                    <a href="#section-circuits" style="padding: 6px 14px; border-radius: 20px; background: var(--bg-secondary); border: 1px solid var(--border); color: var(--text-secondary); text-decoration: none; font-size: 11px; font-weight: 600; white-space: nowrap; transition: all 0.2s;" onmouseover="this.style.color='var(--cyan)';" onmouseout="this.style.color='var(--text-secondary)';">Circuits & Ranges</a>
+                    <a href="#section-ratings" style="padding: 6px 14px; border-radius: 20px; background: var(--bg-secondary); border: 1px solid var(--border); color: var(--text-secondary); text-decoration: none; font-size: 11px; font-weight: 600; white-space: nowrap; transition: all 0.2s;" onmouseover="this.style.color='var(--cyan)';" onmouseout="this.style.color='var(--text-secondary)';">Analyst Ratings</a>
+                    <a href="#section-ratios" style="padding: 6px 14px; border-radius: 20px; background: var(--bg-secondary); border: 1px solid var(--border); color: var(--text-secondary); text-decoration: none; font-size: 11px; font-weight: 600; white-space: nowrap; transition: all 0.2s;" onmouseover="this.style.color='var(--cyan)';" onmouseout="this.style.color='var(--text-secondary)';">Fundamental Ratios</a>
+                    <a href="#section-performance" style="padding: 6px 14px; border-radius: 20px; background: var(--bg-secondary); border: 1px solid var(--border); color: var(--text-secondary); text-decoration: none; font-size: 11px; font-weight: 600; white-space: nowrap; transition: all 0.2s;" onmouseover="this.style.color='var(--cyan)';" onmouseout="this.style.color='var(--text-secondary)';">Performance Overview</a>
+                </div>
+
+                <!-- 1. Activity & Price Details Grid (Side-by-Side) -->
+                <div id="section-activity" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px;">
+                    <!-- Activity -->
+                    <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; box-shadow: var(--shadow-card);">
+                        <h3 style="font-size: 13px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 16px; border-bottom: 1px solid var(--border-light); padding-bottom: 8px;">Activity</h3>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                            <div>
+                                <span style="font-size: 11px; color: var(--text-muted); display: block; margin-bottom: 2px;">Open</span>
+                                <strong style="font-size: 15px; font-family: var(--font-mono); color: var(--text-primary);" data-live-open="{{ ticker }}">₹{{ "%.2f" | format(details.get('open', details.get('price', 100.0))) }}</strong>
+                            </div>
+                            <div>
+                                <span style="font-size: 11px; color: var(--text-muted); display: block; margin-bottom: 2px;">Close (Prev.)</span>
+                                <strong style="font-size: 15px; font-family: var(--font-mono); color: var(--text-primary);" data-live-prev-close="{{ ticker }}">₹{{ "%.2f" | format(details.get('previous_close', details.get('price', 100.0))) }}</strong>
+                            </div>
+                            <div>
+                                <span style="font-size: 11px; color: var(--text-muted); display: block; margin-bottom: 2px;">High</span>
+                                <strong style="font-size: 15px; font-family: var(--font-mono); color: var(--green);" data-live-high="{{ ticker }}">₹{{ "%.2f" | format(details.get('high', details.get('price', 100.0))) }}</strong>
+                            </div>
+                            <div>
+                                <span style="font-size: 11px; color: var(--text-muted); display: block; margin-bottom: 2px;">Low</span>
+                                <strong style="font-size: 15px; font-family: var(--font-mono); color: var(--red);" data-live-low="{{ ticker }}">₹{{ "%.2f" | format(details.get('low', details.get('price', 100.0))) }}</strong>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Price Details -->
+                    <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; box-shadow: var(--shadow-card);">
+                        <h3 style="font-size: 13px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 16px; border-bottom: 1px solid var(--border-light); padding-bottom: 8px;">Price Details</h3>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                            <div>
+                                <span style="font-size: 11px; color: var(--text-muted); display: block; margin-bottom: 2px;">Average Price</span>
+                                <strong style="font-size: 15px; font-family: var(--font-mono); color: var(--text-primary);" id="val-avg-price" data-live-avg-price="{{ ticker }}">₹{{ "%.2f" | format(details.get('price', 100.0)) }}</strong>
+                            </div>
+                            <div>
+                                <span style="font-size: 11px; color: var(--text-muted); display: block; margin-bottom: 2px;">Volume</span>
+                                <strong style="font-size: 15px; font-family: var(--font-mono); color: var(--text-primary);" id="val-volume" data-live-volume="{{ ticker }}">{{ details.get('volume', '22,77,45,007') }}</strong>
+                            </div>
+                            <div>
+                                <span style="font-size: 11px; color: var(--text-muted); display: block; margin-bottom: 2px;">Open Interest (OI)</span>
+                                <strong style="font-size: 15px; font-family: var(--font-mono); color: var(--text-primary);" id="details-oi">-</strong>
+                            </div>
+                            <div>
+                                <span style="font-size: 11px; color: var(--text-muted); display: block; margin-bottom: 2px;">Bid / Ask</span>
+                                <strong style="font-size: 13.5px; font-family: var(--font-mono); color: var(--text-primary);" id="details-bidask">-</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Lower/Upper Circuit & 52 Week Low/High Sliders -->
+                <div id="section-circuits" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px;">
+                    <!-- Lower Circuit / Upper Circuit -->
+                    <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; box-shadow: var(--shadow-card);">
+                        <h3 style="font-size: 13px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 12px;">Lower Circuit / Upper Circuit</h3>
+                        <div style="position: relative; margin: 20px 0 10px;">
+                            <!-- Slider track -->
+                            <div style="height: 6px; background: linear-gradient(90deg, var(--red) 0%, var(--yellow) 50%, var(--green) 100%); border-radius: 3px;"></div>
+                            <!-- Slider pointer -->
+                            <div id="circuit-pointer" style="position: absolute; top: -4px; width: 14px; height: 14px; background: var(--cyan); border: 2px solid var(--bg-card); border-radius: 50%; box-shadow: 0 0 6px rgba(0, 200, 255, 0.5); transform: translateX(-50%); transition: left 0.3s;"></div>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; font-size: 12px; color: var(--text-secondary); margin-top: 12px;">
+                            <span>L: <strong id="val-lower-circuit" style="font-family: var(--font-mono);">-</strong></span>
+                            <span>H: <strong id="val-upper-circuit" style="font-family: var(--font-mono);">-</strong></span>
+                        </div>
+                    </div>
+
+                    <!-- 52 Week Low / High -->
+                    <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; box-shadow: var(--shadow-card);">
+                        <h3 style="font-size: 13px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 12px;">52 Week Low / High</h3>
+                        <div style="position: relative; margin: 20px 0 10px;">
+                            <!-- Slider track -->
+                            <div style="height: 6px; background: linear-gradient(90deg, #f87171 0%, #fbbf24 50%, #34d399 100%); border-radius: 3px;"></div>
+                            <!-- Slider pointer -->
+                            <div id="52wk-pointer" style="position: absolute; top: -4px; width: 14px; height: 14px; background: var(--cyan); border: 2px solid var(--bg-card); border-radius: 50%; box-shadow: 0 0 6px rgba(0, 200, 255, 0.5); transform: translateX(-50%); transition: left 0.3s;"></div>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; font-size: 12px; color: var(--text-secondary); margin-top: 12px;">
+                            <span>L: <strong id="val-52wk-low" style="font-family: var(--font-mono);">₹{{ "%.2f" | format(details.get('low_52week', details.get('price', 100.0) * 0.75)) }}</strong></span>
+                            <span>H: <strong id="val-52wk-high" style="font-family: var(--font-mono);">₹{{ "%.2f" | format(details.get('high_52week', details.get('price', 100.0) * 1.25)) }}</strong></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. Analyst Ratings & Fundamental Ratios (Side-by-Side) -->
+                <div id="section-ratings" style="display: grid; grid-template-columns: 1fr 1.2fr; gap: 20px; margin-bottom: 24px;">
+                    <!-- Analyst Ratings -->
+                    <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; box-shadow: var(--shadow-card);">
+                        <h3 style="font-size: 13px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 12px;">Analyst Ratings</h3>
+                        <p style="font-size: 10px; color: var(--text-muted); margin-bottom: 16px;">*Based on analyst recommendations in the last 1 year</p>
+                        
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; background: var(--bg-secondary); padding: 10px 14px; border-radius: 6px; border: 1px solid var(--border);">
+                            <div>
+                                <span style="font-size: 10px; color: var(--text-muted); display: block; text-transform: uppercase;">Target Price</span>
+                                <strong style="font-size: 18px; color: var(--text-primary); font-family: var(--font-mono);" id="val-target-price">-</strong>
+                            </div>
+                            <div style="text-align: right;">
+                                <span style="font-size: 10px; color: var(--text-muted); display: block; text-transform: uppercase;">Expected Profit</span>
+                                <strong style="font-size: 16px; color: var(--green); font-family: var(--font-mono);" id="val-expected-profit">-</strong>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; flex-direction: column; gap: 12px;">
+                            <div>
+                                <div style="display: flex; justify-content: space-between; font-size: 11px;">
+                                    <span style="color: var(--text-secondary); font-weight: 600;">BUY</span>
+                                    <span style="color: var(--green); font-weight: 700;" id="rating-buy-pct">83%</span>
+                                </div>
+                                <div style="height: 6px; background: var(--border-light); border-radius: 3px; overflow: hidden; margin-top: 4px;">
+                                    <div id="rating-buy-bar" style="height: 100%; background: var(--green); width: 83%; transition: width 0.4s;"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div style="display: flex; justify-content: space-between; font-size: 11px;">
+                                    <span style="color: var(--text-secondary); font-weight: 600;">HOLD</span>
+                                    <span style="color: var(--yellow); font-weight: 700;" id="rating-hold-pct">17%</span>
+                                </div>
+                                <div style="height: 6px; background: var(--border-light); border-radius: 3px; overflow: hidden; margin-top: 4px;">
+                                    <div id="rating-hold-bar" style="height: 100%; background: var(--yellow); width: 17%; transition: width 0.4s;"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div style="display: flex; justify-content: space-between; font-size: 11px;">
+                                    <span style="color: var(--text-secondary); font-weight: 600;">SELL</span>
+                                    <span style="color: var(--red); font-weight: 700;" id="rating-sell-pct">0%</span>
+                                </div>
+                                <div style="height: 6px; background: var(--border-light); border-radius: 3px; overflow: hidden; margin-top: 4px;">
+                                    <div id="rating-sell-bar" style="height: 100%; background: var(--red); width: 0%; transition: width 0.4s;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Fundamental Ratios with Tabs -->
+                    <div id="section-ratios" style="background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; box-shadow: var(--shadow-card);">
+                        <h3 style="font-size: 13px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 12px;">Fundamental Ratios</h3>
+                        
+                        <!-- Ratios Sub Tabs -->
+                        <div style="display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin-bottom: 16px;">
+                            <button id="tab-ratio-val" onclick="switchRatioTab('val')" class="chart-period-btn active" style="font-size: 10px; padding: 6px 10px; font-weight: 700;">Valuation Ratio</button>
+                            <button id="tab-ratio-growth" onclick="switchRatioTab('growth')" class="chart-period-btn" style="font-size: 10px; padding: 6px 10px; font-weight: 700;">Growth</button>
+                            <button id="tab-ratio-fin" onclick="switchRatioTab('fin')" class="chart-period-btn" style="font-size: 10px; padding: 6px 10px; font-weight: 700;">Financial</button>
+                            <button id="tab-ratio-div" onclick="switchRatioTab('div')" class="chart-period-btn" style="font-size: 10px; padding: 6px 10px; font-weight: 700;">Dividend</button>
+                        </div>
+
+                        <!-- Tab Content: Valuation -->
+                        <div id="ratio-pane-val" class="ratio-pane" style="display: block;">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                                <div>
+                                    <span style="font-size: 10px; color: var(--text-muted); display: block; margin-bottom: 2px;">PE Ratio</span>
+                                    <strong style="font-size: 15px; font-family: var(--font-mono); color: var(--text-primary);" id="ratio-pe">-</strong>
+                                </div>
+                                <div>
+                                    <span style="font-size: 10px; color: var(--text-muted); display: block; margin-bottom: 2px;">Price to Book Value</span>
+                                    <strong style="font-size: 15px; font-family: var(--font-mono); color: var(--text-primary);" id="ratio-pb">-</strong>
+                                </div>
+                                <div>
+                                    <span style="font-size: 10px; color: var(--text-muted); display: block; margin-bottom: 2px;">PEG Ratio</span>
+                                    <strong style="font-size: 15px; font-family: var(--font-mono); color: var(--text-primary);" id="ratio-peg">-</strong>
+                                </div>
+                                <div>
+                                    <span style="font-size: 10px; color: var(--text-muted); display: block; margin-bottom: 2px;">ROE (Latest)</span>
+                                    <strong style="font-size: 15px; font-family: var(--font-mono); color: var(--text-primary);" id="ratio-roe">-</strong>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tab Content: Growth -->
+                        <div id="ratio-pane-growth" class="ratio-pane" style="display: none;">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                                <div>
+                                    <span style="font-size: 10px; color: var(--text-muted); display: block; margin-bottom: 2px;">Growth</span>
+                                    <strong style="font-size: 15px; font-family: var(--font-mono); color: var(--text-primary);" id="ratio-growth-val">-</strong>
+                                </div>
+                                <div>
+                                    <span style="font-size: 10px; color: var(--text-muted); display: block; margin-bottom: 2px;">EV to EBITDA</span>
+                                    <strong style="font-size: 15px; font-family: var(--font-mono); color: var(--text-primary);" id="ratio-evebitda">-</strong>
+                                </div>
+                                <div style="grid-column: span 2;">
+                                    <span style="font-size: 10px; color: var(--text-muted); display: block; margin-bottom: 2px;">ROCE (Latest)</span>
+                                    <strong style="font-size: 15px; font-family: var(--font-mono); color: var(--text-primary);" id="ratio-roce">-</strong>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tab Content: Financial -->
+                        <div id="ratio-pane-fin" class="ratio-pane" style="display: none;">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                                <div>
+                                    <span style="font-size: 10px; color: var(--text-muted); display: block; margin-bottom: 2px;">EV to Capital Employed</span>
+                                    <strong style="font-size: 15px; font-family: var(--font-mono); color: var(--text-primary);" id="ratio-evcap">-</strong>
+                                </div>
+                                <div>
+                                    <span style="font-size: 10px; color: var(--text-muted); display: block; margin-bottom: 2px;">EV to Sales</span>
+                                    <strong style="font-size: 15px; font-family: var(--font-mono); color: var(--text-primary);" id="ratio-evsales">-</strong>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tab Content: Dividend -->
+                        <div id="ratio-pane-div" class="ratio-pane" style="display: none;">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                                <div style="grid-column: span 2;">
+                                    <span style="font-size: 10px; color: var(--text-muted); display: block; margin-bottom: 2px;">Dividend Yield</span>
+                                    <strong style="font-size: 15px; font-family: var(--font-mono); color: var(--text-primary);" id="ratio-divyield">-</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. Performance Overview Panel (Full Width) -->
+                <div id="section-performance" style="background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 24px; margin-bottom: 24px; box-shadow: var(--shadow-card);">
+                    <h3 style="font-size: 14px; font-weight: 700; color: var(--text-primary); text-transform: uppercase; margin-bottom: 16px;">Performance Overview</h3>
+                    
+                    <!-- Sector Trend Header -->
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px; flex-wrap: wrap;">
+                        <span style="font-size: 12px; font-weight: 600; color: var(--text-secondary);" id="val-sector-rank">Sector Trend (#11)</span>
+                        <span style="font-size: 10px; background: var(--bg-secondary); border: 1px solid var(--border); padding: 2px 8px; border-radius: 4px; color: var(--text-secondary); font-weight: 700;" id="val-market-cap-size">MID CAP</span>
+                        <span style="font-size: 10px; background: var(--bg-secondary); border: 1px solid var(--border); padding: 2px 8px; border-radius: 4px; color: var(--text-secondary); font-weight: 700;" id="val-sector-name">RENEWABLE ENERGY</span>
+                    </div>
+
+                    <!-- Trend Row Grid -->
+                    <div style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; margin-bottom: 24px; border-bottom: 1px solid var(--border-light); padding-bottom: 20px;">
+                        <div style="background: var(--bg-secondary); border: 1px solid var(--border); padding: 12px; border-radius: 6px; text-align: center;">
+                            <span style="font-size: 10px; color: var(--text-muted); display: block; text-transform: uppercase; margin-bottom: 4px;">Short Term</span>
+                            <span id="val-trend-short" style="font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--yellow);">Neutral</span>
+                        </div>
+                        <div style="background: var(--bg-secondary); border: 1px solid var(--border); padding: 12px; border-radius: 6px; text-align: center;">
+                            <span style="font-size: 10px; color: var(--text-muted); display: block; text-transform: uppercase; margin-bottom: 4px;">Long Term</span>
+                            <span id="val-trend-long" style="font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--yellow);">Neutral</span>
+                        </div>
+                        <div style="background: var(--bg-secondary); border: 1px solid var(--border); padding: 12px; border-radius: 6px; text-align: center;">
+                            <span style="font-size: 10px; color: var(--text-muted); display: block; text-transform: uppercase; margin-bottom: 4px;">Market Cap</span>
+                            <span id="val-perf-mcap" style="font-size: 11.5px; font-weight: 700; color: var(--text-primary); font-family: var(--font-mono);">Rs 74,979 Cr</span>
+                        </div>
+                        <div style="background: var(--bg-secondary); border: 1px solid var(--border); padding: 12px; border-radius: 6px; text-align: center;">
+                            <span style="font-size: 10px; color: var(--text-muted); display: block; text-transform: uppercase; margin-bottom: 4px;">1 Year Return</span>
+                            <span id="val-perf-1yr" style="font-size: 11.5px; font-weight: 700; color: var(--red); font-family: var(--font-mono);">-12.02%</span>
+                        </div>
+                        <div style="background: var(--bg-secondary); border: 1px solid var(--border); padding: 12px; border-radius: 6px; text-align: center;">
+                            <span style="font-size: 10px; color: var(--text-muted); display: block; text-transform: uppercase; margin-bottom: 4px;">Sector Return</span>
+                            <span id="val-perf-sec" style="font-size: 11.5px; font-weight: 700; color: var(--red); font-family: var(--font-mono);">-17.01%</span>
+                        </div>
+                        <div style="background: var(--bg-secondary); border: 1px solid var(--border); padding: 12px; border-radius: 6px; text-align: center;">
+                            <span style="font-size: 10px; color: var(--text-muted); display: block; text-transform: uppercase; margin-bottom: 4px;">Market Return</span>
+                            <span id="val-perf-mkt" style="font-size: 11.5px; font-weight: 700; color: var(--red); font-family: var(--font-mono);">-3.7%</span>
+                        </div>
+                    </div>
+
+                    <!-- Quality / Valuation Grid -->
+                    <div style="display: grid; grid-template-columns: 1fr 1.2fr 1.5fr; gap: 24px;">
+                        <!-- Col 1: Quality, Valuation, Financial -->
+                        <div style="display: flex; flex-direction: column; gap: 16px; border-right: 1px solid var(--border-light); padding-right: 20px;">
+                            <div>
+                                <span style="font-size: 11px; color: var(--text-muted); display: block;">Quality</span>
+                                <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 4px;">
+                                    <span style="font-size: 13px; font-weight: 700; color: var(--green);" id="score-quality-text">GOOD</span>
+                                    <span style="font-size: 11px; background: var(--green-dim); color: var(--green); padding: 1px 6px; border-radius: 4px; font-weight: 600;" id="score-quality-val">4/5</span>
+                                </div>
+                            </div>
+                            <div>
+                                <span style="font-size: 11px; color: var(--text-muted); display: block;">Valuation</span>
+                                <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 4px;">
+                                    <span style="font-size: 13px; font-weight: 700; color: var(--red);" id="score-valuation-text">EXPENSIVE</span>
+                                    <span style="font-size: 11px; background: var(--red-dim); color: var(--red); padding: 1px 6px; border-radius: 4px; font-weight: 600;" id="score-valuation-val">2/5</span>
+                                </div>
+                            </div>
+                            <div>
+                                <span style="font-size: 11px; color: var(--text-muted); display: block;">Financial</span>
+                                <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 4px;">
+                                    <span style="font-size: 13px; font-weight: 700; color: var(--green);" id="score-financial-text">POSITIVE</span>
+                                    <span style="font-size: 11px; background: var(--green-dim); color: var(--green); padding: 1px 6px; border-radius: 4px; font-weight: 600;" id="score-financial-val">3/5</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Col 2: Capital Structure, Growth, Management Risk -->
+                        <div style="display: flex; flex-direction: column; gap: 16px; border-right: 1px solid var(--border-light); padding-right: 20px; justify-content: space-between;">
+                            <div>
+                                <span style="font-size: 11px; color: var(--text-muted); display: block;">Capital Structure</span>
+                                <strong style="font-size: 13px; color: var(--text-primary); margin-top: 4px; display: block;" id="score-capstruct">Average</strong>
+                            </div>
+                            <div>
+                                <span style="font-size: 11px; color: var(--text-muted); display: block;">Growth</span>
+                                <strong style="font-size: 13px; color: var(--green); margin-top: 4px; display: block;" id="score-growth">Excellent</strong>
+                            </div>
+                            <div>
+                                <span style="font-size: 11px; color: var(--text-muted); display: block;">Management Risk</span>
+                                <strong style="font-size: 13px; color: var(--green); margin-top: 4px; display: block;" id="score-mgt-risk">Good</strong>
+                            </div>
+                        </div>
+
+                        <!-- Col 3: Insights to Look For -->
+                        <div style="display: flex; flex-direction: column; gap: 12px;">
+                            <span style="font-size: 11px; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Insights to Look For</span>
+                            <ul style="margin: 0; padding-left: 16px; font-size: 12px; color: var(--text-secondary); line-height: 1.6;" id="list-insights">
+                                <li>Good quality company basis long term financial performance.</li>
+                                <li>Size - Ranks 3rd out of 18 companies in Renewable Energy sector</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 5. Shareholding Pattern Panel -->
+                <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; margin-bottom: 24px; box-shadow: var(--shadow-card);">
+                    <h3 style="font-size: 13px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 16px;">Percentage of Shareholding</h3>
+                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;">
+                        <div>
+                            <span style="font-size: 10px; color: var(--text-muted); display: block; margin-bottom: 2px;">Promoters</span>
+                            <strong style="font-size: 14px; font-family: var(--font-mono); color: var(--text-primary);" id="share-promoters">63.00%</strong>
+                            <div style="height: 4px; background: var(--border-light); border-radius: 2px; margin-top: 6px; overflow: hidden;">
+                                <div id="share-promoters-bar" style="height: 100%; background: var(--cyan); width: 63%;"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <span style="font-size: 10px; color: var(--text-muted); display: block; margin-bottom: 2px;">Foreign Institutions (FII)</span>
+                            <strong style="font-size: 14px; font-family: var(--font-mono); color: var(--text-primary);" id="share-fii">25.50%</strong>
+                            <div style="height: 4px; background: var(--border-light); border-radius: 2px; margin-top: 6px; overflow: hidden;">
+                                <div id="share-fii-bar" style="height: 100%; background: var(--green); width: 25.5%;"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <span style="font-size: 10px; color: var(--text-muted); display: block; margin-bottom: 2px;">Domestic Institutions (DII)</span>
+                            <strong style="font-size: 14px; font-family: var(--font-mono); color: var(--text-primary);" id="share-dii">3.20%</strong>
+                            <div style="height: 4px; background: var(--border-light); border-radius: 2px; margin-top: 6px; overflow: hidden;">
+                                <div id="share-dii-bar" style="height: 100%; background: var(--yellow); width: 3.2%;"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <span style="font-size: 10px; color: var(--text-muted); display: block; margin-bottom: 2px;">Public & Retail</span>
+                            <strong style="font-size: 14px; font-family: var(--font-mono); color: var(--text-primary);" id="share-public">8.30%</strong>
+                            <div style="height: 4px; background: var(--border-light); border-radius: 2px; margin-top: 6px; overflow: hidden;">
+                                <div id="share-public-bar" style="height: 100%; background: var(--text-muted); width: 8.3%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 6. About the Company -->
+                <div class="about-card" style="margin-bottom: 0; box-shadow: var(--shadow-card);">
+                    <h3 style="font-size: 13px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 12px;">About the Company</h3>
+                    <p>{{ details.get('description', '') }}</p>
+                </div>
+            </div>
+
+            <!-- Chart Tab Content -->
+            <div id="tab-chart" class="tab-content" style="display: block; width: 100%;">
+                <!-- Chart Type Source Toggle -->
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; background: var(--bg-secondary); border: 1px solid var(--border); padding: 8px 16px; border-radius: 6px; gap: 16px; flex-wrap: wrap;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <button id="btn-tv-source" onclick="toggleChartSource('tv')" style="padding: 6px 14px; border-radius: 4px; border: 1px solid var(--border); background: transparent; color: var(--text-secondary); font-weight: 700; cursor: pointer; transition: all 0.2s; outline: none; font-size: 11px; font-family: var(--font-mono);">📺 TradingView Live Chart</button>
+                        <button id="btn-custom-source" onclick="toggleChartSource('custom')" style="padding: 6px 14px; border-radius: 4px; border: 1px solid var(--border); background: transparent; color: var(--text-secondary); font-weight: 700; cursor: pointer; transition: all 0.2s; outline: none; font-size: 11px; font-family: var(--font-mono);">📊 Custom Offline Chart</button>
+                    </div>
+                    <span style="color: var(--text-muted); font-size: 11px; font-family: var(--font-mono);">⚠️ TradingView restricts NSE/BSE symbols. Switch to Custom if empty!</span>
+                </div>
+
+                <!-- TradingView Chart Container -->
+                <div id="tv-chart-container" style="width: 100%; height: 500px; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; margin-bottom: 24px; display: block;">
+                    <div id="tv-chart-iframe" style="width: 100%; height: 100%;"></div>
+                </div>
+
+                <!-- Custom ApexCharts Wrapper -->
+                <div id="custom-chart-wrapper" style="display: none; width: 100%;">
+                    <div class="metrics-section" style="padding: 24px; position: relative;">
+                        <!-- Trading Chart Toolbar -->
+                        <div style="display: flex; align-items: center; background: var(--bg-secondary); border: 1px solid var(--border); padding: 8px 16px; border-radius: 6px; gap: 16px; flex-wrap: wrap; margin-bottom: 12px; font-family: var(--font-mono); font-size: 12px; position: relative;">
+                            <!-- Timeframe Selection -->
+                            <div style="display: flex; align-items: center; gap: 6px; position: relative;">
+                                <span style="color: var(--text-muted); font-size: 11px; font-weight: 600; text-transform: uppercase;">Interval:</span>
+                                <div id="chart-interval-dropdown-container" style="position: relative;">
+                                    <button id="btn-interval-trigger" onclick="toggleIntervalDropdown(event)" style="display: flex; align-items: center; gap: 8px; font-size: 11px; font-weight: 600; padding: 5px 12px; border-radius: 4px; background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border); cursor: pointer; min-width: 100px; justify-content: space-between; outline: none; transition: background-color 0.2s;">
+                                        <span id="active-interval-text">1 day</span>
+                                        <span style="font-size: 8px; color: var(--text-secondary);">▼</span>
+                                    </button>
+                                    
+                                    <!-- Interval Dropdown Menu -->
+                                    <div id="interval-dropdown-menu" style="display: none; position: absolute; top: calc(100% + 4px); left: 0; background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px; width: 170px; z-index: 1000; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08); max-height: 280px; overflow-y: auto; padding: 4px 0;">
+                                        <!-- SECONDS -->
+                                        <div style="font-size: 9px; font-weight: 700; color: var(--text-muted); padding: 6px 12px 2px; text-transform: uppercase; letter-spacing: 0.8px;">Seconds</div>
+                                        <div class="dropdown-item" onclick="selectInterval('15s', '15 seconds')" data-interval="15s">15 seconds</div>
+                                        <div class="dropdown-item" onclick="selectInterval('30s', '30 seconds')" data-interval="30s">30 seconds</div>
+                                        <div class="dropdown-item" onclick="selectInterval('45s', '45 seconds')" data-interval="45s">45 seconds</div>
+
+                                        <!-- MINUTES -->
+                                        <div style="font-size: 9px; font-weight: 700; color: var(--text-muted); padding: 8px 12px 2px; text-transform: uppercase; letter-spacing: 0.8px; border-top: 1px solid var(--border-light); margin-top: 4px;">Minutes</div>
+                                        <div class="dropdown-item" onclick="selectInterval('1m', '1 minute')" data-interval="1m">1 minute</div>
+                                        <div class="dropdown-item" onclick="selectInterval('2m', '2 minutes')" data-interval="2m">2 minutes</div>
+                                        <div class="dropdown-item" onclick="selectInterval('3m', '3 minutes')" data-interval="3m">3 minutes</div>
+                                        <div class="dropdown-item" onclick="selectInterval('4m', '4 minutes')" data-interval="4m">4 minutes</div>
+                                        <div class="dropdown-item" onclick="selectInterval('5m', '5 minutes')" data-interval="5m">5 minutes</div>
+                                        <div class="dropdown-item" onclick="selectInterval('10m', '10 minutes')" data-interval="10m">10 minutes</div>
+                                        <div class="dropdown-item" onclick="selectInterval('15m', '15 minutes')" data-interval="15m">15 minutes</div>
+                                        <div class="dropdown-item" onclick="selectInterval('30m', '30 minutes')" data-interval="30m">30 minutes</div>
+                                        <div class="dropdown-item" onclick="selectInterval('75m', '75 minutes')" data-interval="75m">75 minutes</div>
+                                        <div class="dropdown-item" onclick="selectInterval('125m', '125 minutes')" data-interval="125m">125 minutes</div>
+
+                                        <!-- HOURS -->
+                                        <div style="font-size: 9px; font-weight: 700; color: var(--text-muted); padding: 8px 12px 2px; text-transform: uppercase; letter-spacing: 0.8px; border-top: 1px solid var(--border-light); margin-top: 4px;">Hours</div>
+                                        <div class="dropdown-item" onclick="selectInterval('1h', '1 hour')" data-interval="1h">1 hour</div>
+                                        <div class="dropdown-item" onclick="selectInterval('2h', '2 hours')" data-interval="2h">2 hours</div>
+                                        <div class="dropdown-item" onclick="selectInterval('3h', '3 hours')" data-interval="3h">3 hours</div>
+
+                                        <!-- DAYS -->
+                                        <div style="font-size: 9px; font-weight: 700; color: var(--text-muted); padding: 8px 12px 2px; text-transform: uppercase; letter-spacing: 0.8px; border-top: 1px solid var(--border-light); margin-top: 4px;">Days</div>
+                                        <div class="dropdown-item active" onclick="selectInterval('1d', '1 day')" data-interval="1d" style="background: var(--cyan-glow); color: var(--cyan);">1 day</div>
+                                        <div class="dropdown-item" onclick="selectInterval('1wk', '1 week')" data-interval="1wk">1 week</div>
+                                        <div class="dropdown-item" onclick="selectInterval('1mo', '1 month')" data-interval="1mo">1 month</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Divider -->
+                            <div style="width: 1px; height: 16px; background: var(--border);"></div>
+                            
+                            <!-- Chart Type Selection -->
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <button class="chart-type-btn" onclick="changeChartType('area')">📈 Area</button>
+                                <button class="chart-type-btn active" onclick="changeChartType('candlestick')">🕯️ Candles</button>
+                            </div>
+
+                            <!-- Divider -->
+                            <div style="width: 1px; height: 16px; background: var(--border);"></div>
+                            
+                            <!-- Indicators Dropdown Trigger -->
+                            <div id="chart-indicators-dropdown-container" style="position: relative;">
+                                <button id="btn-indicators-trigger" onclick="toggleIndicatorsDropdown(event)" style="display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; padding: 5px 12px; border-radius: 4px; background: transparent; color: var(--text-secondary); border: 1px solid var(--border); cursor: pointer; transition: all 0.2s; white-space: nowrap; outline: none;">
+                                    <span>ƒ<sub>x</sub></span> Indicators <span id="active-indicators-count" style="font-size: 10px; background: var(--cyan-glow); color: var(--cyan); padding: 1px 5px; border-radius: 10px; margin-left: 4px; display: none;">0</span>
+                                </button>
+                                
+                                <!-- Indicators Dropdown Menu -->
+                                <div id="indicators-dropdown-menu" style="display: none; position: absolute; top: calc(100% + 4px); left: 0; background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px; width: 180px; z-index: 1000; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08); padding: 8px 0;">
+                                    <div style="font-size: 9px; font-weight: 700; color: var(--text-muted); padding: 4px 14px 6px; text-transform: uppercase; letter-spacing: 0.8px;">Chart Overlays</div>
+                                    <label class="indicator-item" style="display: flex; align-items: center; gap: 10px; padding: 6px 14px; color: var(--text-secondary); font-size: 12px; cursor: pointer; transition: background 0.15s;" onmouseover="this.style.background='var(--bg-hover)';" onmouseout="this.style.background='transparent';">
+                                        <input type="checkbox" id="chk-ema9" onchange="toggleIndicatorState('ema9')" style="cursor: pointer;">
+                                        <span>EMA (9)</span>
+                                    </label>
+                                    <label class="indicator-item" style="display: flex; align-items: center; gap: 10px; padding: 6px 14px; color: var(--text-secondary); font-size: 12px; cursor: pointer; transition: background 0.15s;" onmouseover="this.style.background='var(--bg-hover)';" onmouseout="this.style.background='transparent';">
+                                        <input type="checkbox" id="chk-sma20" onchange="toggleIndicatorState('sma20')" style="cursor: pointer;">
+                                        <span>SMA (20)</span>
+                                    </label>
+                                    
+                                    <div style="font-size: 9px; font-weight: 700; color: var(--text-muted); padding: 8px 14px 6px; text-transform: uppercase; letter-spacing: 0.8px; border-top: 1px solid var(--border-light); margin-top: 6px;">Lower Panes</div>
+                                    <label class="indicator-item" style="display: flex; align-items: center; gap: 10px; padding: 6px 14px; color: var(--text-secondary); font-size: 12px; cursor: pointer; transition: background 0.15s;" onmouseover="this.style.background='var(--bg-hover)';" onmouseout="this.style.background='transparent';">
+                                        <input type="checkbox" id="chk-macd" onchange="toggleIndicatorState('macd')" style="cursor: pointer;">
+                                        <span>MACD</span>
+                                    </label>
+                                    <label class="indicator-item" style="display: flex; align-items: center; gap: 10px; padding: 6px 14px; color: var(--text-secondary); font-size: 12px; cursor: pointer; transition: background 0.15s;" onmouseover="this.style.background='var(--bg-hover)';" onmouseout="this.style.background='transparent';">
+                                        <input type="checkbox" id="chk-rsi" onchange="toggleIndicatorState('rsi')" style="cursor: pointer;">
+                                        <span>RSI (14)</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                    <div id="chart-loader" style="display: flex; align-items: center; justify-content: center; height: 400px; color: var(--text-secondary); font-size: 14px;">
+                        <div style="text-align: center;">
+                            <div class="loader-spinner" style="border: 3px solid var(--border); border-top: 3px solid var(--cyan); border-radius: 50%; width: 36px; height: 36px; animation: spin 1s linear infinite; margin: 0 auto 12px;"></div>
+                            <span>Fetching market data...</span>
+                        </div>
+                    </div>
+                    <div id="custom-chart-container" style="width: 100%; display: none;">
+                        <!-- OHLCV Info Bar -->
+                        <div id="chart-info-bar" style="display: flex; flex-wrap: wrap; gap: 14px; font-family: var(--font-mono); font-size: 11px; color: var(--text-secondary); margin-bottom: 16px; padding: 6px 12px; background: var(--bg-primary); border: 1px solid var(--border); border-radius: 4px;">
+                            <span style="font-weight: 700; color: var(--text-primary);">{{ ticker }}</span>
+                            <span style="color: var(--text-muted);">|</span>
+                            <span id="chart-info-date" style="color: var(--text-muted); min-width: 80px;"></span>
+                            <span id="chart-info-open"></span>
+                            <span id="chart-info-high"></span>
+                            <span id="chart-info-low"></span>
+                            <span id="chart-info-close"></span>
+                            <span id="chart-info-volume"></span>
+                        </div>
+                        <div id="chart-price" style="width: 100%;"></div>
+                        <div id="chart-volume" style="width: 100%; margin-top: -15px;"></div>
+                        <div id="chart-macd" style="width: 100%; margin-top: -15px; display: none;"></div>
+                        <div id="chart-rsi" style="width: 100%; margin-top: -15px; display: none;"></div>
+                        
+                        <!-- Period Selector Bar (TradingView style below chart) -->
+                        <div id="chart-period-bar" style="display: flex; align-items: center; justify-content: flex-start; gap: 4px; padding: 8px 12px; border-top: 1px solid var(--border-light); margin-top: 10px; font-family: var(--font-mono); font-size: 11px;">
+                            <span style="color: var(--text-muted); font-size: 10px; font-weight: 600; text-transform: uppercase; margin-right: 8px;">Period:</span>
+                            <button class="chart-period-btn" onclick="selectPeriod('1d')" data-period="1d">1D</button>
+                            <button class="chart-period-btn" onclick="selectPeriod('5d')" data-period="5d">5D</button>
+                            <button class="chart-period-btn active" onclick="selectPeriod('1mo')" data-period="1mo">1M</button>
+                            <button class="chart-period-btn" onclick="selectPeriod('3mo')" data-period="3mo">3M</button>
+                            <button class="chart-period-btn" onclick="selectPeriod('6mo')" data-period="6mo">6M</button>
+                            <button class="chart-period-btn" onclick="selectPeriod('1y')" data-period="1y">1Y</button>
+                            <button class="chart-period-btn" onclick="selectPeriod('5y')" data-period="5y">5Y</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div> <!-- closes tab-chart -->
+
+            <!-- Option Chain Tab Content -->
+            <div id="tab-options" class="tab-content" style="display: none; width: 100%;">
+                <div class="metrics-section">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; border-bottom:1px solid var(--border); padding-bottom:8px;">
+                        <h2>Option Chain (Simulated)</h2>
+                        <span style="font-size:12px; color:var(--text-muted);">Expiry: Near Month (28-May-2026)</span>
+                    </div>
+                    <div id="option-chain-container" style="overflow-x: auto;"></div>
+                </div>
+            </div>
+
+            <!-- Right Trading Panel Panel -->
+            <div class="trade-card">
+                <h2>Quick Trade ⚡</h2>
+                {% if not logged_in %}
+                    <p style="font-size:13px;color:var(--text-muted);text-align:center;margin: 20px 0;">Please log in to trade stocks.</p>
+                    <a href="/login" class="cta-btn" style="display:block;text-align:center;text-decoration:none;">Login</a>
+                {% else %}
+                    <div class="trade-input-group">
+                        <label>Stock Ticker</label>
+                        <div class="trade-input-wrap">
+                            <input type="text" id="details-ticker" value="{{ ticker }}" disabled style="background:var(--border);">
+                        </div>
+                    </div>
+                    <div class="trade-input-group">
+                        <label for="details-shares">Quantity</label>
+                        <div class="trade-input-wrap">
+                            <input type="number" id="details-shares" placeholder="Number of shares" min="1" value="1">
+                        </div>
+                    </div>
+                    
+                    <div class="trade-buttons">
+                        <button onclick="executeDetailsTrade('buy')" class="trade-btn-buy">BUY</button>
+                        <button onclick="executeDetailsTrade('sell')" class="trade-btn-sell">SELL</button>
+                    </div>
+
+                    <div class="trade-balance">
+                        <span>Available Balance:</span>
+                        <strong style="color:var(--cyan);font-family:var(--font-mono);">₹{{ "%.2f" | format(balance) }}</strong>
+                    </div>
+                {% endif %}
+                <button onclick="quickAddToWatchlist('{{ ticker }}')" class="btn-outline" style="width:100%;margin-top:12px;padding:9px;font-size:13px;">+ Add to Watchlist</button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Chatbot -->
+    <button class="chatbot-toggle" onclick="toggleChatbot()" title="RP Assistant">💬</button>
+    <div class="chatbot-container" id="chatbot-container">
+        <div class="chatbot-header">
+            <span>RP Assistant</span>
+            <button class="close-btn" onclick="toggleChatbot()">×</button>
+        </div>
+        <div class="chatbot-messages" id="chatbot-messages"></div>
+        <div class="chatbot-input">
+            <input type="text" id="chatbot-input" placeholder="Ask me anything…">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <footer>
+        <a href="/about">About</a>
+        <a href="/contact">Contact</a>
+        <a href="/privacy">Privacy Policy</a>
+        <a href="/terms">Terms of Use</a>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/apexcharts.min.js') }}"></script>
+    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <script>
+        let activeSource = 'custom'; // Default to Custom offline chart for Indian stocks
+        const tvSymbolStart = "{{ ticker }}";
+        const isUSStock = !tvSymbolStart.includes('.NSE') && !tvSymbolStart.includes('.BSE') && tvSymbolStart !== 'SENSEX.BSE' && tvSymbolStart !== 'NIFTY50.NSE' && tvSymbolStart !== 'NIFTYBANK.NSE';
+        if (isUSStock) {
+            activeSource = 'tv';
+        }
+
+        function toggleChartSource(source) {
+            activeSource = source;
+            const tvContainer = document.getElementById('tv-chart-container');
+            const customWrapper = document.getElementById('custom-chart-wrapper');
+            const btnTv = document.getElementById('btn-tv-source');
+            const btnCustom = document.getElementById('btn-custom-source');
+            
+            if (!tvContainer || !customWrapper || !btnTv || !btnCustom) return;
+
+            if (source === 'tv') {
+                tvContainer.style.display = 'block';
+                customWrapper.style.display = 'none';
+                
+                // Highlight active button
+                btnTv.style.borderColor = 'var(--cyan)';
+                btnTv.style.background = 'var(--cyan-glow)';
+                btnTv.style.color = 'var(--cyan)';
+                
+                btnCustom.style.borderColor = 'var(--border)';
+                btnCustom.style.background = 'transparent';
+                btnCustom.style.color = 'var(--text-secondary)';
+                
+                initTradingViewWidget();
+            } else {
+                tvContainer.style.display = 'none';
+                customWrapper.style.display = 'block';
+                
+                // Highlight active button
+                btnCustom.style.borderColor = 'var(--cyan)';
+                btnCustom.style.background = 'var(--cyan-glow)';
+                btnCustom.style.color = 'var(--cyan)';
+                
+                btnTv.style.borderColor = 'var(--border)';
+                btnTv.style.background = 'transparent';
+                btnTv.style.color = 'var(--text-secondary)';
+                
+                initCustomStockChart();
+            }
+        }
+
+        function initTradingViewWidget() {
+            let tvSymbol = "{{ ticker }}";
+            if (tvSymbol.endsWith('.NSE')) {
+                tvSymbol = 'NSE:' + tvSymbol.replace('.NSE', '');
+            } else if (tvSymbol.endsWith('.BSE')) {
+                tvSymbol = 'BSE:' + tvSymbol.replace('.BSE', '');
+            } else if (tvSymbol === 'SENSEX.BSE') {
+                tvSymbol = 'BSE:SENSEX';
+            } else if (tvSymbol === 'NIFTY50.NSE') {
+                tvSymbol = 'NSE:NIFTY';
+            } else if (tvSymbol === 'NIFTYBANK.NSE') {
+                tvSymbol = 'NSE:BANKNIFTY';
+            }
+
+            if (typeof TradingView !== 'undefined') {
+                new TradingView.widget({
+                    "width": "100%",
+                    "height": 500,
+                    "symbol": tvSymbol,
+                    "interval": "D",
+                    "timezone": "Asia/Kolkata",
+                    "theme": "dark",
+                    "style": "1",
+                    "locale": "en",
+                    "toolbar_bg": "#111827",
+                    "enable_publishing": false,
+                    "hide_side_toolbar": false,
+                    "allow_symbol_change": true,
+                    "container_id": "tv-chart-iframe"
+                });
+            } else {
+                console.error("TradingView library not loaded yet.");
+            }
+        }
+
+        function switchTab(tabId, btnElement) {
+            // Update button classes
+            const buttons = document.querySelectorAll('.details-tabs .tab-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            btnElement.classList.add('active');
+
+            // Hide all tab contents
+            const tabContents = document.querySelectorAll('.tab-content');
+            tabContents.forEach(content => content.style.display = 'none');
+
+            // Show selected tab content
+            if (tabId === 'overview') {
+                document.getElementById('tab-overview').style.display = 'block';
+            } else if (tabId === 'chart') {
+                document.getElementById('tab-chart').style.display = 'block';
+                toggleChartSource(activeSource);
+            } else if (tabId === 'options') {
+                document.getElementById('tab-options').style.display = 'block';
+                generateOptionChain();
+            }
+        }
+
+        let priceChart = null;
+        let volumeChart = null;
+        let macdChart = null;
+        let rsiChart = null;
+        let chartData = null;
+        let currentChartType = 'candlestick'; // Default to candles matching the user's reference image
+        let currentPeriod = '1mo';
+        let currentInterval = '1d';
+        
+        // Indicator States
+        let showEMA9 = false;
+        let showSMA20 = false;
+        let showMACD = false;
+        let showRSI = false;
+
+        function formatDateString(dateStr) {
+            if (!dateStr) return '';
+            if (dateStr.includes(' ')) {
+                const [datePart, timePart] = dateStr.split(' ');
+                const [y, m, d] = datePart.split('-');
+                const timeParts = timePart.split(':');
+                
+                const hr = parseInt(timeParts[0]);
+                const min = parseInt(timeParts[1]);
+                const sec = timeParts[2] ? parseInt(timeParts[2]) : 0;
+                
+                const dateObj = new Date(y, m - 1, d, hr, min, sec);
+                const dateStrFormatted = dateObj.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
+                const formattedTime = timeParts[2] ? `${timeParts[0]}:${timeParts[1]}:${timeParts[2]}` : `${timeParts[0]}:${timeParts[1]}`;
+                return `${dateStrFormatted} ${formattedTime}`;
+            } else {
+                const parts = dateStr.split('-');
+                const d = new Date(parts[0], parts[1] - 1, parts[2]);
+                return d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
+            }
+        }
+
+        function generateSmartCategories(sortedDates) {
+            let lastDatePart = null;
+            return sortedDates.map(d => {
+                if (d.includes(' ')) {
+                    const [datePart, timePart] = d.split(' ');
+                    const timeOnly = timePart.substring(0, 5); // HH:MM
+                    
+                    const [y, m, dayVal] = datePart.split('-');
+                    const dateObj = new Date(y, m - 1, dayVal);
+                    const dateStrFormatted = dateObj.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
+                    
+                    if (datePart !== lastDatePart) {
+                        lastDatePart = datePart;
+                        return `${dateStrFormatted} ${timeOnly}`;
+                    } else {
+                        return timeOnly;
+                    }
+                } else {
+                    const parts = d.split('-');
+                    const dateObj = new Date(parts[0], parts[1] - 1, parts[2]);
+                    return dateObj.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
+                }
+            });
+        }
+
+        function calculateEMA(values, period) {
+            if (values.length === 0) return [];
+            const k = 2 / (period + 1);
+            let ema = [values[0]];
+            for (let i = 1; i < values.length; i++) {
+                ema.push(values[i] * k + ema[i - 1] * (1 - k));
+            }
+            return ema;
+        }
+
+        function getMACDSignals(closePrices, formattedCats) {
+            if (closePrices.length < 26) {
+                return {
+                    macd: formattedCats.map(c => ({ x: c, y: 0.0 })),
+                    signal: formattedCats.map(c => ({ x: c, y: 0.0 })),
+                    hist: formattedCats.map(c => ({ x: c, y: 0.0 }))
+                };
+            }
+            const ema12 = calculateEMA(closePrices, 12);
+            const ema26 = calculateEMA(closePrices, 26);
+            
+            const macdLine = [];
+            for (let i = 0; i < closePrices.length; i++) {
+                macdLine.push(ema12[i] - ema26[i]);
+            }
+            
+            const signalLineValues = calculateEMA(macdLine, 9);
+            
+            const macdOut = [];
+            const signalOut = [];
+            const histOut = [];
+            
+            for (let i = 0; i < closePrices.length; i++) {
+                macdOut.push({ x: formattedCats[i], y: macdLine[i] });
+                signalOut.push({ x: formattedCats[i], y: signalLineValues[i] });
+                histOut.push({ x: formattedCats[i], y: macdLine[i] - signalLineValues[i] });
+            }
+            
+            return { macd: macdOut, signal: signalOut, hist: histOut };
+        }
+
+        async function initCustomStockChart() {
+            const container = document.getElementById('custom-chart-container');
+            const loader = document.getElementById('chart-loader');
+            if (!container) return;
+
+            if (chartData) {
+                renderChart();
+                return;
+            }
+
+            loader.style.display = 'flex';
+            container.style.display = 'none';
+
+            try {
+                const response = await fetch(`/stock/{{ ticker }}?period=${currentPeriod}&interval=${currentInterval}`);
+                if (!response.ok) throw new Error('API failed');
+                
+                const rawData = await response.json();
+                const sortedDates = Object.keys(rawData).sort();
+
+                if (sortedDates.length === 0) {
+                    throw new Error('No historical data found');
+                }
+
+                const smartCats = generateSmartCategories(sortedDates);
+                chartData = {
+                    dates: sortedDates,
+                    categories: smartCats,
+                    area: sortedDates.map((d, idx) => ({
+                        x: smartCats[idx],
+                        y: parseFloat(rawData[d]["4. close"])
+                    })),
+                    candle: sortedDates.map((d, idx) => ({
+                        x: smartCats[idx],
+                        y: [
+                            parseFloat(rawData[d]["1. open"]),
+                            parseFloat(rawData[d]["2. high"]),
+                            parseFloat(rawData[d]["3. low"]),
+                            parseFloat(rawData[d]["4. close"])
+                        ]
+                    })),
+                    volume: sortedDates.map((d, idx) => ({
+                        x: smartCats[idx],
+                        y: parseInt(rawData[d]["5. volume"] || 0)
+                    }))
+                };
+
+                loader.style.display = 'none';
+                container.style.display = 'block';
+                renderChart();
+            } catch (err) {
+                console.error("Custom chart fetch error:", err);
+                loader.innerHTML = `
+                    <div style="text-align: center; color: var(--red);">
+                        <span style="font-size: 24px; display: block; margin-bottom: 8px;">⚠️</span>
+                        <span>Failed to load stock history. Showing simulation instead.</span>
+                    </div>
+                `;
+            }
+        }
+
+        function updateInfoBar(idx) {
+            if (idx === undefined || idx < 0 || !chartData) return;
+            const dataCount = chartData.dates.length;
+            
+            if (idx >= 0 && idx < dataCount) {
+                let dateStr = '';
+                const rawDate = chartData.dates[idx];
+                if (rawDate.includes(' ')) {
+                    const [datePart, timePart] = rawDate.split(' ');
+                    const [y, m, d_val] = datePart.split('-');
+                    const dateObj = new Date(y, m - 1, d_val);
+                    const formattedD = dateObj.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+                    dateStr = `${formattedD} ${timePart}`;
+                } else {
+                    const parts = rawDate.split('-');
+                    const d = new Date(parts[0], parts[1] - 1, parts[2]);
+                    dateStr = d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+                }
+                
+                const openVal = chartData.candle[idx].y[0];
+                const highVal = chartData.candle[idx].y[1];
+                const lowVal = chartData.candle[idx].y[2];
+                const closeVal = chartData.candle[idx].y[3];
+                const volVal = chartData.volume[idx].y;
+
+                const dateEl = document.getElementById('chart-info-date');
+                const openEl = document.getElementById('chart-info-open');
+                const highEl = document.getElementById('chart-info-high');
+                const lowEl = document.getElementById('chart-info-low');
+                const closeEl = document.getElementById('chart-info-close');
+                const volEl = document.getElementById('chart-info-volume');
+
+                if (dateEl) dateEl.textContent = dateStr;
+                if (openEl) openEl.innerHTML = `O: <strong style="color:var(--text-primary)">₹${openVal.toFixed(2)}</strong>`;
+                if (highEl) highEl.innerHTML = `H: <strong style="color:var(--green)">₹${highVal.toFixed(2)}</strong>`;
+                if (lowEl) lowEl.innerHTML = `L: <strong style="color:var(--red)">₹${lowVal.toFixed(2)}</strong>`;
+                if (closeEl) closeEl.innerHTML = `C: <strong style="color:var(--text-primary)">₹${closeVal.toFixed(2)}</strong>`;
+                if (volEl) volEl.innerHTML = `Vol: <strong style="color:var(--cyan)">${volVal.toLocaleString('en-IN')}</strong>`;
+            }
+        }
+
+        function calculateSMA(values, period) {
+            if (values.length < period) return values.map(() => null);
+            let sma = [];
+            for (let i = 0; i < values.length; i++) {
+                if (i < period - 1) {
+                    sma.push(null);
+                } else {
+                    let sum = 0;
+                    for (let j = 0; j < period; j++) {
+                        sum += values[i - j];
+                    }
+                    sma.push(sum / period);
+                }
+            }
+            return sma;
+        }
+
+        function calculateRSISignals(closePrices, formattedCats, period = 14) {
+            if (closePrices.length <= period) {
+                return formattedCats.map(c => ({ x: c, y: 50.0 }));
+            }
+            
+            let rsiOut = [];
+            let gains = [];
+            let losses = [];
+            
+            for (let i = 1; i < closePrices.length; i++) {
+                const diff = closePrices[i] - closePrices[i - 1];
+                if (diff > 0) {
+                    gains.push(diff);
+                    losses.push(0.0);
+                } else {
+                    gains.push(0.0);
+                    losses.push(Math.abs(diff));
+                }
+            }
+            
+            let avgGain = gains.slice(0, period).reduce((a, b) => a + b, 0) / period;
+            let avgLoss = losses.slice(0, period).reduce((a, b) => a + b, 0) / period;
+            
+            let firstRSI = avgLoss === 0 ? 100 : 100 - (100 / (1 + (avgGain / avgLoss)));
+            
+            for (let i = 0; i < period; i++) {
+                rsiOut.push({ x: formattedCats[i], y: 50.0 });
+            }
+            rsiOut.push({ x: formattedCats[period], y: firstRSI });
+            
+            for (let i = period + 1; i < closePrices.length; i++) {
+                avgGain = (avgGain * (period - 1) + gains[i - 1]) / period;
+                avgLoss = (avgLoss * (period - 1) + losses[i - 1]) / period;
+                
+                const rsiVal = avgLoss === 0 ? 100 : 100 - (100 / (1 + (avgGain / avgLoss)));
+                rsiOut.push({ x: formattedCats[i], y: rsiVal });
+            }
+            
+            return rsiOut;
+        }
+
+        function toggleIndicatorsDropdown(event) {
+            event.stopPropagation();
+            const menu = document.getElementById('indicators-dropdown-menu');
+            const isOpen = menu.style.display === 'block';
+            menu.style.display = isOpen ? 'none' : 'block';
+        }
+
+        // Close dropdowns on external clicks
+        document.addEventListener('click', function(e) {
+            const indMenu = document.getElementById('indicators-dropdown-menu');
+            if (indMenu && !indMenu.contains(e.target) && e.target.id !== 'btn-indicators-trigger') {
+                indMenu.style.display = 'none';
+            }
+        });
+
+        function toggleIndicatorState(indicator) {
+            if (indicator === 'ema9') showEMA9 = document.getElementById('chk-ema9').checked;
+            if (indicator === 'sma20') showSMA20 = document.getElementById('chk-sma20').checked;
+            if (indicator === 'macd') showMACD = document.getElementById('chk-macd').checked;
+            if (indicator === 'rsi') showRSI = document.getElementById('chk-rsi').checked;
+
+            // Update trigger count badge
+            let activeCount = 0;
+            if (showEMA9) activeCount++;
+            if (showSMA20) activeCount++;
+            if (showMACD) activeCount++;
+            if (showRSI) activeCount++;
+
+            const badge = document.getElementById('active-indicators-count');
+            const triggerBtn = document.getElementById('btn-indicators-trigger');
+            if (activeCount > 0) {
+                badge.textContent = activeCount;
+                badge.style.display = 'inline-block';
+                triggerBtn.style.background = 'var(--cyan-glow)';
+                triggerBtn.style.color = 'var(--cyan)';
+                triggerBtn.style.borderColor = 'var(--cyan)';
+            } else {
+                badge.style.display = 'none';
+                triggerBtn.style.background = 'transparent';
+                triggerBtn.style.color = 'var(--text-secondary)';
+                triggerBtn.style.borderColor = 'var(--border)';
+            }
+
+            renderChart();
+        }
+
+        function renderChart() {
+            if (priceChart) priceChart.destroy();
+            if (volumeChart) volumeChart.destroy();
+            if (macdChart) macdChart.destroy();
+            if (rsiChart) rsiChart.destroy();
+
+            const dataCount = chartData.dates.length;
+            const filteredArea = chartData.area;
+            const filteredCandle = chartData.candle;
+            const filteredVolume = chartData.volume;
+
+            // Compute MACD on the full history
+            const fullCloses = chartData.area.map(d => d.y);
+            const fullMACD = getMACDSignals(fullCloses, chartData.categories);
+
+            const firstPrice = filteredArea[0]?.y || 100;
+            const lastPrice = filteredArea[filteredArea.length - 1]?.y || 100;
+            const isBullish = lastPrice >= firstPrice;
+            const chartColor = isBullish ? '#00d97e' : '#ff4d6a';
+
+            // Price Chart Setup
+            const hasOverlays = showEMA9 || showSMA20;
+            const priceHeight = (showMACD || showRSI) ? 210 : 300;
+            
+            let seriesData = [];
+            
+            // Add primary Price series
+            if (currentChartType === 'area') {
+                seriesData.push({
+                    name: 'Close Price',
+                    type: 'area',
+                    data: filteredArea
+                });
+            } else {
+                seriesData.push({
+                    name: 'Price',
+                    type: 'candlestick',
+                    data: filteredCandle
+                });
+            }
+            
+            // Add EMA 9 if enabled
+            if (showEMA9) {
+                const ema9Values = calculateEMA(fullCloses, 9);
+                seriesData.push({
+                    name: 'EMA (9)',
+                    type: 'line',
+                    data: chartData.categories.map((c, idx) => ({ x: c, y: parseFloat(ema9Values[idx].toFixed(2)) }))
+                });
+            }
+            
+            // Add SMA 20 if enabled
+            if (showSMA20) {
+                const sma20Values = calculateSMA(fullCloses, 20);
+                seriesData.push({
+                    name: 'SMA (20)',
+                    type: 'line',
+                    data: chartData.categories.map((c, idx) => {
+                        const val = sma20Values[idx];
+                        return { x: c, y: val !== null ? parseFloat(val.toFixed(2)) : null };
+                    })
+                });
+            }
+            
+            // Determine X-axis labels visibility for volume and indicator charts
+            const volumeXLabelsShow = !showMACD && !showRSI;
+            const macdXLabelsShow = showMACD && !showRSI;
+            const rsiXLabelsShow = showRSI;
+
+            let chartColors = [];
+            if (currentChartType === 'area') {
+                chartColors.push(chartColor);
+            } else {
+                chartColors.push('#00d97e'); // dummy, overridden by candlestick options
+            }
+            if (showEMA9) chartColors.push('#4f46e5'); // Indigo
+            if (showSMA20) chartColors.push('#f59e0b'); // Amber/Orange
+            
+            let strokeWidths = [];
+            if (currentChartType === 'area') {
+                strokeWidths.push(2);
+            } else {
+                strokeWidths.push(hasOverlays ? 1 : 2); // candlestick border width
+            }
+            if (showEMA9) strokeWidths.push(1.5);
+            if (showSMA20) strokeWidths.push(1.5);
+
+            let priceOptions = {
+                chart: {
+                    id: 'price-chart',
+                    group: 'stock-sync',
+                    type: hasOverlays ? 'line' : currentChartType,
+                    height: priceHeight,
+                    toolbar: { show: false },
+                    animations: { enabled: false },
+                    background: 'transparent',
+                    foreColor: 'var(--text-secondary)',
+                    fontFamily: "'Inter', sans-serif",
+                    events: {
+                        mouseMove: function(event, chartContext, config) {
+                            if (config.dataPointIndex !== undefined && config.dataPointIndex >= 0) {
+                                updateInfoBar(config.dataPointIndex);
+                            }
+                        }
+                    }
+                },
+                theme: { mode: 'light' },
+                grid: {
+                    borderColor: 'var(--border)',
+                    strokeDashArray: 3,
+                    xaxis: { lines: { show: false } },
+                    yaxis: { lines: { show: true } }
+                },
+                dataLabels: { enabled: false },
+                colors: chartColors,
+                stroke: {
+                    width: strokeWidths,
+                    curve: 'smooth'
+                },
+                xaxis: {
+                    type: 'category',
+                    labels: { show: false },
+                    axisBorder: { show: false },
+                    axisTicks: { show: false }
+                },
+                yaxis: {
+                    labels: {
+                        minWidth: 60,
+                        maxWidth: 60,
+                        formatter: function (val) {
+                            return '₹' + val.toLocaleString('en-IN', { maximumFractionDigits: 1 });
+                        },
+                        style: { colors: 'var(--text-secondary)', fontSize: '10px', fontFamily: 'var(--font-mono)' }
+                    }
+                },
+                tooltip: {
+                    theme: 'light',
+                    x: {
+                        show: true,
+                        formatter: function(val, { series, seriesIndex, dataPointIndex, w }) {
+                            if (chartData && chartData.dates[dataPointIndex]) {
+                                return formatDateString(chartData.dates[dataPointIndex]);
+                            }
+                            return val;
+                        }
+                    }
+                }
+            };
+
+            if (currentChartType === 'area' && !hasOverlays) {
+                priceOptions.fill = {
+                    type: 'gradient',
+                    gradient: {
+                        shadeIntensity: 1,
+                        opacityFrom: 0.3,
+                        opacityTo: 0.0,
+                        stops: [0, 95],
+                        colorStops: [
+                            { offset: 0, color: chartColor, opacity: 0.3 },
+                            { offset: 100, color: chartColor, opacity: 0.0 }
+                        ]
+                    }
+                };
+            } else if (currentChartType === 'candlestick') {
+                priceOptions.plotOptions = {
+                    candlestick: {
+                        colors: {
+                            upward: '#00d97e',
+                            downward: '#ff4d6a'
+                        },
+                        wick: {
+                            useFillColor: true
+                        }
+                    }
+                };
+            }
+            priceOptions.series = seriesData;
+
+            // Volume Chart
+            const volumeColors = filteredVolume.map((d, idx) => {
+                if (idx === 0) return '#00d97e';
+                const prevClose = filteredArea[idx - 1].y;
+                const currClose = filteredArea[idx].y;
+                return currClose >= prevClose ? '#00d97e' : '#ff4d6a';
+            });
+
+            let volumeOptions = {
+                chart: {
+                    id: 'volume-chart',
+                    group: 'stock-sync',
+                    type: 'bar',
+                    height: 100,
+                    toolbar: { show: false },
+                    animations: { enabled: false },
+                    background: 'transparent',
+                    foreColor: 'var(--text-secondary)',
+                    fontFamily: "'Inter', sans-serif",
+                    events: {
+                        mouseMove: function(event, chartContext, config) {
+                            if (config.dataPointIndex !== undefined && config.dataPointIndex >= 0) {
+                                updateInfoBar(config.dataPointIndex);
+                            }
+                        }
+                    }
+                },
+                theme: { mode: 'light' },
+                grid: {
+                    borderColor: 'var(--border)',
+                    strokeDashArray: 3,
+                    xaxis: { lines: { show: false } },
+                    yaxis: { lines: { show: false } }
+                },
+                dataLabels: { enabled: false },
+                colors: volumeColors,
+                plotOptions: {
+                    bar: {
+                        colors: {
+                            ranges: [
+                                { from: 0, to: 999999999999, color: '#00d97e' }
+                            ]
+                        },
+                        columnWidth: '60%'
+                    }
+                },
+                series: [{
+                    name: 'Volume',
+                    data: filteredVolume.map((d, i) => ({
+                        x: d.x,
+                        y: d.y,
+                        fillColor: volumeColors[i]
+                    }))
+                }],
+                xaxis: {
+                    type: 'category',
+                    labels: {
+                        show: volumeXLabelsShow,
+                        style: { colors: 'var(--text-secondary)', fontSize: '10px' }
+                    },
+                    tickAmount: 8,
+                    axisBorder: { show: false },
+                    axisTicks: { show: false }
+                },
+                yaxis: {
+                    labels: {
+                        minWidth: 60,
+                        maxWidth: 60,
+                        formatter: function (val) {
+                            if (val >= 1000000) return (val/1000000).toFixed(1) + 'M';
+                            if (val >= 1000) return (val/1000).toFixed(0) + 'K';
+                            return val;
+                        },
+                        style: { colors: 'var(--text-secondary)', fontSize: '9px', fontFamily: 'var(--font-mono)' }
+                    }
+                },
+                tooltip: { enabled: false }
+            };
+
+            priceChart = new ApexCharts(document.getElementById('chart-price'), priceOptions);
+            priceChart.render();
+
+            volumeChart = new ApexCharts(document.getElementById('chart-volume'), volumeOptions);
+            volumeChart.render();
+
+            if (showMACD) {
+                document.getElementById('chart-macd').style.display = 'block';
+                // MACD Chart
+                let macdOptions = {
+                    chart: {
+                        id: 'macd-chart',
+                        group: 'stock-sync',
+                        type: 'line',
+                        height: 120,
+                        toolbar: { show: false },
+                        animations: { enabled: false },
+                        background: 'transparent',
+                        foreColor: 'var(--text-secondary)',
+                        fontFamily: "'Inter', sans-serif",
+                        events: {
+                            mouseMove: function(event, chartContext, config) {
+                                if (config.dataPointIndex !== undefined && config.dataPointIndex >= 0) {
+                                    updateInfoBar(config.dataPointIndex);
+                                }
+                            }
+                        }
+                    },
+                    theme: { mode: 'light' },
+                    grid: {
+                        borderColor: 'var(--border)',
+                        strokeDashArray: 3,
+                        xaxis: { lines: { show: false } },
+                        yaxis: { lines: { show: true } }
+                    },
+                    dataLabels: { enabled: false },
+                    stroke: {
+                        width: [1.5, 1.5, 0],
+                        curve: 'smooth'
+                    },
+                    colors: ['#0080ff', '#ff8000', '#00d97e'],
+                    plotOptions: {
+                        bar: {
+                            colors: {
+                                ranges: [
+                                    { from: -100000, to: 0, color: '#ff4d6a' },
+                                    { from: 0, to: 100000, color: '#00d97e' }
+                                ]
+                            },
+                            columnWidth: '60%'
+                        }
+                    },
+                    series: [
+                        {
+                            name: 'MACD',
+                            type: 'line',
+                            data: fullMACD.macd
+                        },
+                        {
+                            name: 'Signal',
+                            type: 'line',
+                            data: fullMACD.signal
+                        },
+                        {
+                            name: 'Histogram',
+                            type: 'bar',
+                            data: fullMACD.hist
+                        }
+                    ],
+                    xaxis: {
+                        type: 'category',
+                        tickAmount: 8,
+                        labels: {
+                            show: macdXLabelsShow,
+                            style: { colors: 'var(--text-secondary)', fontSize: '10px' }
+                        },
+                        axisBorder: { show: false },
+                        axisTicks: { show: false }
+                    },
+                    yaxis: {
+                        labels: {
+                            minWidth: 60,
+                            maxWidth: 60,
+                            formatter: function (val) {
+                                return val.toFixed(2);
+                            },
+                            style: { colors: 'var(--text-secondary)', fontSize: '10px', fontFamily: 'var(--font-mono)' }
+                        }
+                    },
+                    tooltip: { enabled: false }
+                };
+
+                macdChart = new ApexCharts(document.getElementById('chart-macd'), macdOptions);
+                macdChart.render();
+            } else {
+                document.getElementById('chart-macd').style.display = 'none';
+            }
+
+            if (showRSI) {
+                document.getElementById('chart-rsi').style.display = 'block';
+                const rsiData = calculateRSISignals(fullCloses, chartData.categories);
+                
+                let rsiOptions = {
+                    chart: {
+                        id: 'rsi-chart',
+                        group: 'stock-sync',
+                        type: 'line',
+                        height: 120,
+                        toolbar: { show: false },
+                        animations: { enabled: false },
+                        background: 'transparent',
+                        foreColor: 'var(--text-secondary)',
+                        fontFamily: "'Inter', sans-serif",
+                        events: {
+                            mouseMove: function(event, chartContext, config) {
+                                if (config.dataPointIndex !== undefined && config.dataPointIndex >= 0) {
+                                    updateInfoBar(config.dataPointIndex);
+                                }
+                            }
+                        }
+                    },
+                    theme: { mode: 'light' },
+                    grid: {
+                        borderColor: 'var(--border)',
+                        strokeDashArray: 3,
+                        xaxis: { lines: { show: false } },
+                        yaxis: { lines: { show: true } }
+                    },
+                    colors: ['#8B5CF6'], // Purple
+                    stroke: { width: 1.5 },
+                    series: [{
+                        name: 'RSI (14)',
+                        data: rsiData
+                    }],
+                    annotations: {
+                        yaxis: [
+                            {
+                                y: 70,
+                                borderColor: '#ff4d6a',
+                                strokeDashArray: 2,
+                                label: {
+                                    text: 'Overbought (70)',
+                                    style: { color: '#ff4d6a', fontSize: '9px', background: 'transparent' }
+                                }
+                            },
+                            {
+                                y: 30,
+                                borderColor: '#00d97e',
+                                strokeDashArray: 2,
+                                label: {
+                                    text: 'Oversold (30)',
+                                    style: { color: '#00d97e', fontSize: '9px', background: 'transparent' }
+                                }
+                            }
+                        ]
+                    },
+                    xaxis: {
+                        type: 'category',
+                        tickAmount: 8,
+                        labels: {
+                            show: rsiXLabelsShow,
+                            style: { colors: 'var(--text-secondary)', fontSize: '10px' }
+                        },
+                        axisBorder: { show: false },
+                        axisTicks: { show: false }
+                    },
+                    yaxis: {
+                        min: 10,
+                        max: 90,
+                        tickAmount: 2,
+                        labels: {
+                            minWidth: 60,
+                            maxWidth: 60,
+                            formatter: function (val) {
+                                return val.toFixed(0);
+                            },
+                            style: { colors: 'var(--text-secondary)', fontSize: '10px', fontFamily: 'var(--font-mono)' }
+                        }
+                    },
+                    tooltip: { enabled: false }
+                };
+
+                rsiChart = new ApexCharts(document.getElementById('chart-rsi'), rsiOptions);
+                rsiChart.render();
+            } else {
+                document.getElementById('chart-rsi').style.display = 'none';
+            }
+
+            setTimeout(() => updateInfoBar(dataCount - 1), 100);
+        }
+
+        function toggleIntervalDropdown(event) {
+            event.stopPropagation();
+            const menu = document.getElementById('interval-dropdown-menu');
+            const isOpen = menu.style.display === 'block';
+            menu.style.display = isOpen ? 'none' : 'block';
+        }
+
+        // Close interval dropdown on external click
+        document.addEventListener('click', function(e) {
+            const menu = document.getElementById('interval-dropdown-menu');
+            if (menu && menu.style.display === 'block') {
+                menu.style.display = 'none';
+            }
+        });
+
+        function selectInterval(intervalVal, labelText) {
+            currentInterval = intervalVal;
+            document.getElementById('active-interval-text').textContent = labelText;
+            
+            // Highlight in dropdown
+            document.querySelectorAll('.dropdown-item').forEach(item => {
+                if (item.getAttribute('data-interval') === intervalVal) {
+                    item.classList.add('active');
+                } else {
+                    item.classList.remove('active');
+                }
+            });
+            
+            // Auto adjust period if interval calls for shorter limits (yfinance constraints)
+            if (['15s', '30s', '45s', '1m', '2m', '3m', '4m', '5m', '10m'].includes(intervalVal)) {
+                if (!['1d', '5d'].includes(currentPeriod)) {
+                    currentPeriod = '5d';
+                    updatePeriodBarActive();
+                }
+            } else if (['15m', '30m', '75m', '125m'].includes(intervalVal)) {
+                if (!['1d', '5d', '1mo'].includes(currentPeriod)) {
+                    currentPeriod = '1mo';
+                    updatePeriodBarActive();
+                }
+            } else if (['1h', '2h', '3h'].includes(intervalVal)) {
+                if (['5y'].includes(currentPeriod)) {
+                    currentPeriod = '1y';
+                    updatePeriodBarActive();
+                }
+            }
+            
+            chartData = null;
+            initCustomStockChart();
+        }
+
+        function selectPeriod(periodVal) {
+            currentPeriod = periodVal;
+            updatePeriodBarActive();
+            
+            // Auto adjust interval if the period is incompatible
+            if (['1d'].includes(periodVal)) {
+                if (!['15s', '30s', '45s', '1m', '2m', '3m', '4m', '5m', '10m', '15m', '30m'].includes(currentInterval)) {
+                    currentInterval = '5m';
+                    document.getElementById('active-interval-text').textContent = '5 minutes';
+                }
+            } else if (['5d'].includes(periodVal)) {
+                if (!['15s', '30s', '45s', '1m', '2m', '3m', '4m', '5m', '10m', '15m', '30m', '75m', '125m', '1h', '2h', '3h'].includes(currentInterval)) {
+                    currentInterval = '15m';
+                    document.getElementById('active-interval-text').textContent = '15 minutes';
+                }
+            } else if (['1mo'].includes(periodVal)) {
+                if (!['15m', '30m', '75m', '125m', '1h', '2h', '3h', '1d'].includes(currentInterval)) {
+                    currentInterval = '30m';
+                    document.getElementById('active-interval-text').textContent = '30 minutes';
+                }
+            } else if (['3mo', '6mo', '1y'].includes(periodVal)) {
+                if (!['1h', '2h', '3h', '1d', '1wk', '1mo'].includes(currentInterval)) {
+                    currentInterval = '1d';
+                    document.getElementById('active-interval-text').textContent = '1 day';
+                }
+            } else if (['5y'].includes(periodVal)) {
+                if (!['1d', '1wk', '1mo'].includes(currentInterval)) {
+                    currentInterval = '1d';
+                    document.getElementById('active-interval-text').textContent = '1 day';
+                }
+            }
+            
+            // Sync highlighted dropdown item
+            document.querySelectorAll('.dropdown-item').forEach(item => {
+                if (item.getAttribute('data-interval') === currentInterval) {
+                    item.classList.add('active');
+                } else {
+                    item.classList.remove('active');
+                }
+            });
+            
+            chartData = null;
+            initCustomStockChart();
+        }
+
+        function updatePeriodBarActive() {
+            document.querySelectorAll('.chart-period-btn').forEach(btn => {
+                if (btn.getAttribute('data-period') === currentPeriod) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+        }
+
+        function changeChartType(type) {
+            currentChartType = type;
+            document.querySelectorAll('.chart-type-btn').forEach(btn => {
+                if (btn.textContent.toLowerCase().includes(type === 'area' ? 'area' : 'candle')) btn.classList.add('active');
+                else btn.classList.remove('active');
+            });
+            renderChart();
+        }
+
+        function generateOptionChain() {
+            const container = document.getElementById('option-chain-container');
+            if (!container) return;
+
+            const price = parseFloat("{{ details.get('price', 100.0) }}");
+            const ticker = "{{ ticker }}";
+            const symbol = '₹';
+
+            // Strike interval
+            let interval = 10;
+            if (price < 30) interval = 0.5;
+            else if (price < 100) interval = 1;
+            else if (price < 300) interval = 5;
+            else if (price < 1000) interval = 10;
+            else interval = 50;
+
+            const atmStrike = Math.round(price / interval) * interval;
+            const strikes = [];
+            for (let i = -5; i <= 5; i++) {
+                strikes.push(atmStrike + (i * interval));
+            }
+
+            let html = `
+                <table class="rp-table" style="text-align: center; width: 100%;">
+                    <thead>
+                        <tr style="background: var(--bg-secondary); border-bottom: 2px solid var(--border);">
+                            <th colspan="4" style="text-align: center; color: var(--green); border-right: 1px solid var(--border);">CALL OPTIONS (CE)</th>
+                            <th style="text-align: center; font-weight: 700; color: var(--text-primary); width: 120px;">STRIKE</th>
+                            <th colspan="4" style="text-align: center; color: var(--red); border-left: 1px solid var(--border);">PUT OPTIONS (PE)</th>
+                        </tr>
+                        <tr style="font-size: 11px; background: rgba(25, 37, 64, 0.3);">
+                            <th>OI</th>
+                            <th>Volume</th>
+                            <th>LTP</th>
+                            <th style="border-right: 1px solid var(--border);">Action</th>
+                            <th style="font-weight: 700; color: var(--cyan);">Strike Price</th>
+                            <th style="border-left: 1px solid var(--border);">Action</th>
+                            <th>LTP</th>
+                            <th>Volume</th>
+                            <th>OI</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            strikes.forEach(strike => {
+                const diff = price - strike;
+                const timeValue = (price * 0.04) * Math.exp(-Math.pow(diff / (price * 0.12), 2));
+                const ceLtp = Math.max(0.05, (diff > 0 ? diff : 0) + timeValue);
+                const peLtp = Math.max(0.05, (diff < 0 ? -diff : 0) + timeValue);
+
+                const ceVol = Math.floor(Math.max(250, 15000 - Math.abs(diff) * (1800 / interval)));
+                const peVol = Math.floor(Math.max(250, 16000 - Math.abs(diff) * (1900 / interval)));
+                const ceOi = Math.floor(ceVol * 1.4);
+                const peOi = Math.floor(peVol * 1.5);
+
+                const ceBg = strike < price ? 'background: rgba(0, 217, 126, 0.03);' : '';
+                const peBg = strike > price ? 'background: rgba(255, 77, 106, 0.03);' : '';
+                const isAtm = strike === atmStrike ? 'font-weight: bold; background: var(--bg-hover);' : '';
+
+                html += `
+                    <tr style="border-bottom: 1px solid var(--border);">
+                        <td style="${ceBg} font-family: var(--font-mono); font-size: 12px; color: var(--text-secondary);">${ceOi.toLocaleString()}</td>
+                        <td style="${ceBg} font-family: var(--font-mono); font-size: 12px; color: var(--text-secondary);">${ceVol.toLocaleString()}</td>
+                        <td style="${ceBg} font-family: var(--font-mono); font-size: 13px; font-weight: 600; color: var(--green);">${symbol}${ceLtp.toFixed(2)}</td>
+                        <td style="${ceBg} border-right: 1px solid var(--border);">
+                            <button class="cta-btn" onclick="tradeOption('CE', ${strike}, ${ceLtp})" style="padding: 3px 8px; font-size: 11px;">BUY</button>
+                        </td>
+                        
+                        <td style="${isAtm} font-family: var(--font-mono); font-size: 13px; font-weight: 700; color: var(--text-primary);">${symbol}${strike.toFixed(2)}</td>
+                        
+                        <td style="${peBg} border-left: 1px solid var(--border);">
+                            <button class="cta-btn" onclick="tradeOption('PE', ${strike}, ${peLtp})" style="padding: 3px 8px; font-size: 11px;">BUY</button>
+                        </td>
+                        <td style="${peBg} font-family: var(--font-mono); font-size: 13px; font-weight: 600; color: var(--red);">${symbol}${peLtp.toFixed(2)}</td>
+                        <td style="${peBg} font-family: var(--font-mono); font-size: 12px; color: var(--text-secondary);">${peVol.toLocaleString()}</td>
+                        <td style="${peBg} font-family: var(--font-mono); font-size: 12px; color: var(--text-secondary);">${peOi.toLocaleString()}</td>
+                    </tr>
+                `;
+            });
+
+            html += `
+                    </tbody>
+                </table>
+            `;
+            container.innerHTML = html;
+        }
+
+        function tradeOption(type, strike, premium) {
+            const ticker = "{{ ticker }}";
+            const qtyInput = document.getElementById('details-shares');
+            const qty = qtyInput ? parseInt(qtyInput.value) : 1;
+            const symbol = '₹';
+            const totalCost = premium * qty;
+            
+            showToast(`Simulated Option Trade: Bought ${qty} lot(s) of ${ticker} ${strike} ${type} at ${symbol}${premium.toFixed(2)} (Total Premium: ${symbol}${totalCost.toFixed(2)})`, 'success');
+        }
+
+        async function executeDetailsTrade(action) {
+            const ticker = "{{ ticker }}";
+            const shares = document.getElementById('details-shares').value;
+            if (!shares || Number(shares) <= 0) {
+                return showToast('Enter a valid share count.', 'error');
+            }
+            
+            const endpoint = action === 'buy' ? '/buy_stock' : '/sell_stock';
+            try {
+                const res = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: `ticker=${encodeURIComponent(ticker)}&shares=${encodeURIComponent(shares)}`
+                });
+                const data = await res.json();
+                if (data.status === 'success') {
+                    const msg = action === 'buy' 
+                        ? `Bought ${shares} shares of ${ticker}. Balance: ₹${data.balance.toFixed(2)}`
+                        : `Sold ${shares} shares of ${ticker}. Balance: ₹${data.balance.toFixed(2)}`;
+                    showToast(msg, 'success');
+                    setTimeout(() => location.reload(), 1200);
+                } else {
+                    showToast(data.message || 'Trade failed.', 'error');
+                }
+            } catch {
+                showToast('Network error. Try again.', 'error');
+            }
+        }
+
+        // --- Overview Tab Logic (Circuits, Ratios, Performance & Sync) ---
+        class SeededRandom {
+            constructor(seed) {
+                this.seed = seed;
+            }
+            next() {
+                this.seed = (this.seed * 9301 + 49297) % 233280;
+                return this.seed / 233280;
+            }
+            nextRange(min, max, decimals = 2) {
+                const val = min + this.next() * (max - min);
+                return parseFloat(val.toFixed(decimals));
+            }
+            choice(arr) {
+                const idx = Math.floor(this.next() * arr.length);
+                return arr[idx];
+            }
+        }
+
+        function getTickerSeed(ticker) {
+            let hash = 0;
+            for (let i = 0; i < ticker.length; i++) {
+                hash = ticker.charCodeAt(i) + ((hash << 5) - hash);
+            }
+            return Math.abs(hash);
+        }
+
+        function switchRatioTab(ratioTabId) {
+            // Hide all ratio panes
+            document.querySelectorAll('.ratio-pane').forEach(pane => {
+                pane.style.display = 'none';
+            });
+            // Remove active class from all buttons
+            const tabButtons = [
+                { id: 'tab-ratio-val', suffix: 'val' },
+                { id: 'tab-ratio-growth', suffix: 'growth' },
+                { id: 'tab-ratio-fin', suffix: 'fin' },
+                { id: 'tab-ratio-div', suffix: 'div' }
+            ];
+            tabButtons.forEach(btn => {
+                const el = document.getElementById(btn.id);
+                if (el) el.classList.remove('active');
+            });
+
+            // Show active pane and add active class to button
+            const activeBtn = document.getElementById(`tab-ratio-${ratioTabId}`);
+            if (activeBtn) activeBtn.classList.add('active');
+            
+            const activePane = document.getElementById(`ratio-pane-${ratioTabId}`);
+            if (activePane) activePane.style.display = 'block';
+        }
+
+        function updateSliderPointers(currentPrice) {
+            // 1. Circuit limits
+            const lcText = document.getElementById('val-lower-circuit')?.textContent;
+            const ucText = document.getElementById('val-upper-circuit')?.textContent;
+            if (lcText && ucText) {
+                const lowerCircuit = parseFloat(lcText.replace(/[^\d.]/g, ''));
+                const upperCircuit = parseFloat(ucText.replace(/[^\d.]/g, ''));
+                const circuitPointer = document.getElementById('circuit-pointer');
+                if (!isNaN(lowerCircuit) && !isNaN(upperCircuit) && upperCircuit > lowerCircuit && circuitPointer) {
+                    let circuitPct = ((currentPrice - lowerCircuit) / (upperCircuit - lowerCircuit)) * 100;
+                    circuitPct = Math.max(0, Math.min(100, circuitPct));
+                    circuitPointer.style.left = `${circuitPct}%`;
+                }
+            }
+
+            // 2. 52-week limits
+            const low52Text = document.getElementById('val-52wk-low')?.textContent;
+            const high52Text = document.getElementById('val-52wk-high')?.textContent;
+            if (low52Text && high52Text) {
+                const low52 = parseFloat(low52Text.replace(/[^\d.]/g, ''));
+                const high52 = parseFloat(high52Text.replace(/[^\d.]/g, ''));
+                const wk52Pointer = document.getElementById('52wk-pointer');
+                if (!isNaN(low52) && !isNaN(high52) && high52 > low52 && wk52Pointer) {
+                    let wk52Pct = ((currentPrice - low52) / (high52 - low52)) * 100;
+                    wk52Pct = Math.max(0, Math.min(100, wk52Pct));
+                    wk52Pointer.style.left = `${wk52Pct}%`;
+                }
+            }
+        }
+
+        function initPriceObserver() {
+            const priceEl = document.querySelector(`[data-live-price="${tvSymbolStart}"]`);
+            if (!priceEl) return;
+            const observer = new MutationObserver(() => {
+                const priceText = priceEl.textContent.replace(/[^\d.]/g, '');
+                const currentPrice = parseFloat(priceText);
+                if (!isNaN(currentPrice)) {
+                    updateSliderPointers(currentPrice);
+                }
+            });
+            observer.observe(priceEl, { childList: true, characterData: true, subtree: true });
+        }
+
+        function populateOverviewData() {
+            const normalizedTicker = tvSymbolStart.split('.')[0].toUpperCase();
+            const basePrice = parseFloat("{{ details.get('price', 100.0) }}");
+
+            if (normalizedTicker === 'SUZLON') {
+                // Seed EXACT Suzlon stats from screenshots & prompt
+                document.getElementById('ratio-pe').textContent = '23.48';
+                document.getElementById('ratio-pb').textContent = '7.85';
+                document.getElementById('ratio-peg').textContent = '0.45';
+                document.getElementById('ratio-roe').textContent = '33.43%';
+                document.getElementById('ratio-growth-val').textContent = '27.13';
+                document.getElementById('ratio-evebitda').textContent = '24.27';
+                document.getElementById('ratio-roce').textContent = '31.60%';
+                document.getElementById('ratio-evcap').textContent = '8.57';
+                document.getElementById('ratio-evsales').textContent = '4.38';
+                document.getElementById('ratio-divyield').textContent = 'NA';
+
+                document.getElementById('val-sector-rank').textContent = 'Sector Trend (#11)';
+                document.getElementById('val-market-cap-size').textContent = 'MID CAP';
+                document.getElementById('val-sector-name').textContent = 'RENEWABLE ENERGY';
+                
+                const shortTrend = document.getElementById('val-trend-short');
+                shortTrend.textContent = 'neutral';
+                shortTrend.className = '';
+                shortTrend.style.color = 'var(--yellow)';
+                
+                const longTrend = document.getElementById('val-trend-long');
+                longTrend.textContent = 'neutral';
+                longTrend.className = '';
+                longTrend.style.color = 'var(--yellow)';
+
+                document.getElementById('val-perf-mcap').textContent = 'Rs 74,979 Cr';
+                
+                const perf1yr = document.getElementById('val-perf-1yr');
+                perf1yr.textContent = '-12.02%';
+                perf1yr.style.color = 'var(--red)';
+                
+                const perfSec = document.getElementById('val-perf-sec');
+                perfSec.textContent = '-17.01%';
+                perfSec.style.color = 'var(--red)';
+                
+                const perfMkt = document.getElementById('val-perf-mkt');
+                perfMkt.textContent = '-3.7%';
+                perfMkt.style.color = 'var(--red)';
+
+                document.getElementById('score-quality-text').textContent = 'GOOD';
+                document.getElementById('score-quality-text').style.color = 'var(--green)';
+                document.getElementById('score-quality-val').textContent = '4/5';
+                document.getElementById('score-quality-val').style.background = 'var(--green-dim)';
+                document.getElementById('score-quality-val').style.color = 'var(--green)';
+
+                document.getElementById('score-valuation-text').textContent = 'EXPENSIVE';
+                document.getElementById('score-valuation-text').style.color = 'var(--red)';
+                document.getElementById('score-valuation-val').textContent = '2/5';
+                document.getElementById('score-valuation-val').style.background = 'var(--red-dim)';
+                document.getElementById('score-valuation-val').style.color = 'var(--red)';
+
+                document.getElementById('score-financial-text').textContent = 'POSITIVE';
+                document.getElementById('score-financial-text').style.color = 'var(--green)';
+                document.getElementById('score-financial-val').textContent = '3/5';
+                document.getElementById('score-financial-val').style.background = 'var(--green-dim)';
+                document.getElementById('score-financial-val').style.color = 'var(--green)';
+
+                document.getElementById('score-capstruct').textContent = 'Average';
+                document.getElementById('score-capstruct').style.color = 'var(--text-primary)';
+                
+                const scoreGrowth = document.getElementById('score-growth');
+                scoreGrowth.textContent = 'Excellent';
+                scoreGrowth.style.color = 'var(--green)';
+                
+                const scoreRisk = document.getElementById('score-mgt-risk');
+                scoreRisk.textContent = 'Good';
+                scoreRisk.style.color = 'var(--green)';
+
+                const listInsights = document.getElementById('list-insights');
+                listInsights.innerHTML = `
+                    <li>Good quality company basis long term financial performance.</li>
+                    <li>Size - Ranks 3rd out of 18 companies in Renewable Energy sector</li>
+                `;
+
+                // Prices details from prompt and screenshot
+                document.getElementById('val-lower-circuit').textContent = '₹49.13';
+                document.getElementById('val-upper-circuit').textContent = '₹60.03';
+                document.getElementById('val-52wk-low').textContent = '₹38.19';
+                document.getElementById('val-52wk-high').textContent = '₹74.30';
+
+                document.getElementById('val-target-price').textContent = '₹65.83';
+                const expProfit = document.getElementById('val-expected-profit');
+                expProfit.textContent = '14.43%';
+                expProfit.style.color = 'var(--green)';
+
+                document.getElementById('rating-buy-pct').textContent = '83%';
+                document.getElementById('rating-buy-bar').style.width = '83%';
+                document.getElementById('rating-hold-pct').textContent = '16%';
+                document.getElementById('rating-hold-bar').style.width = '16%';
+                document.getElementById('rating-sell-pct').textContent = '1%';
+                document.getElementById('rating-sell-bar').style.width = '1%';
+
+                document.getElementById('val-volume').textContent = '22,77,45,007';
+                document.getElementById('details-oi').textContent = '49,28,91,050';
+                document.getElementById('details-bidask').textContent = '57.53 / 0.00';
+                document.getElementById('val-avg-price').textContent = '₹56.29';
+
+                updateSliderPointers(basePrice);
+            } else {
+                // Seed random stats deterministically based on ticker hash
+                const seed = getTickerSeed(normalizedTicker);
+                const rand = new SeededRandom(seed);
+
+                // Lower/upper circuit (typically 10%)
+                const lowerCircuit = basePrice * 0.90;
+                const upperCircuit = basePrice * 1.10;
+                document.getElementById('val-lower-circuit').textContent = '₹' + lowerCircuit.toFixed(2);
+                document.getElementById('val-upper-circuit').textContent = '₹' + upperCircuit.toFixed(2);
+
+                // 52 Week Low/High
+                const low52 = basePrice * rand.nextRange(0.55, 0.92);
+                const high52 = basePrice * rand.nextRange(1.08, 1.95);
+                document.getElementById('val-52wk-low').textContent = '₹' + low52.toFixed(2);
+                document.getElementById('val-52wk-high').textContent = '₹' + high52.toFixed(2);
+
+                // Valuation ratios
+                document.getElementById('ratio-pe').textContent = rand.nextRange(8, 95).toFixed(2);
+                document.getElementById('ratio-pb').textContent = rand.nextRange(0.8, 22.0).toFixed(2);
+                document.getElementById('ratio-peg').textContent = rand.nextRange(0.15, 4.5).toFixed(2);
+                document.getElementById('ratio-roe').textContent = rand.nextRange(2, 48).toFixed(2) + '%';
+
+                // Growth
+                document.getElementById('ratio-growth-val').textContent = rand.nextRange(-10, 65).toFixed(2);
+                document.getElementById('ratio-evebitda').textContent = rand.nextRange(4, 52).toFixed(2);
+                document.getElementById('ratio-roce').textContent = rand.nextRange(2, 52).toFixed(2) + '%';
+
+                // Financial
+                document.getElementById('ratio-evcap').textContent = rand.nextRange(1.5, 32.0).toFixed(2);
+                document.getElementById('ratio-evsales').textContent = rand.nextRange(0.2, 18.0).toFixed(2);
+
+                // Dividend Yield
+                const divYield = rand.next() > 0.45 ? rand.nextRange(0.1, 5.5).toFixed(2) + '%' : 'NA';
+                document.getElementById('ratio-divyield').textContent = divYield;
+
+                // Sector Rank
+                const rankNum = Math.floor(rand.nextRange(1, 45, 0));
+                document.getElementById('val-sector-rank').textContent = `Sector Trend (#${rankNum})`;
+
+                const capSize = rand.choice(['LARGE CAP', 'MID CAP', 'SMALL CAP']);
+                document.getElementById('val-market-cap-size').textContent = capSize;
+
+                const sectorName = rand.choice(['RENEWABLE ENERGY', 'BANKING', 'IT SERVICES', 'AUTOMOBILE', 'PHARMACEUTICALS', 'TELECOM', 'POWER & ENERGY', 'METALS & MINING', 'OIL & GAS']);
+                document.getElementById('val-sector-name').textContent = sectorName;
+
+                // Trends
+                const shortSignal = rand.choice(['bullish', 'neutral', 'bearish']);
+                const shortTrend = document.getElementById('val-trend-short');
+                shortTrend.textContent = shortSignal;
+                shortTrend.style.color = shortSignal === 'bullish' ? 'var(--green)' : shortSignal === 'bearish' ? 'var(--red)' : 'var(--yellow)';
+
+                const longSignal = rand.choice(['bullish', 'neutral', 'bearish']);
+                const longTrend = document.getElementById('val-trend-long');
+                longTrend.textContent = longSignal;
+                longTrend.style.color = longSignal === 'bullish' ? 'var(--green)' : longSignal === 'bearish' ? 'var(--red)' : 'var(--yellow)';
+
+                // Market Cap size formatting
+                const mcapInCr = Math.floor(rand.nextRange(1000, capSize === 'LARGE CAP' ? 1200000 : capSize === 'MID CAP' ? 150000 : 20000));
+                document.getElementById('val-perf-mcap').textContent = 'Rs ' + mcapInCr.toLocaleString('en-IN') + ' Cr';
+
+                const ret1yr = rand.nextRange(-65, 320);
+                const perf1yr = document.getElementById('val-perf-1yr');
+                perf1yr.textContent = (ret1yr >= 0 ? '+' : '') + ret1yr.toFixed(2) + '%';
+                perf1yr.style.color = ret1yr >= 0 ? 'var(--green)' : 'var(--red)';
+
+                const retSec = rand.nextRange(-45, 180);
+                const perfSec = document.getElementById('val-perf-sec');
+                perfSec.textContent = (retSec >= 0 ? '+' : '') + retSec.toFixed(2) + '%';
+                perfSec.style.color = retSec >= 0 ? 'var(--green)' : 'var(--red)';
+
+                const retMkt = rand.nextRange(-15, 45);
+                const perfMkt = document.getElementById('val-perf-mkt');
+                perfMkt.textContent = (retMkt >= 0 ? '+' : '') + retMkt.toFixed(2) + '%';
+                perfMkt.style.color = retMkt >= 0 ? 'var(--green)' : 'var(--red)';
+
+                // Scores (1 to 5)
+                const qualityScore = Math.floor(rand.nextRange(1, 6, 0));
+                const qualityText = ['POOR', 'BELOW AVERAGE', 'AVERAGE', 'GOOD', 'EXCELLENT'][qualityScore - 1];
+                const qualityColor = qualityScore >= 4 ? 'var(--green)' : qualityScore <= 2 ? 'var(--red)' : 'var(--yellow)';
+                document.getElementById('score-quality-text').textContent = qualityText;
+                document.getElementById('score-quality-text').style.color = qualityColor;
+                document.getElementById('score-quality-val').textContent = `${qualityScore}/5`;
+                document.getElementById('score-quality-val').style.background = qualityScore >= 4 ? 'var(--green-dim)' : qualityScore <= 2 ? 'var(--red-dim)' : 'var(--yellow-dim)';
+                document.getElementById('score-quality-val').style.color = qualityColor;
+
+                const valuationScore = Math.floor(rand.nextRange(1, 6, 0));
+                const valuationText = ['VERY EXPENSIVE', 'EXPENSIVE', 'FAIR', 'CHEAP', 'VERY CHEAP'][valuationScore - 1];
+                const valuationColor = valuationScore >= 4 ? 'var(--green)' : valuationScore <= 2 ? 'var(--red)' : 'var(--yellow)';
+                document.getElementById('score-valuation-text').textContent = valuationText;
+                document.getElementById('score-valuation-text').style.color = valuationColor;
+                document.getElementById('score-valuation-val').textContent = `${valuationScore}/5`;
+                document.getElementById('score-valuation-val').style.background = valuationScore >= 4 ? 'var(--green-dim)' : valuationScore <= 2 ? 'var(--red-dim)' : 'var(--yellow-dim)';
+                document.getElementById('score-valuation-val').style.color = valuationColor;
+
+                const financialScore = Math.floor(rand.nextRange(1, 6, 0));
+                const financialText = ['NEGATIVE', 'WEAK', 'NEUTRAL', 'POSITIVE', 'VERY POSITIVE'][financialScore - 1];
+                const financialColor = financialScore >= 4 ? 'var(--green)' : financialScore <= 2 ? 'var(--red)' : 'var(--yellow)';
+                document.getElementById('score-financial-text').textContent = financialText;
+                document.getElementById('score-financial-text').style.color = financialColor;
+                document.getElementById('score-financial-val').textContent = `${financialScore}/5`;
+                document.getElementById('score-financial-val').style.background = financialScore >= 4 ? 'var(--green-dim)' : financialScore <= 2 ? 'var(--red-dim)' : 'var(--yellow-dim)';
+                document.getElementById('score-financial-val').style.color = financialColor;
+
+                // Sub-metrics
+                const capStruct = rand.choice(['Weak', 'Average', 'Strong']);
+                document.getElementById('score-capstruct').textContent = capStruct;
+                document.getElementById('score-capstruct').style.color = capStruct === 'Strong' ? 'var(--green)' : capStruct === 'Weak' ? 'var(--red)' : 'var(--text-primary)';
+
+                const growthScore = rand.choice(['Poor', 'Average', 'Good', 'Excellent']);
+                document.getElementById('score-growth').textContent = growthScore;
+                document.getElementById('score-growth').style.color = ['Good', 'Excellent'].includes(growthScore) ? 'var(--green)' : growthScore === 'Poor' ? 'var(--red)' : 'var(--text-primary)';
+
+                const mgmtRisk = rand.choice(['High', 'Average', 'Good', 'Low']);
+                document.getElementById('score-mgt-risk').textContent = mgmtRisk;
+                document.getElementById('score-mgt-risk').style.color = ['Good', 'Low'].includes(mgmtRisk) ? 'var(--green)' : mgmtRisk === 'High' ? 'var(--red)' : 'var(--text-primary)';
+
+                // Target Price & Expected Profit
+                const targetPrice = basePrice * rand.nextRange(0.85, 1.45);
+                document.getElementById('val-target-price').textContent = '₹' + targetPrice.toFixed(2);
+                
+                const upsidePct = ((targetPrice - basePrice) / basePrice) * 100;
+                const expProfit = document.getElementById('val-expected-profit');
+                expProfit.textContent = (upsidePct >= 0 ? '+' : '') + upsidePct.toFixed(2) + '%';
+                expProfit.style.color = upsidePct >= 0 ? 'var(--green)' : 'var(--red)';
+
+                // Analyst Ratings
+                const buyPct = Math.floor(rand.nextRange(15, 85, 0));
+                const holdPct = Math.floor(rand.nextRange(5, 100 - buyPct, 0));
+                const sellPct = 100 - buyPct - holdPct;
+
+                document.getElementById('rating-buy-pct').textContent = buyPct + '%';
+                document.getElementById('rating-buy-bar').style.width = buyPct + '%';
+                document.getElementById('rating-hold-pct').textContent = holdPct + '%';
+                document.getElementById('rating-hold-bar').style.width = holdPct + '%';
+                document.getElementById('rating-sell-pct').textContent = sellPct + '%';
+                document.getElementById('rating-sell-bar').style.width = sellPct + '%';
+
+                // Price details
+                const oiVal = Math.floor(rand.nextRange(10000, 8500000, 0));
+                document.getElementById('details-oi').textContent = oiVal.toLocaleString('en-IN');
+                
+                const avgPrice = basePrice * rand.nextRange(0.985, 1.015);
+                document.getElementById('val-avg-price').textContent = '₹' + avgPrice.toFixed(2);
+
+                const bid = basePrice * rand.nextRange(0.998, 1.001);
+                const ask = basePrice * rand.nextRange(1.0, 1.002);
+                document.getElementById('details-bidask').textContent = `${bid.toFixed(2)} / ${ask.toFixed(2)}`;
+
+                // Insights to Look For
+                const listInsights = document.getElementById('list-insights');
+                let insightsHtml = '';
+                if (qualityScore >= 4) {
+                    insightsHtml += '<li>Good quality company basis long term financial performance.</li>';
+                } else if (qualityScore <= 2) {
+                    insightsHtml += '<li>Keep an eye on company metrics due to weaker long term performance.</li>';
+                } else {
+                    insightsHtml += '<li>Average quality company exhibiting steady long term performance.</li>';
+                }
+                insightsHtml += `<li>Size - Ranks ${Math.floor(rand.nextRange(1, 15, 0))}rd out of ${Math.floor(rand.nextRange(15, 45, 0))} companies in ${sectorName} sector</li>`;
+                listInsights.innerHTML = insightsHtml;
+
+                updateSliderPointers(basePrice);
+            }
+        }
+
+        // Initialize default chart on startup
+        setTimeout(() => {
+            toggleChartSource(activeSource);
+            populateOverviewData();
+            initPriceObserver();
+        }, 300);
+    </script>
+</body>
+</html>

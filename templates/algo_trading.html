@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Stock Analysis & Prediction Dashboard — RP Finance</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        /* ── AI Dashboard Custom Styles ── */
+        .ai-results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 16px;
+            margin-bottom: 20px;
+        }
+        .ai-stock-info h2 {
+            font-size: 18px;
+            font-weight: 700;
+            margin: 0;
+            letter-spacing: -0.3px;
+        }
+        .ai-stock-info p {
+            font-size: 12.5px;
+            color: var(--text-secondary);
+            margin: 4px 0 0;
+        }
+        .ai-price-wrap {
+            text-align: right;
+        }
+        .ai-price-val {
+            font-family: var(--font-mono);
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        .ai-rec-badge {
+            display: inline-block;
+            padding: 5px 14px;
+            border-radius: 50px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-top: 6px;
+            text-align: center;
+        }
+        .badge-strong-buy {
+            background: var(--green-dim);
+            color: var(--green);
+            border: 1px solid var(--green);
+            box-shadow: 0 0 12px rgba(0, 176, 96, 0.12);
+        }
+        .badge-buy {
+            background: var(--green-dim);
+            color: var(--green);
+            border: 1px solid rgba(0, 176, 96, 0.4);
+        }
+        .badge-hold {
+            background: rgba(250, 130, 49, 0.06);
+            color: var(--yellow);
+            border: 1px solid rgba(250, 130, 49, 0.4);
+        }
+        .badge-sell {
+            background: var(--red-dim);
+            color: var(--red);
+            border: 1px solid rgba(235, 59, 90, 0.4);
+        }
+        .badge-strong-sell {
+            background: var(--red-dim);
+            color: var(--red);
+            border: 1px solid var(--red);
+            box-shadow: 0 0 12px rgba(235, 59, 90, 0.12);
+        }
+
+        .ai-cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+        .ai-dashboard-card {
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+        .ai-dashboard-card.span-full {
+            grid-column: 1 / -1;
+        }
+        .ai-card-title {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--text-muted);
+            margin-bottom: 14px;
+        }
+
+        .target-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border-light);
+        }
+        .target-row:last-child {
+            border-bottom: none;
+        }
+        .target-label {
+            color: var(--text-secondary);
+            font-size: 13px;
+        }
+        .target-val {
+            font-family: var(--font-mono);
+            font-weight: 600;
+            font-size: 13.5px;
+        }
+
+        .gauge-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            height: 100%;
+        }
+        .circle-gauge {
+            flex-shrink: 0;
+        }
+        .circular-chart {
+            max-width: 90px;
+            max-height: 90px;
+        }
+        .circle-bg {
+            fill: none;
+            stroke: var(--border);
+            stroke-width: 3.5;
+        }
+        .circle {
+            fill: none;
+            stroke: var(--cyan);
+            stroke-width: 3.5;
+            stroke-linecap: round;
+            transition: stroke-dasharray 0.3s ease;
+        }
+        .percentage {
+            fill: var(--text-primary);
+            font-family: var(--font-mono);
+            font-size: 8px;
+            font-weight: 700;
+            text-anchor: middle;
+        }
+        .gauge-desc {
+            flex: 1;
+            padding-left: 20px;
+        }
+        .gauge-desc h4 {
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 4px;
+            color: var(--text-primary);
+        }
+        .gauge-desc p {
+            font-size: 11.5px;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+
+        .forecast-chart-container {
+            width: 100%;
+            height: 250px;
+            position: relative;
+            margin-top: 10px;
+        }
+        .forecast-chart-svg {
+            width: 100%;
+            height: 100%;
+        }
+        .chart-tooltip {
+            position: absolute;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 8px 12px;
+            font-size: 12px;
+            box-shadow: var(--shadow-card);
+            pointer-events: none;
+            display: none;
+            z-index: 100;
+        }
+        .chart-tooltip-date {
+            color: var(--text-muted);
+            font-weight: 500;
+            margin-bottom: 2px;
+        }
+        .chart-tooltip-price {
+            font-family: var(--font-mono);
+            font-weight: 700;
+            color: var(--cyan);
+        }
+
+        .indicator-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border-light);
+            font-size: 13px;
+        }
+        .indicator-row:last-child {
+            border-bottom: none;
+        }
+        .ind-name {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        .ind-value {
+            font-family: var(--font-mono);
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        .ind-signal {
+            font-size: 12.5px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+
+    <header class="top-bar">
+        <a href="/" class="logo" style="text-decoration:none;"><span>RP</span> Finance</a>
+        <nav class="nav-links">
+            <a href="/">Dashboard</a>
+            <a href="/portfolio">Portfolio</a>
+            <a href="/watchlist">Watchlist</a>
+            <a href="/algo_trading" class="active">Algo Trading</a>
+            <a href="/tutorials">Tutorials</a>
+            <a href="/news">News</a>
+        </nav>
+        <div class="user-options">
+            <div class="search-bar">
+                <button onclick="searchStock()" class="magnifier">🔍</button>
+                <input type="text" id="search" placeholder="Search ticker…">
+            </div>
+            {% if logged_in %}
+                <a href="/logout">Logout</a>
+            {% else %}
+                <a href="/login">Login</a>
+                <a href="/signup" class="btn-signup">Sign Up</a>
+            {% endif %}
+        </div>
+    </header>
+
+    <main class="algo-trading-container">
+        <div class="algo-trading-section">
+            <h1>AI Prediction & Stock Analysis</h1>
+            <p>Configure technical indicator periods to generate live AI predictions, targets, and buy/sell signals.</p>
+
+            {% if not logged_in %}
+                <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:48px;text-align:center;margin-top:24px;">
+                    <div style="font-size:36px;margin-bottom:12px;">🔒</div>
+                    <p style="color:var(--text-muted);margin-bottom:20px;">Please log in to use Algo Trading & AI Prediction tools.</p>
+                    <a href="/login" class="cta-btn">Login</a>
+                </div>
+            {% else %}
+                {% if error %}
+                    <p class="error" style="margin-bottom:20px;">{{ error }}</p>
+                {% endif %}
+
+                <div class="algo-layout">
+                    <!-- Config Panel -->
+                    <div class="algo-form-card">
+                        <h2>AI Strategy Config</h2>
+                        <form id="algo-form" onsubmit="event.preventDefault(); runAlgoTrading();">
+                            <div class="form-group">
+                                <label for="ticker">Stock Ticker</label>
+                                <input type="text" id="ticker" placeholder="e.g. TCS.NSE" required style="text-transform:uppercase;">
+                            </div>
+                            <div class="form-group">
+                                <label for="short_ma">Short MA Period (days)</label>
+                                <input type="number" id="short_ma" value="10" min="1" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="long_ma">Long MA Period (days)</label>
+                                <input type="number" id="long_ma" value="50" min="1" required>
+                            </div>
+                            <button type="submit" class="cta-btn">Run AI Prediction & Analysis ⚡</button>
+                        </form>
+
+                        <div style="margin-top:24px;padding-top:20px;border-top:1px solid var(--border);">
+                            <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.8px;color:var(--text-muted);margin-bottom:12px;">How it works</div>
+                            <p style="font-size:12px;color:var(--text-secondary);line-height:1.7;">
+                                A <strong style="color:var(--cyan);">Buy signal</strong> is generated when the short MA crosses above the long MA.<br><br>
+                                A <strong style="color:var(--red);">Sell signal</strong> fires when the short MA crosses below the long MA.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Results Panel -->
+                    <div class="algo-results-card" id="algo-results">
+                        {% if recommendation %}
+                            <!-- AI Dashboard Header -->
+                            <div class="ai-results-header">
+                                <div class="ai-stock-info">
+                                    <h2>Prediction & Analysis: <span style="font-family:var(--font-mono);color:var(--cyan);">{{ ticker }}</span></h2>
+                                    <p>Comprehensive technical prediction based on past cycles & live data</p>
+                                </div>
+                                <div class="ai-price-wrap">
+                                    <div class="ai-price-val">₹{{ "%.2f"|format(current_price) }}</div>
+                                    <span class="ai-rec-badge {% if recommendation == 'STRONG BUY' %}badge-strong-buy{% elif recommendation == 'BUY' %}badge-buy{% elif recommendation == 'HOLD' %}badge-hold{% elif recommendation == 'SELL' %}badge-sell{% else %}badge-strong-sell{% endif %}">
+                                        {{ recommendation }}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- Dashboard Cards Grid -->
+                            <div class="ai-cards-grid">
+                                <!-- Card 1: AI Forecast Targets -->
+                                <div class="ai-dashboard-card">
+                                    <div class="ai-card-title">AI Price Forecast & Exit</div>
+                                    <div class="target-row">
+                                        <span class="target-label">Target Price</span>
+                                        <span class="target-val" style="color:var(--green);">₹{{ "%.2f"|format(target_price) }}</span>
+                                    </div>
+                                    <div class="target-row">
+                                        <span class="target-label">Expected Growth</span>
+                                        <span class="target-val {% if upside_pct >= 0 %}positive{% else %}negative{% endif %}">
+                                            {{ "+" if upside_pct >= 0 else "" }}{{ upside_pct }}%
+                                        </span>
+                                    </div>
+                                    <div class="target-row">
+                                        <span class="target-label">Stop Loss</span>
+                                        <span class="target-val" style="color:var(--red);">₹{{ "%.2f"|format(stop_loss) }}</span>
+                                    </div>
+                                    <div class="target-row">
+                                        <span class="target-label">Holding Horizon</span>
+                                        <span class="target-val" style="color:var(--cyan);font-family:var(--font-main);">{{ hold_duration }}</span>
+                                    </div>
+                                </div>
+
+                                <!-- Card 2: Win-Rate Accuracy Gauge -->
+                                <div class="ai-dashboard-card">
+                                    <div class="ai-card-title">Strategy Confidence & Accuracy</div>
+                                    <div class="gauge-container">
+                                        <div class="circle-gauge">
+                                            <svg class="circular-chart" viewBox="0 0 36 36" width="90" height="90" style="display: block; margin: 0 auto;" xmlns="http://www.w3.org/2000/svg">
+                                                <circle cx="18" cy="18" r="15.9155" fill="none" stroke="#e3def2" stroke-width="3" />
+                                                <circle cx="18" cy="18" r="15.9155" fill="none" stroke="#5c28c6" stroke-width="3" stroke-dasharray="{{ accuracy }} 100" stroke-linecap="round" style="transition: stroke-dasharray 0.3s ease;" />
+                                                <text x="18" y="20.5" fill="#1f1b2d" style="font-family: var(--font-mono); font-size: 7.5px; font-weight: bold; text-anchor: middle;">{{ accuracy }}%</text>
+                                            </svg>
+                                        </div>
+                                        <div class="gauge-desc">
+                                            <h4>Model Win Rate</h4>
+                                            <p>Win rate of this prediction algorithm on {{ ticker.split('.')[0] }} backtested over 1 year.</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Card 3: SVG Chart Forecast Path (Full Width) -->
+                                <div class="ai-dashboard-card span-full">
+                                    <div class="ai-card-title">30-Day Future Price Projection Chart (Historic + AI Projected)</div>
+                                    <div class="forecast-chart-container" id="forecast-chart-container" data-history="{{ history_json }}" data-forecast="{{ forecast_json }}" data-ticker="{{ ticker }}">
+                                        <!-- Interactive SVG will be injected here -->
+                                        <div class="chart-tooltip" id="chart-tooltip">
+                                            <div class="chart-tooltip-date" id="chart-tooltip-date">-</div>
+                                            <div class="chart-tooltip-price" id="chart-tooltip-price">-</div>
+                                        </div>
+                                    </div>
+                                    <div style="display:flex;justify-content:center;gap:24px;margin-top:10px;font-size:12px;color:var(--text-secondary);">
+                                        <div style="display:flex;align-items:center;gap:6px;">
+                                            <span style="display:inline-block;width:12px;height:3px;background:var(--cyan);"></span> Historical Close (Last 15 Days)
+                                        </div>
+                                        <div style="display:flex;align-items:center;gap:6px;">
+                                            <span style="display:inline-block;width:12px;height:3px;border-top:2px dashed #33d4ff;"></span> AI Forecast Path (Next 30 Days)
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Card 4: Technical Analysis Summary Details -->
+                                <div class="ai-dashboard-card span-full">
+                                    <div class="ai-card-title">Technical Indicators Breakdown</div>
+                                    
+                                    <div class="indicator-row">
+                                        <span class="ind-name">Relative Strength Index (RSI-14)</span>
+                                        <span class="ind-value">Value: {{ "%.2f"|format(rsi) }}</span>
+                                        <span class="ind-signal {% if rsi < 35 %}positive{% elif rsi > 65 %}negative{% else %}neutral{% endif %}" style="{% if rsi < 35 %}color:var(--green);{% elif rsi > 65 %}color:var(--red);{% else %}color:var(--text-secondary);{% endif %} font-weight:600;">
+                                            {% if rsi < 35 %}Oversold (Bullish Reversal Room){% elif rsi > 65 %}Overbought (Exit Pressure){% else %}Neutral (Fair Value Range){% endif %}
+                                        </span>
+                                    </div>
+
+                                    <div class="indicator-row">
+                                        <span class="ind-name">MACD Momentum (12, 26, 9)</span>
+                                        <span class="ind-value">Histogram: {{ "%.2f"|format(macd_hist) }}</span>
+                                        <span class="ind-signal {% if macd_hist > 0 %}positive{% else %}negative{% endif %}">
+                                            {% if macd_hist > 0 %}Bullish Momentum 📈{% else %}Bearish Momentum 📉{% endif %}
+                                        </span>
+                                    </div>
+
+                                    <div class="indicator-row">
+                                        <span class="ind-name">Moving Average Crossover ({{ short_ma }} vs {{ long_ma }} Days)</span>
+                                        <span class="ind-value">Configured Periods: {{ short_ma }} / {{ long_ma }}</span>
+                                        <span class="ind-signal {% if score >= 1 %}positive{% elif score <= -1 %}negative{% else %}neutral{% endif %}" style="{% if score >= 1 %}color:var(--green);{% elif score <= -1 %}color:var(--red);{% else %}color:var(--text-secondary);{% endif %} font-weight:600;">
+                                            {% if score >= 1 %}Bullish Crossover active{% else %}Bearish Trend active{% endif %}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Historical Signal Crossover Points -->
+                            {% if signals %}
+                                <h2 style="font-size:14px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:16px;margin-top:24px;">Recent MA Crossover Event Signals</h2>
+                                <table class="algo-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Crossover Date</th>
+                                            <th>Signal Trigger</th>
+                                            <th>Execution Price</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for signal in signals %}
+                                            <tr class="signal-row-{{ signal.action | lower }}">
+                                                <td style="font-family:var(--font-mono);color:var(--text-secondary);">{{ signal.date }}</td>
+                                                <td>
+                                                    <span class="{% if signal.action == 'Buy' %}badge-green{% else %}badge-red{% endif %}">
+                                                        {{ "BULLISH CROSS (BUY)" if signal.action == 'Buy' else "BEARISH CROSS (SELL)" }}
+                                                    </span>
+                                                </td>
+                                                <td style="font-family:var(--font-mono);font-weight:600;">₹{{ "%.2f"|format(signal.price) }}</td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            {% endif %}
+                        {% else %}
+                            <div style="text-align:center;padding:80px 20px;">
+                                <div style="font-size:40px;margin-bottom:16px;">⚡</div>
+                                <p style="color:var(--text-muted);font-size:14px;">Enter a ticker and configure your MA periods, then hit **Run AI Analysis & Prediction** to view full forecasting dashboard.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </main>
+
+    <!-- Chatbot -->
+    <button class="chatbot-toggle" onclick="toggleChatbot()" title="RP Assistant">💬</button>
+    <div class="chatbot-container" id="chatbot-container">
+        <div class="chatbot-header">
+            <span>RP Assistant</span>
+            <button class="close-btn" onclick="toggleChatbot()">×</button>
+        </div>
+        <div class="chatbot-messages" id="chatbot-messages"></div>
+        <div class="chatbot-input">
+            <input type="text" id="chatbot-input" placeholder="Ask me anything…">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <footer>
+        <a href="/about">About</a>
+        <a href="/contact">Contact</a>
+        <a href="/privacy">Privacy Policy</a>
+        <a href="/terms">Terms of Use</a>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

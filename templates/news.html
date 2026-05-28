@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>News — RP Finance</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+    <header class="top-bar">
+        <a href="/" class="logo" style="text-decoration:none;"><span>RP</span> Finance</a>
+        <nav class="nav-links">
+            <a href="/">Dashboard</a>
+            <a href="/portfolio">Portfolio</a>
+            <a href="/watchlist">Watchlist</a>
+            <a href="/algo_trading">Algo Trading</a>
+            <a href="/tutorials">Tutorials</a>
+            <a href="/news" class="active">News</a>
+        </nav>
+        <div class="user-options">
+            <div class="search-bar">
+                <button onclick="searchStock()" class="magnifier">🔍</button>
+                <input type="text" id="search" placeholder="Search ticker…">
+            </div>
+            {% if logged_in %}
+                <a href="/logout">Logout</a>
+            {% else %}
+                <a href="/login">Login</a>
+                <a href="/signup" class="btn-signup">Sign Up</a>
+            {% endif %}
+        </div>
+    </header>
+
+    <main class="news-container">
+        <div class="news-section">
+            <h1>Market News</h1>
+            <p>Stay updated with the latest stock market trends and financial insights.</p>
+
+            <div class="news-list">
+                {% if news_items %}
+                    {% for item in news_items %}
+                        <div class="news-item">
+                            <img src="{{ item.thumbnail }}" alt="News" class="news-thumbnail" onerror="this.style.display='none'">
+                            <div class="news-content">
+                                <h2>{{ item.title }}</h2>
+                                <p>{{ item.description }}</p>
+                                <a href="{{ item.url }}" target="_blank" rel="noopener noreferrer" class="cta-btn">Read More</a>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div style="grid-column:1/-1;padding:60px;text-align:center;">
+                        <div style="font-size:36px;margin-bottom:12px;">📰</div>
+                        <p style="color:var(--text-muted);">No news available at the moment. Check back soon.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </main>
+
+    <!-- Chatbot -->
+    <button class="chatbot-toggle" onclick="toggleChatbot()" title="RP Assistant">💬</button>
+    <div class="chatbot-container" id="chatbot-container">
+        <div class="chatbot-header">
+            <span>RP Assistant</span>
+            <button class="close-btn" onclick="toggleChatbot()">×</button>
+        </div>
+        <div class="chatbot-messages" id="chatbot-messages"></div>
+        <div class="chatbot-input">
+            <input type="text" id="chatbot-input" placeholder="Ask me anything…">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <footer>
+        <a href="/about">About</a>
+        <a href="/contact">Contact</a>
+        <a href="/privacy">Privacy Policy</a>
+        <a href="/terms">Terms of Use</a>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

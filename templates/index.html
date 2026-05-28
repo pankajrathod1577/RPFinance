@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard — RP Finance</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+    <style>
+        /* ── Live Ticker Bar ── */
+        .ticker-bar {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            overflow: hidden;
+            height: 36px;
+            display: flex;
+            align-items: center;
+        }
+
+        .ticker-scroll {
+            display: flex;
+            gap: 0;
+            animation: tickerMove 45s linear infinite;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .ticker-bar:hover .ticker-scroll {
+            animation-play-state: paused;
+        }
+
+        @keyframes tickerMove {
+            0% {
+                transform: translateX(0);
+            }
+
+            100% {
+                transform: translateX(-50%);
+            }
+        }
+
+        .ticker-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 0 22px;
+            border-right: 1px solid var(--border);
+            font-size: 12.5px;
+            height: 36px;
+        }
+
+        .ticker-item .t-name {
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        .ticker-item .t-price {
+            font-family: var(--font-mono);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .ticker-item .t-chg {
+            font-family: var(--font-mono);
+            font-size: 11.5px;
+        }
+
+        .ticker-item .t-chg.up {
+            color: var(--green);
+        }
+
+        .ticker-item .t-chg.down {
+            color: var(--red);
+        }
+
+        /* ── Pie Chart Card ── */
+        .chart-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+        }
+
+        .chart-card h2 {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-bottom: 16px;
+        }
+
+        .pie-wrap {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            flex-wrap: wrap;
+        }
+
+        .pie-wrap canvas {
+            max-width: 160px;
+            max-height: 160px;
+        }
+
+        .pie-legend {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .pie-legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+        }
+
+        .pie-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .pie-legend-label {
+            color: var(--text-secondary);
+        }
+
+        .pie-legend-val {
+            color: var(--text-primary);
+            font-family: var(--font-mono);
+            font-weight: 600;
+            margin-left: auto;
+        }
+
+        /* ── Market card with mini table ── */
+        .market-table-wrap {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header class="top-bar">
+        <a href="/" class="logo" style="text-decoration:none;"><span>RP</span> Finance</a>
+        <nav class="nav-links">
+            <a href="/" class="active">Dashboard</a>
+            <a href="/portfolio">Portfolio</a>
+            <a href="/watchlist">Watchlist</a>
+            <a href="/algo_trading">Algo Trading</a>
+            <a href="/tutorials">Tutorials</a>
+            <a href="/news">News</a>
+        </nav>
+        <div class="user-options">
+            <div class="search-bar">
+                <button onclick="searchStock()" class="magnifier">🔍</button>
+                <input type="text" id="search" placeholder="Search ticker…">
+            </div>
+            {% if logged_in %}
+            <a href="/logout">Logout</a>
+            {% else %}
+            <a href="/auth?mode=login">Login</a>
+            <a href="/auth?mode=signup" class="btn-signup">Sign Up</a>
+            {% endif %}
+        </div>
+    </header>
+
+    <!-- Live Ticker Bar -->
+    {% if market_stocks %}
+    <div class="ticker-bar">
+        <div class="ticker-scroll" id="ticker-scroll">
+            {% for s in market_stocks %}
+            <div class="ticker-item">
+                <span class="t-name">{{ s.name }}</span>
+                <span class="t-price" data-live-price="{{ s.ticker }}">₹{{ "%.2f"|format(s.price) }}</span>
+                <span class="t-chg {{ 'up' if s.change >= 0 else 'down' }}" data-live-change="{{ s.ticker }}">
+                    {{ '+' if s.change >= 0 }}{{ "%.2f"|format(s.change) }}%
+                </span>
+            </div>
+            {% endfor %}
+            {# Duplicate for seamless loop #}
+            {% for s in market_stocks %}
+            <div class="ticker-item">
+                <span class="t-name">{{ s.name }}</span>
+                <span class="t-price" data-live-price="{{ s.ticker }}">₹{{ "%.2f"|format(s.price) }}</span>
+                <span class="t-chg {{ 'up' if s.change >= 0 else 'down' }}" data-live-change="{{ s.ticker }}">
+                    {{ '+' if s.change >= 0 }}{{ "%.2f"|format(s.change) }}%
+                </span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <main>
+        <div class="dashboard-container">
+            <!-- Header Row -->
+            <div class="dashboard-header" style="margin-bottom: 24px;">
+                <div>
+                    <h1>Dashboard</h1>
+                    <p style="color:var(--text-secondary);font-size:13px;margin-top:4px;">
+                        {% if logged_in %}
+                        Your financial overview
+                        {% else %}
+                        Live Indian Market Intelligence & Advisory
+                        {% endif %}
+                    </p>
+                </div>
+                {% if logged_in %}
+                <div style="text-align:right;">
+                    <div
+                        style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:4px;">
+                        Available Balance</div>
+                    <div class="balance-amount" id="portfolio-header-cash">₹{{ "%.2f"|format(balance) }}</div>
+                </div>
+                {% else %}
+                <div style="text-align:right;">
+                    <a href="/auth?mode=login" class="cta-btn"
+                        style="padding: 8px 16px; font-size:12px; text-decoration:none;">Log In to Trade</a>
+                </div>
+                {% endif %}
+            </div>
+
+            {% if logged_in %}
+            <!-- Stat Cards -->
+            <div class="stat-cards">
+                <div class="stat-card">
+                    <div class="stat-label">Cash Balance</div>
+                    <div class="stat-value cyan" id="portfolio-cash-value">₹{{ "%.2f"|format(balance) }}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Holdings Value</div>
+                    <div class="stat-value" id="portfolio-holdings-value">₹{{ "%.2f"|format(total_holdings_value) }}
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Total Portfolio</div>
+                    <div class="stat-value green" id="portfolio-net-worth">₹{{ "%.2f"|format(total_portfolio_value) }}
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Positions</div>
+                    <div class="stat-value">{{ portfolio|length }}</div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- 1. "What are you looking for today?" Quick Navigation -->
+            <div class="quick-nav-header">What are you looking for today?</div>
+            <div class="quick-nav-grid">
+                <a href="/watchlist" class="quick-nav-card">
+                    <span class="quick-nav-icon">👁️</span>
+                    <span class="quick-nav-label">Watchlist</span>
+                </a>
+                <a href="/portfolio" class="quick-nav-card">
+                    <span class="quick-nav-icon">💼</span>
+                    <span class="quick-nav-label">Portfolio</span>
+                </a>
+                <a href="/algo_trading" class="quick-nav-card">
+                    <span class="quick-nav-icon">⚡</span>
+                    <span class="quick-nav-label">Algo Trading</span>
+                </a>
+                <a href="#" onclick="toggleChatbot(); return false;" class="quick-nav-card">
+                    <span class="quick-nav-icon">🤖</span>
+                    <span class="quick-nav-label">AI Advisor</span>
+                </a>
+                <a href="/tutorials" class="quick-nav-card">
+                    <span class="quick-nav-icon">📚</span>
+                    <span class="quick-nav-label">Masterclass</span>
+                </a>
+                <a href="/news" class="quick-nav-card">
+                    <span class="quick-nav-icon">📰</span>
+                    <span class="quick-nav-label">News</span>
+                </a>
+            </div>
+
+            <!-- 2. Research Recommendations Carousel -->
+            <div class="section-title-bar">
+                <h2>AI Research Recommendations</h2>
+                <span style="font-size: 11px; color: var(--text-muted);">Advisory calls based on short-term
+                    indicators</span>
+            </div>
+            <div class="rec-carousel">
+                <!-- Reliance Card -->
+                <div class="rec-card">
+                    <div class="rec-card-header">
+                        <div style="display: flex; align-items: center; gap: 4px;">
+                            <a href="/stock-details/RELIANCE.NSE" class="rec-card-ticker"
+                                style="text-decoration:none;">RELIANCE.NSE</a>
+                        </div>
+                        <span class="rec-badge-buy">BUY</span>
+                    </div>
+                    <div class="rec-values">
+                        <div class="rec-val-item">
+                            <span>LTP</span>
+                            <strong data-live-price="RELIANCE.NSE">₹1359.20</strong>
+                        </div>
+                        <div class="rec-val-item">
+                            <span>Target</span>
+                            <strong style="color: var(--green);">₹1538.50</strong>
+                        </div>
+                        <div class="rec-val-item">
+                            <span>Stop Loss</span>
+                            <strong style="color: var(--red);">₹1280.00</strong>
+                        </div>
+                        <div class="rec-val-item">
+                            <span>Exp. Profit</span>
+                            <strong style="color: var(--green);">+13.2%</strong>
+                        </div>
+                    </div>
+                    <a href="/stock-details/RELIANCE.NSE" class="cta-btn"
+                        style="display:block; text-align:center; padding: 6px; font-size:11px; text-decoration:none;">View
+                        Stats & Trade</a>
+                </div>
+
+                <!-- TCS Card -->
+                <div class="rec-card">
+                    <div class="rec-card-header">
+                        <div style="display: flex; align-items: center; gap: 4px;">
+                            <a href="/stock-details/TCS.NSE" class="rec-card-ticker"
+                                style="text-decoration:none;">TCS.NSE</a>
+                        </div>
+                        <span class="rec-badge-buy">BUY</span>
+                    </div>
+                    <div class="rec-values">
+                        <div class="rec-val-item">
+                            <span>LTP</span>
+                            <strong data-live-price="TCS.NSE">₹2296.50</strong>
+                        </div>
+                        <div class="rec-val-item">
+                            <span>Target</span>
+                            <strong style="color: var(--green);">₹2560.00</strong>
+                        </div>
+                        <div class="rec-val-item">
+                            <span>Stop Loss</span>
+                            <strong style="color: var(--red);">₹2180.00</strong>
+                        </div>
+                        <div class="rec-val-item">
+                            <span>Exp. Profit</span>
+                            <strong style="color: var(--green);">+11.5%</strong>
+                        </div>
+                    </div>
+                    <a href="/stock-details/TCS.NSE" class="cta-btn"
+                        style="display:block; text-align:center; padding: 6px; font-size:11px; text-decoration:none;">View
+                        Stats & Trade</a>
+                </div>
+
+                <!-- Suzlon Card -->
+                <div class="rec-card">
+                    <div class="rec-card-header">
+                        <div style="display: flex; align-items: center; gap: 4px;">
+                            <a href="/stock-details/SUZLON.NSE" class="rec-card-ticker"
+                                style="text-decoration:none;">SUZLON.NSE</a>
+                        </div>
+                        <span class="rec-badge-buy">BUY</span>
+                    </div>
+                    <div class="rec-values">
+                        <div class="rec-val-item">
+                            <span>LTP</span>
+                            <strong data-live-price="SUZLON.NSE">₹57.53</strong>
+                        </div>
+                        <div class="rec-val-item">
+                            <span>Target</span>
+                            <strong style="color: var(--green);">₹65.83</strong>
+                        </div>
+                        <div class="rec-val-item">
+                            <span>Stop Loss</span>
+                            <strong style="color: var(--red);">₹49.13</strong>
+                        </div>
+                        <div class="rec-val-item">
+                            <span>Expected Profit</span>
+                            <strong style="color: var(--green);">+14.43%</strong>
+                        </div>
+                    </div>
+                    <a href="/stock-details/SUZLON.NSE" class="cta-btn"
+                        style="display:block; text-align:center; padding: 6px; font-size:11px; text-decoration:none;">View
+                        Stats & Trade</a>
+                </div>
+            </div>
+
+            <!-- 3b. Trade in Futures & Options (F&O) -->
+            <div class="fo-section-wrap">
+                <!-- Section Header -->
+                <div class="fo-section-header">
+                    <span class="fo-section-title">TRADE IN FUTURES &amp; OPTIONS</span>
+                    <span class="fo-section-sub">Real-time derivatives &amp; commodities overview</span>
+                </div>
+
+                <!-- Top Row: 5×2 Sector Tiles + F&O Scrips Table -->
+                <div class="fo-main-row">
+                    <!-- Left: 5×2 Sector Tile Grid -->
+                    <div class="fo-sector-tiles">
+                        <div class="fo-tile active" data-fo-sector="metal" onclick="selectFOSector('metal')">
+                            <span class="fo-tile-name">Metal</span>
+                            <span class="fo-tile-pct positive" data-fo-sector-pct="metal">+1.55%</span>
+                        </div>
+                        <div class="fo-tile" data-fo-sector="auto" onclick="selectFOSector('auto')">
+                            <span class="fo-tile-name">Auto</span>
+                            <span class="fo-tile-pct positive" data-fo-sector-pct="auto">+1.47%</span>
+                        </div>
+                        <div class="fo-tile" data-fo-sector="infra" onclick="selectFOSector('infra')">
+                            <span class="fo-tile-name">Infra</span>
+                            <span class="fo-tile-pct positive" data-fo-sector-pct="infra">+1.35%</span>
+                        </div>
+                        <div class="fo-tile" data-fo-sector="pse" onclick="selectFOSector('pse')">
+                            <span class="fo-tile-name">PSE</span>
+                            <span class="fo-tile-pct positive" data-fo-sector-pct="pse">+0.91%</span>
+                        </div>
+                        <div class="fo-tile" data-fo-sector="cement" onclick="selectFOSector('cement')">
+                            <span class="fo-tile-name">Cement</span>
+                            <span class="fo-tile-pct positive" data-fo-sector-pct="cement">+0.67%</span>
+                        </div>
+                        <div class="fo-tile" data-fo-sector="services" onclick="selectFOSector('services')">
+                            <span class="fo-tile-name">Services</span>
+                            <span class="fo-tile-pct positive" data-fo-sector-pct="services">+0.39%</span>
+                        </div>
+                        <div class="fo-tile" data-fo-sector="energy" onclick="selectFOSector('energy')">
+                            <span class="fo-tile-name">Energy</span>
+                            <span class="fo-tile-pct positive" data-fo-sector-pct="energy">+0.34%</span>
+                        </div>
+                        <div class="fo-tile" data-fo-sector="psubank" onclick="selectFOSector('psubank')">
+                            <span class="fo-tile-name">PSU Bank</span>
+                            <span class="fo-tile-pct positive" data-fo-sector-pct="psubank">+0.33%</span>
+                        </div>
+                        <div class="fo-tile" data-fo-sector="realty" onclick="selectFOSector('realty')">
+                            <span class="fo-tile-name">Realty</span>
+                            <span class="fo-tile-pct positive" data-fo-sector-pct="realty">+0.31%</span>
+                        </div>
+                        <div class="fo-tile" data-fo-sector="tech" onclick="selectFOSector('tech')">
+                            <span class="fo-tile-name">Technology</span>
+                            <span class="fo-tile-pct positive" data-fo-sector-pct="tech">+0.29%</span>
+                        </div>
+                    </div>
+
+                    <!-- Right: Selected Sector F&O Scrips Table -->
+                    <div class="fo-card fo-scrips-card">
+                        <div class="fo-card-header">
+                            <h3 id="fo-selected-sector-title">Metal Sector F&amp;O</h3>
+                            <a href="/watchlist" class="fo-view-all">VIEW ALL STOCK F&amp;O &gt;</a>
+                        </div>
+                        <table class="fo-table">
+                            <thead>
+                                <tr>
+                                    <th>F&amp;O Scrips</th>
+                                    <th>LTP</th>
+                                    <th>LTP Change (%)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="fo-sector-scrips-tbody">
+                                <!-- Populated dynamically via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Bottom Row: Index F&O + Commodities -->
+                <div class="fo-grid">
+                    <!-- Index F&O Column -->
+                    <div class="fo-card">
+                        <div class="fo-card-header">
+                            <h3>Index F&amp;O</h3>
+                            <a href="/watchlist" class="fo-view-all">VIEW ALL INDEX F&amp;O &gt;</a>
+                        </div>
+                        <div class="fo-dropdown-filters">
+                            <select class="fo-select" id="index-select" onchange="updateIndexFOTable()">
+                                <option value="NIFTY">NIFTY</option>
+                                <option value="SENSEX">SENSEX</option>
+                                <option value="BANKNIFTY">BANK NIFTY</option>
+                                <option value="BANKEX">BANKEX</option>
+                                <option value="MIDCPNIFTY">MIDCPNIFTY</option>
+                                <option value="FINNIFTY">FINNIFTY</option>
+                                <option value="NIFTYNXT50">NIFTYNXT50</option>
+                            </select>
+                            <select class="fo-select" id="index-expiry-select" onchange="updateIndexFOTable()">
+                                <option value="02 Jun 2026">02 Jun 2026</option>
+                                <option value="05 Jun 2026">05 Jun 2026</option>
+                                <option value="12 Jun 2026">12 Jun 2026</option>
+                                <option value="19 Jun 2026">19 Jun 2026</option>
+                                <option value="26 Jun 2026">26 Jun 2026</option>
+                                <option value="03 Jul 2026">03 Jul 2026</option>
+                            </select>
+                            <select class="fo-select" id="index-opttype-select" onchange="updateIndexFOTable()">
+                                <option value="CE">CE (Call Option)</option>
+                                <option value="PE">PE (Put Option)</option>
+                            </select>
+                        </div>
+                        <table class="fo-table">
+                            <thead>
+                                <tr>
+                                    <th>Options</th>
+                                    <th>LTP</th>
+                                    <th>Price Change</th>
+                                </tr>
+                            </thead>
+                            <tbody id="nifty-options-tbody">
+                                <tr>
+                                    <td><span class="fo-option-name">NIFTY 23850 02 Jun 2026 <small
+                                                class="badge-itm">ITM</small></span></td>
+                                    <td style="font-family:var(--font-mono);font-weight:600;" id="nifty-opt-itm-ltp">
+                                        &#8377;218.20</td>
+                                    <td><span class="change-negative" id="nifty-opt-itm-change">-&#8377;18.65
+                                            (-7.87%)</span></td>
+                                </tr>
+                                <tr>
+                                    <td><span class="fo-option-name">NIFTY 23900 02 Jun 2026 <small
+                                                class="badge-atm">ATM</small></span></td>
+                                    <td style="font-family:var(--font-mono);font-weight:600;" id="nifty-opt-atm-ltp">
+                                        &#8377;188.25</td>
+                                    <td><span class="change-negative" id="nifty-opt-atm-change">-&#8377;19.85
+                                            (-9.54%)</span></td>
+                                </tr>
+                                <tr>
+                                    <td><span class="fo-option-name">NIFTY 23950 02 Jun 2026 <small
+                                                class="badge-otm">OTM</small></span></td>
+                                    <td style="font-family:var(--font-mono);font-weight:600;" id="nifty-opt-otm-ltp">
+                                        &#8377;161.40</td>
+                                    <td><span class="change-negative" id="nifty-opt-otm-change">-&#8377;21.90
+                                            (-11.95%)</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Commodities Column -->
+                    <div class="fo-card">
+                        <div class="fo-card-header">
+                            <h3>Commodities</h3>
+                            <a href="/watchlist" class="fo-view-all">VIEW ALL COMMODITIES &gt;</a>
+                        </div>
+                        <div class="fo-dropdown-filters">
+                            <select class="fo-select" id="commodity-select" onchange="updateCommodityTable()">
+                                <option value="CRUDEOIL">Crude Oil</option>
+                                <option value="NATURALGAS">Natural Gas</option>
+                                <option value="GOLD">Gold</option>
+                                <option value="SILVER">Silver</option>
+                                <option value="CRUDEOILMINI">Crude Oil Mini</option>
+                                <option value="NATURALGASMINI">Natural Gas Mini</option>
+                                <option value="GOLDMINI">Gold Mini</option>
+                                <option value="SILVERMINI">Silver Mini</option>
+                            </select>
+                            <select class="fo-select" id="commodity-expiry-select" onchange="updateCommodityTable()">
+                                <option value="16 Jun 2026">16 Jun 2026</option>
+                                <option value="16 Jul 2026">16 Jul 2026</option>
+                                <option value="19 Aug 2026">19 Aug 2026</option>
+                                <option value="16 Sep 2026">16 Sep 2026</option>
+                            </select>
+                            <select class="fo-select" id="commodity-opttype-select" onchange="updateCommodityTable()">
+                                <option value="CE">CE (Call Option)</option>
+                                <option value="PE">PE (Put Option)</option>
+                            </select>
+                        </div>
+                        <table class="fo-table">
+                            <thead>
+                                <tr>
+                                    <th>Options</th>
+                                    <th>LTP</th>
+                                    <th>Price Change</th>
+                                </tr>
+                            </thead>
+                            <tbody id="crude-options-tbody">
+                                <tr>
+                                    <td><span class="fo-option-name">8550 CRUDEOIL 16 Jun 2026 <small
+                                                class="badge-itm">ITM</small></span></td>
+                                    <td style="font-family:var(--font-mono);font-weight:600;" id="crude-opt-itm-ltp">
+                                        &#8377;535.90</td>
+                                    <td><span class="change-negative" id="crude-opt-itm-change">-&#8377;240.60
+                                            (-30.99%)</span></td>
+                                </tr>
+                                <tr>
+                                    <td><span class="fo-option-name">8600 CRUDEOIL 16 Jun 2026 <small
+                                                class="badge-atm">ATM</small></span></td>
+                                    <td style="font-family:var(--font-mono);font-weight:600;" id="crude-opt-atm-ltp">
+                                        &#8377;511.20</td>
+                                    <td><span class="change-negative" id="crude-opt-atm-change">-&#8377;290.50
+                                            (-36.24%)</span></td>
+                                </tr>
+                                <tr>
+                                    <td><span class="fo-option-name">8650 CRUDEOIL 16 Jun 2026 <small
+                                                class="badge-otm">OTM</small></span></td>
+                                    <td style="font-family:var(--font-mono);font-weight:600;" id="crude-opt-otm-ltp">
+                                        &#8377;486.50</td>
+                                    <td><span class="change-negative" id="crude-opt-otm-change">-&#8377;245.80
+                                            (-33.56%)</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 4. Market Movers & Personal Lists Row -->
+                <div class="movers-grid">
+                    <!-- Top Gainers Card -->
+                    <div class="mover-card">
+                        <h3>🔥 Top Gainers (NSE)</h3>
+                        <table class="dashboard-table" id="table-gainers">
+                            <thead>
+                                <tr>
+                                    <th>Stock</th>
+                                    <th>LTP</th>
+                                    <th>Change</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Loaded via script.js -->
+                                <tr>
+                                    <td colspan="3" style="text-align:center; color:var(--text-muted); font-size:12px;">
+                                        Loading movers data...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Top Losers Card -->
+                    <div class="mover-card">
+                        <h3>📉 Top Losers (NSE)</h3>
+                        <table class="dashboard-table" id="table-losers">
+                            <thead>
+                                <tr>
+                                    <th>Stock</th>
+                                    <th>LTP</th>
+                                    <th>Change</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Loaded via script.js -->
+                                <tr>
+                                    <td colspan="3" style="text-align:center; color:var(--text-muted); font-size:12px;">
+                                        Loading movers data...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 5. Watchlist & Portfolio Cards Split -->
+                <div class="teaser-container-wrap" style="margin-bottom: 28px;">
+                    {% if not logged_in %}
+                    <div class="teaser-overlay">
+                        <h3>Watchlist & Portfolio Locked</h3>
+                        <p>Log in or sign up to personalize your watchlist, build positions, and track investments.</p>
+                        <div style="display:flex; gap:8px;">
+                            <a href="/auth?mode=login" class="cta-btn"
+                                style="padding: 6px 14px; font-size:12.5px; text-decoration:none;">Log In</a>
+                            <a href="/auth?mode=signup" class="btn-outline"
+                                style="padding: 6px 14px; font-size:12.5px; text-decoration:none;">Sign Up</a>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <div class="dashboard-cards">
+                        <!-- Portfolio Card -->
+                        <div class="card">
+                            <h2>Personal Portfolio</h2>
+                            {% if logged_in and portfolio_data %}
+                            <table class="dashboard-table">
+                                <thead>
+                                    <tr>
+                                        <th>Ticker</th>
+                                        <th>Shares</th>
+                                        <th>Change</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in portfolio_data %}
+                                    <tr>
+                                        <td style="font-family:var(--font-mono);font-weight:700;color:var(--cyan);">
+                                            <a href="/stock-details/{{ item.ticker }}"
+                                                style="color:var(--cyan);text-decoration:none;">{{ item.ticker }}</a>
+                                        </td>
+                                        <td style="font-family:var(--font-mono);">{{ item.shares }}</td>
+                                        <td>
+                                            <span
+                                                class="{% if item.change >= 0 %}badge-green{% else %}badge-red{% endif %}"
+                                                data-live-change="{{ item.ticker }}">
+                                                {{ '+' if item.change >= 0 }}{{ "%.2f"|format(item.change) }}%
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                            <a href="/portfolio" class="card-link"
+                                style="margin-top: 12px; display:inline-block;">Manage Portfolio →</a>
+                            {% else %}
+                            <p class="empty-message" style="margin: 20px 0;">No active holdings in your portfolio.</p>
+                            <a href="/portfolio" class="card-link">Go to Trade Panel →</a>
+                            {% endif %}
+                        </div>
+
+                        <!-- Watchlist Card -->
+                        <div class="card">
+                            <h2>Personal Watchlist</h2>
+                            {% if logged_in and watchlist_data %}
+                            <table class="dashboard-table">
+                                <thead>
+                                    <tr>
+                                        <th>Ticker</th>
+                                        <th>Price</th>
+                                        <th>Change</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in watchlist_data %}
+                                    <tr>
+                                        <td style="font-family:var(--font-mono);font-weight:700;color:var(--cyan);">
+                                            <a href="/stock-details/{{ item.ticker }}"
+                                                style="color:var(--cyan);text-decoration:none;">{{ item.ticker }}</a>
+                                        </td>
+                                        <td style="font-family:var(--font-mono);" data-live-price="{{ item.ticker }}">
+                                            ₹{{ "%.2f"|format(item.price) }}</td>
+                                        <td>
+                                            <span
+                                                class="{% if item.change >= 0 %}badge-green{% else %}badge-red{% endif %}"
+                                                data-live-change="{{ item.ticker }}">
+                                                {{ '+' if item.change >= 0 }}{{ "%.2f"|format(item.change) }}%
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                            <a href="/watchlist" class="card-link" style="margin-top: 12px; display:inline-block;">View
+                                Watchlist →</a>
+                            {% else %}
+                            <p class="empty-message" style="margin: 20px 0;">No stocks tracked in your watchlist.</p>
+                            <div class="add-watchlist" style="display:flex; gap:8px;">
+                                <input type="text" id="add-ticker" placeholder="Add ticker…"
+                                    style="text-transform:uppercase; flex:1;">
+                                <button onclick="addToWatchlist()" class="cta-btn"
+                                    style="padding:8px 14px;font-size:12px;">Add</button>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Portfolio Allocation Pie Chart (only if logged in and holdings exist) -->
+                {% if logged_in and portfolio_data %}
+                <div class="chart-card" style="margin-bottom: 28px;">
+                    <h2>Portfolio Allocation</h2>
+                    <div class="pie-wrap">
+                        <canvas id="portfolioPie"></canvas>
+                        <div class="pie-legend" id="pieLegend"></div>
+                    </div>
+                </div>
+
+                <script>
+                    (function () {
+                        const data = [
+                            {% for item in portfolio_data %}
+                    { ticker: "{{ item.ticker }}", value: { { item.value_inr | round(0) } } },
+                    {% endfor %}
+                ];
+                    const total = data.reduce((s, d) => s + d.value, 0);
+                    const colors = ['#00c8ff', '#00d97e', '#f5c842', '#ff4d6a', '#a78bfa', '#fb923c', '#38bdf8', '#4ade80', '#facc15', '#f87171'];
+                    const ctx = document.getElementById('portfolioPie').getContext('2d');
+                    new Chart(ctx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: data.map(d => d.ticker),
+                            datasets: [{
+                                data: data.map(d => d.value),
+                                backgroundColor: data.map((_, i) => colors[i % colors.length]),
+                                borderColor: '#151d2e',
+                                borderWidth: 3,
+                                hoverOffset: 6
+                            }]
+                        },
+                        options: {
+                            responsive: false,
+                            cutout: '60%',
+                            plugins: {
+                                legend: { display: false }, tooltip: {
+                                    callbacks: {
+                                        label: ctx => ` ₹${ctx.parsed.toLocaleString('en-IN')} (${(ctx.parsed / total * 100).toFixed(1)}%)`
+                                    }
+                                }
+                            }
+                        }
+                    });
+                    const legend = document.getElementById('pieLegend');
+                    data.forEach((d, i) => {
+                        const pct = (d.value / total * 100).toFixed(1);
+                        legend.innerHTML += `
+                        <div class="pie-legend-item">
+                            <div class="pie-dot" style="background:${colors[i % colors.length]};"></div>
+                            <span class="pie-legend-label">${d.ticker}</span>
+                            <span class="pie-legend-val">₹${d.value.toLocaleString('en-IN')} <small style="color:var(--text-muted);">${pct}%</small></span>
+                        </div>`;
+                    });
+            }) ();
+                </script>
+                {% endif %}
+
+                <!-- 6. Active IPO Tracker Section -->
+                <div class="card" style="margin-bottom: 28px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                        <h2
+                            style="font-size:14px; font-weight:600; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.8px; margin-bottom:0;">
+                            Invest in Latest IPOs</h2>
+                        <a href="/ipos"
+                            style="font-size:11px; font-weight:700; color:var(--cyan); text-decoration:none; text-transform:uppercase; letter-spacing:0.5px;">VIEW
+                            ALL OPEN &amp; UPCOMING IPO &gt;</a>
+                    </div>
+                    <div class="ipo-grid">
+                        <div class="ipo-card-main" onclick="showIpoDetails('smr_jewels')"
+                            style="cursor:pointer; background:var(--bg-secondary); border:1px solid var(--border); border-radius:var(--radius-md); padding:16px; transition:all 0.2s;">
+                            <div
+                                style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
+                                <div style="display:flex; align-items:center; gap:10px;">
+                                    <div
+                                        style="width:32px; height:32px; border-radius:50%; background:var(--cyan-glow); border:1px solid rgba(99,102,241,0.15); display:flex; align-items:center; justify-content:center; font-weight:700; color:var(--cyan); font-size:11px;">
+                                        SMR</div>
+                                    <div style="display:flex; flex-direction:column; gap:2px;">
+                                        <span style="font-weight:700; font-size:13px; color:var(--text-primary);">SMR
+                                            JEWELS LTD</span>
+                                        <span
+                                            style="align-self:flex-start; font-size:9px; font-weight:700; color:var(--cyan); background:var(--cyan-glow); padding:1px 6px; border-radius:3px; text-transform:uppercase; border:1px solid rgba(99,102,241,0.15);">SME</span>
+                                    </div>
+                                </div>
+                                <span style="color:var(--text-muted); font-size:14px;">&gt;</span>
+                            </div>
+                            <div
+                                style="display:flex; justify-content:space-between; font-size:11px; color:var(--text-muted); margin-bottom:12px;">
+                                <div>
+                                    <div>Closes On</div>
+                                    <div
+                                        style="font-weight:700; color:var(--text-primary); font-size:13px; margin-top:2px; font-family:var(--font-mono);">
+                                        29 May 26</div>
+                                </div>
+                                <div style="text-align:right;">
+                                    <div>Min. Investment</div>
+                                    <div
+                                        style="font-weight:700; color:var(--text-primary); font-size:13px; margin-top:2px; font-family:var(--font-mono);">
+                                        ₹2,56,000</div>
+                                </div>
+                            </div>
+                            <div
+                                style="border-top:1px solid var(--border-light); padding-top:8px; display:flex; justify-content:space-between; font-size:11px; color:var(--text-muted);">
+                                <span>Overall Subscription</span>
+                                <span
+                                    style="font-weight:700; color:var(--text-primary); font-family:var(--font-mono);">0.26x</span>
+                            </div>
+                        </div>
+
+                        <div class="ipo-card-main" onclick="showIpoDetails('rajnandini_fashion')"
+                            style="cursor:pointer; background:var(--bg-secondary); border:1px solid var(--border); border-radius:var(--radius-md); padding:16px; transition:all 0.2s;">
+                            <div
+                                style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
+                                <div style="display:flex; align-items:center; gap:10px;">
+                                    <div
+                                        style="width:32px; height:32px; border-radius:50%; background:var(--cyan-glow); border:1px solid rgba(99,102,241,0.15); display:flex; align-items:center; justify-content:center; font-weight:700; color:var(--cyan); font-size:11px;">
+                                        RFI</div>
+                                    <div style="display:flex; flex-direction:column; gap:2px;">
+                                        <span
+                                            style="font-weight:700; font-size:13px; color:var(--text-primary);">RAJNANDINI
+                                            FASHION INDIA LTD</span>
+                                        <span
+                                            style="align-self:flex-start; font-size:9px; font-weight:700; color:var(--cyan); background:var(--cyan-glow); padding:1px 6px; border-radius:3px; text-transform:uppercase; border:1px solid rgba(99,102,241,0.15);">SME</span>
+                                    </div>
+                                </div>
+                                <span style="color:var(--text-muted); font-size:14px;">&gt;</span>
+                            </div>
+                            <div
+                                style="display:flex; justify-content:space-between; font-size:11px; color:var(--text-muted); margin-bottom:12px;">
+                                <div>
+                                    <div>Closes On</div>
+                                    <div
+                                        style="font-weight:700; color:var(--text-primary); font-size:13px; margin-top:2px; font-family:var(--font-mono);">
+                                        29 May 26</div>
+                                </div>
+                                <div style="text-align:right;">
+                                    <div>Min. Investment</div>
+                                    <div
+                                        style="font-weight:700; color:var(--text-primary); font-size:13px; margin-top:2px; font-family:var(--font-mono);">
+                                        ₹2,36,000</div>
+                                </div>
+                            </div>
+                            <div
+                                style="border-top:1px solid var(--border-light); padding-top:8px; display:flex; justify-content:space-between; font-size:11px; color:var(--text-muted);">
+                                <span>Overall Subscription</span>
+                                <span
+                                    style="font-weight:700; color:var(--text-primary); font-family:var(--font-mono);">6.97x</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 7. Masterclass Learning Banner -->
+                <div class="learn-banner">
+                    <div class="learn-banner-left">
+                        <h3>Trend-Based Fibonacci Extension Masterclass 🎓</h3>
+                        <p>Learn how to predict dynamic targets and major support/resistance zones using advanced
+                            Fibonacci tools on live market charts.</p>
+                        <a href="/tutorials" class="cta-btn"
+                            style="text-decoration:none; padding:8px 18px; display:inline-block; font-size:12.5px;">Start
+                            Learning Free</a>
+                    </div>
+                    <div class="learn-video-thumb" onclick="location.href='/tutorials'">
+                        <div class="play-overlay">
+                            <div class="play-triangle"></div>
+                        </div>
+                        <div
+                            style="position: absolute; bottom: 8px; left: 8px; font-size: 10px; background: rgba(0,0,0,0.6); color: #fff; padding: 2px 6px; border-radius: 4px; font-family: var(--font-mono);">
+                            12:45</div>
+                    </div>
+                </div>
+    </main>
+
+    <!-- Chatbot -->
+    <button class="chatbot-toggle" onclick="toggleChatbot()" title="RP Assistant">💬</button>
+    <div class="chatbot-container" id="chatbot-container">
+        <div class="chatbot-header"><span>RP Assistant</span><button class="close-btn"
+                onclick="toggleChatbot()">×</button></div>
+        <div class="chatbot-messages" id="chatbot-messages"></div>
+        <div class="chatbot-input">
+            <input type="text" id="chatbot-input" placeholder="Ask me anything…">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <footer>
+        <a href="/about">About</a>
+        <a href="/contact">Contact</a>
+        <a href="/privacy">Privacy Policy</a>
+        <a href="/terms">Terms of Use</a>
+    </footer>
+
+    <script>
+        const userHoldings = [
+            {% for item in portfolio_data %}
+        { ticker: "{{ item.ticker }}", shares: { { item.shares } } },
+        {% endfor %}
+        ];
+    </script>
+    <script src="{{ url_for('static', filename='js/script.js') }}?v=1.2"></script>
+</body>
+
+</html>

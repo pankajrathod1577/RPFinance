@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% if mode == 'signup' %}Sign Up{% else %}Login{% endif %} — RP Finance</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .auth-toggle {
+            display: flex;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 4px;
+            margin-bottom: 28px;
+        }
+        .auth-tab {
+            flex: 1;
+            padding: 9px;
+            text-align: center;
+            font-size: 13px;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            transition: all 0.2s;
+            text-decoration: none;
+            display: block;
+        }
+        .auth-tab.active {
+            background: var(--bg-card);
+            color: var(--cyan);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            border: 1px solid var(--border);
+        }
+    </style>
+</head>
+<body>
+
+    <header class="top-bar">
+        <a href="/" class="logo" style="text-decoration:none;"><span>RP</span> Finance</a>
+        <nav class="nav-links">
+            <a href="/">Dashboard</a>
+            <a href="/portfolio">Portfolio</a>
+            <a href="/watchlist">Watchlist</a>
+            <a href="/algo_trading">Algo Trading</a>
+            <a href="/tutorials">Tutorials</a>
+            <a href="/news">News</a>
+        </nav>
+        <div class="user-options">
+            <div class="search-bar">
+                <button onclick="searchStock()" class="magnifier">🔍</button>
+                <input type="text" id="search" placeholder="Search ticker…">
+            </div>
+            <a href="/auth?mode=login">Login</a>
+            <a href="/auth?mode=signup" class="btn-signup">Sign Up</a>
+        </div>
+    </header>
+
+    <main class="login-container">
+        <div class="login-form" style="max-width:440px;">
+
+            <!-- Toggle tabs -->
+            <div class="auth-toggle">
+                <a href="/auth?mode=login"
+                   class="auth-tab {% if mode != 'signup' %}active{% endif %}">
+                    Sign In
+                </a>
+                <a href="/auth?mode=signup"
+                   class="auth-tab {% if mode == 'signup' %}active{% endif %}">
+                    Create Account
+                </a>
+            </div>
+
+            {% if error %}
+                <p class="error" style="margin-bottom:16px;">{{ error }}</p>
+            {% endif %}
+
+            {% if mode == 'signup' %}
+                <!-- ── SIGNUP FORM ── -->
+                <h1 style="font-size:20px;margin-bottom:4px;">Create your account</h1>
+                <p style="color:var(--text-secondary);font-size:13px;margin-bottom:24px;">Join RP Finance — free virtual trading</p>
+
+                <form method="POST" action="/auth?mode=signup">
+                    <input type="hidden" name="action" value="signup">
+                    <div class="form-group">
+                        <label for="username">Username</label>
+                        <input type="text" id="username" name="username"
+                               placeholder="Choose a username" required autocomplete="username">
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" name="password"
+                               placeholder="Create a password" required autocomplete="new-password">
+                    </div>
+                    <div class="form-group">
+                        <label for="balance">
+                            Starting Balance (Virtual)
+                            <span style="color:var(--text-muted);font-weight:400;font-style:italic;margin-left:4px;">optional</span>
+                        </label>
+                        <input type="number" id="balance" name="balance"
+                               step="0.01" placeholder="10000.00" min="0">
+                    </div>
+                    <button type="submit" class="cta-btn">Create Account</button>
+                </form>
+
+            {% else %}
+                <!-- ── LOGIN FORM ── -->
+                <h1 style="font-size:20px;margin-bottom:4px;">Welcome back</h1>
+                <p style="color:var(--text-secondary);font-size:13px;margin-bottom:24px;">Sign in to your RP Finance account</p>
+
+                <form method="POST" action="/auth?mode=login">
+                    <input type="hidden" name="action" value="login">
+                    <div class="form-group">
+                        <label for="username">Username</label>
+                        <input type="text" id="username" name="username"
+                               placeholder="Enter username" required autocomplete="username">
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" name="password"
+                               placeholder="Enter password" required autocomplete="current-password">
+                    </div>
+                    <button type="submit" class="cta-btn">Sign In</button>
+                </form>
+            {% endif %}
+        </div>
+    </main>
+
+    <!-- Chatbot -->
+    <button class="chatbot-toggle" onclick="toggleChatbot()" title="RP Assistant">💬</button>
+    <div class="chatbot-container" id="chatbot-container">
+        <div class="chatbot-header">
+            <span>RP Assistant</span>
+            <button class="close-btn" onclick="toggleChatbot()">×</button>
+        </div>
+        <div class="chatbot-messages" id="chatbot-messages"></div>
+        <div class="chatbot-input">
+            <input type="text" id="chatbot-input" placeholder="Ask me anything…">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

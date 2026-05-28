@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IPO Dashboard — RP Finance</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        /* ── IPO Page Specific Styling ── */
+        .ipo-tabs {
+            display: flex;
+            gap: 24px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 24px;
+        }
+
+        .ipo-tab {
+            padding: 12px 4px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s ease;
+        }
+
+        .ipo-tab.active {
+            color: var(--cyan);
+            border-bottom-color: var(--cyan);
+        }
+
+        .ipo-section-header-custom {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 16px;
+            margin-top: 12px;
+        }
+
+        .ipo-section-header-custom h2 {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0;
+            text-transform: none;
+            letter-spacing: normal;
+        }
+
+        .ipo-count-badge {
+            background: var(--cyan-glow);
+            color: var(--cyan);
+            border: 1px solid rgba(99, 102, 241, 0.15);
+            font-size: 11px;
+            font-weight: 700;
+            padding: 1px 6px;
+            border-radius: 12px;
+        }
+
+        .ipo-list-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .ipo-card-interactive {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 18px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .ipo-card-interactive:hover {
+            border-color: var(--cyan-dim);
+            box-shadow: var(--shadow-card);
+            transform: translateY(-2px);
+        }
+
+        .ipo-card-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .ipo-logo {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: var(--cyan-glow);
+            border: 1px solid rgba(99, 102, 241, 0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            color: var(--cyan);
+            font-size: 12px;
+            flex-shrink: 0;
+        }
+
+        .ipo-card-title {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .ipo-card-title h4 {
+            font-size: 13.5px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin: 0;
+        }
+
+        .ipo-type-tag {
+            align-self: flex-start;
+            font-size: 9px;
+            font-weight: 700;
+            color: var(--cyan);
+            background: var(--cyan-glow);
+            padding: 1px 6px;
+            border-radius: 3px;
+            text-transform: uppercase;
+            border: 1px solid rgba(99, 102, 241, 0.12);
+        }
+
+        .ipo-apply-btn {
+            background: transparent;
+            color: var(--cyan);
+            border: 1px solid var(--cyan);
+            font-size: 12px;
+            font-weight: 700;
+            padding: 5px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .ipo-apply-btn:hover {
+            background: var(--cyan);
+            color: #ffffff;
+        }
+
+        .ipo-info-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11.5px;
+            color: var(--text-muted);
+        }
+
+        .ipo-info-item div:last-child {
+            font-weight: 700;
+            color: var(--text-primary);
+            font-size: 13px;
+            margin-top: 3px;
+            font-family: var(--font-mono);
+        }
+
+        .ipo-info-item.right {
+            text-align: right;
+        }
+
+        /* Promotion Cards */
+        .ipo-promo-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        @media (max-width: 600px) {
+            .ipo-promo-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .ipo-promo-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .ipo-promo-card:hover {
+            border-color: var(--cyan);
+            background: var(--cyan-glow2);
+        }
+
+        /* Listing gains */
+        .gain-badge {
+            font-size: 11px;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-family: var(--font-mono);
+        }
+
+        .gain-badge.positive {
+            background: var(--green-dim);
+            color: var(--green);
+        }
+
+        .gain-badge.negative {
+            background: var(--red-dim);
+            color: var(--red);
+        }
+
+        .gain-badge.none {
+            background: var(--border-light);
+            color: var(--text-muted);
+        }
+    </style>
+</head>
+
+<body>
+
+    <header class="top-bar">
+        <a href="/" class="logo" style="text-decoration:none;"><span>RP</span> Finance</a>
+        <nav class="nav-links">
+            <a href="/">Dashboard</a>
+            <a href="/portfolio">Portfolio</a>
+            <a href="/watchlist">Watchlist</a>
+            <a href="/algo_trading">Algo Trading</a>
+            <a href="/tutorials">Masterclass</a>
+            <a href="/news">News</a>
+        </nav>
+        <div class="user-options">
+            <div class="search-bar">
+                <button onclick="searchStock()" class="magnifier">🔍</button>
+                <input type="text" id="search" placeholder="Search ticker…">
+            </div>
+            {% if logged_in %}
+            <a href="/logout">Logout</a>
+            {% else %}
+            <a href="/auth?mode=login">Login</a>
+            <a href="/auth?mode=signup" class="btn-signup">Sign Up</a>
+            {% endif %}
+        </div>
+    </header>
+
+    <main>
+        <div class="dashboard-container">
+            <!-- Header -->
+            <div class="dashboard-header" style="margin-bottom: 12px;">
+                <h1>Initial Public Offerings (IPOs)</h1>
+                <p style="color:var(--text-secondary);font-size:13px;margin-top:4px;">Apply for current and upcoming
+                    IPOs in India</p>
+            </div>
+
+            <!-- Groww Tabs -->
+            <div class="ipo-tabs">
+                <div class="ipo-tab active" id="tab-open-upcoming" onclick="switchIpoMainTab('open-upcoming')">Open
+                    &amp; Upcoming</div>
+                <div class="ipo-tab" id="tab-my-apps" onclick="switchIpoMainTab('my-apps')">Your Applications</div>
+            </div>
+
+            <!-- tab contents -->
+            <div id="ipo-pane-open-upcoming" style="display:block;">
+                <!-- 1. Open IPOs -->
+                <div class="ipo-section-header-custom">
+                    <h2>Open IPOs</h2>
+                    <span class="ipo-count-badge">2</span>
+                </div>
+                <div class="ipo-list-grid">
+                    <!-- SMR Jewels -->
+                    <div class="ipo-card-interactive" onclick="showIpoDetails('smr_jewels')">
+                        <div class="ipo-card-top">
+                            <div style="display:flex; align-items:center; gap:12px;">
+                                <div class="ipo-logo">SMR</div>
+                                <div class="ipo-card-title">
+                                    <h4>SMR Jewels Ltd</h4>
+                                    <span class="ipo-type-tag">SME</span>
+                                </div>
+                            </div>
+                            <button class="ipo-apply-btn"
+                                onclick="event.stopPropagation(); showIpoDetails('smr_jewels');">APPLY</button>
+                        </div>
+                        <div class="ipo-info-row">
+                            <div class="ipo-info-item">
+                                <div>Closes On</div>
+                                <div>29 May 2026</div>
+                            </div>
+                            <div class="ipo-info-item right">
+                                <div>Subscription</div>
+                                <div style="color: var(--green);">0.26x</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Rajnandini Fashion -->
+                    <div class="ipo-card-interactive" onclick="showIpoDetails('rajnandini_fashion')">
+                        <div class="ipo-card-top">
+                            <div style="display:flex; align-items:center; gap:12px;">
+                                <div class="ipo-logo">RFI</div>
+                                <div class="ipo-card-title">
+                                    <h4>Rajnandini Fashion India Ltd</h4>
+                                    <span class="ipo-type-tag">SME</span>
+                                </div>
+                            </div>
+                            <button class="ipo-apply-btn"
+                                onclick="event.stopPropagation(); showIpoDetails('rajnandini_fashion');">APPLY</button>
+                        </div>
+                        <div class="ipo-info-row">
+                            <div class="ipo-info-item">
+                                <div>Closes On</div>
+                                <div>29 May 2026</div>
+                            </div>
+                            <div class="ipo-info-item right">
+                                <div>Subscription</div>
+                                <div style="color: var(--green);">6.97x</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Promo Banner widgets -->
+                <div class="ipo-promo-grid">
+                    <div class="ipo-promo-card" onclick="alert('Referral links generated! Share with your friends.')">
+                        <div>
+                            <div style="font-weight:700; font-size:13px; color:var(--text-primary);">Refer &amp; Earn
+                                ₹2500</div>
+                            <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">Invite friends and
+                                earn when they sign up</div>
+                        </div>
+                        <span style="font-size:18px;">🎁</span>
+                    </div>
+                    <div class="ipo-promo-card" onclick="location.href='/tutorials'">
+                        <div>
+                            <div style="font-weight:700; font-size:13px; color:var(--text-primary);">Need Help? Learn
+                                more about IPO</div>
+                            <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">Read Masterclass
+                                tutorials on how IPOs work</div>
+                        </div>
+                        <span style="font-size:18px;">💡</span>
+                    </div>
+                </div>
+
+                <!-- 3. Upcoming IPOs -->
+                <div class="ipo-section-header-custom">
+                    <h2>Upcoming IPOs</h2>
+                    <span class="ipo-count-badge">13</span>
+                </div>
+                <div class="ipo-list-grid">
+                    <!-- Bajaj Energy -->
+                    <div class="ipo-card-interactive" onclick="showIpoDetails('bajaj_energy')">
+                        <div class="ipo-card-top">
+                            <div style="display:flex; align-items:center; gap:12px;">
+                                <div class="ipo-logo" style="background:#fff3f3; color:#ef4444;">BE</div>
+                                <div class="ipo-card-title">
+                                    <h4>Bajaj Energy Ltd</h4>
+                                    <span class="ipo-type-tag"
+                                        style="color:var(--text-secondary); background:var(--border); border:none;">MAINBOARD</span>
+                                </div>
+                            </div>
+                            <span style="color:var(--text-muted); font-size:14px;">&gt;</span>
+                        </div>
+                        <div class="ipo-info-row">
+                            <div class="ipo-info-item">
+                                <div>Offer Starts On</div>
+                                <div>To be announced</div>
+                            </div>
+                            <div class="ipo-info-item right">
+                                <div>Bid Price Range</div>
+                                <div>₹0.00 - ₹0.00</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- boAt -->
+                    <div class="ipo-card-interactive" onclick="showIpoDetails('boat')">
+                        <div class="ipo-card-top">
+                            <div style="display:flex; align-items:center; gap:12px;">
+                                <div class="ipo-logo" style="background:#111; color:#fff;">BT</div>
+                                <div class="ipo-card-title">
+                                    <h4>boAt</h4>
+                                    <span class="ipo-type-tag"
+                                        style="color:var(--text-secondary); background:var(--border); border:none;">MAINBOARD</span>
+                                </div>
+                            </div>
+                            <span style="color:var(--text-muted); font-size:14px;">&gt;</span>
+                        </div>
+                        <div class="ipo-info-row">
+                            <div class="ipo-info-item">
+                                <div>Offer Starts On</div>
+                                <div>To be announced</div>
+                            </div>
+                            <div class="ipo-info-item right">
+                                <div>Bid Price Range</div>
+                                <div>₹0.00 - ₹0.00</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Fabindia -->
+                    <div class="ipo-card-interactive" onclick="showIpoDetails('fabindia')">
+                        <div class="ipo-card-top">
+                            <div style="display:flex; align-items:center; gap:12px;">
+                                <div class="ipo-logo" style="background:#fdf6e2; color:#d97706;">FI</div>
+                                <div class="ipo-card-title">
+                                    <h4>Fabindia Ltd</h4>
+                                    <span class="ipo-type-tag"
+                                        style="color:var(--text-secondary); background:var(--border); border:none;">MAINBOARD</span>
+                                </div>
+                            </div>
+                            <span style="color:var(--text-muted); font-size:14px;">&gt;</span>
+                        </div>
+                        <div class="ipo-info-row">
+                            <div class="ipo-info-item">
+                                <div>Offer Starts On</div>
+                                <div>To be announced</div>
+                            </div>
+                            <div class="ipo-info-item right">
+                                <div>Bid Price Range</div>
+                                <div>₹0.00 - ₹0.00</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Flipkart -->
+                    <div class="ipo-card-interactive" onclick="showIpoDetails('flipkart')">
+                        <div class="ipo-card-top">
+                            <div style="display:flex; align-items:center; gap:12px;">
+                                <div class="ipo-logo" style="background:#eff6ff; color:#2563eb;">FK</div>
+                                <div class="ipo-card-title">
+                                    <h4>Flipkart</h4>
+                                    <span class="ipo-type-tag"
+                                        style="color:var(--text-secondary); background:var(--border); border:none;">MAINBOARD</span>
+                                </div>
+                            </div>
+                            <span style="color:var(--text-muted); font-size:14px;">&gt;</span>
+                        </div>
+                        <div class="ipo-info-row">
+                            <div class="ipo-info-item">
+                                <div>Offer Starts On</div>
+                                <div>To be announced</div>
+                            </div>
+                            <div class="ipo-info-item right">
+                                <div>Bid Price Range</div>
+                                <div>₹0.00 - ₹0.00</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Hexagon Nutrition -->
+                    <div class="ipo-card-interactive" onclick="showIpoDetails('hexagon_nutrition')">
+                        <div class="ipo-card-top">
+                            <div style="display:flex; align-items:center; gap:12px;">
+                                <div class="ipo-logo" style="background:#f0fdf4; color:#16a34a;">HN</div>
+                                <div class="ipo-card-title">
+                                    <h4>Hexagon Nutrition Ltd</h4>
+                                    <span class="ipo-type-tag"
+                                        style="color:var(--text-secondary); background:var(--border); border:none;">MAINBOARD</span>
+                                </div>
+                            </div>
+                            <span style="color:var(--text-muted); font-size:14px;">&gt;</span>
+                        </div>
+                        <div class="ipo-info-row">
+                            <div class="ipo-info-item">
+                                <div>Offer Starts On</div>
+                                <div>05 Jun 2026</div>
+                            </div>
+                            <div class="ipo-info-item right">
+                                <div>Bid Price Range</div>
+                                <div>₹42.00 - ₹45.00</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- NSE -->
+                    <div class="ipo-card-interactive" onclick="showIpoDetails('nse_ipo')">
+                        <div class="ipo-card-top">
+                            <div style="display:flex; align-items:center; gap:12px;">
+                                <div class="ipo-logo" style="background:#f5f3ff; color:#7c3aed;">NS</div>
+                                <div class="ipo-card-title">
+                                    <h4>National Stock Exchange</h4>
+                                    <span class="ipo-type-tag"
+                                        style="color:var(--text-secondary); background:var(--border); border:none;">MAINBOARD</span>
+                                </div>
+                            </div>
+                            <span style="color:var(--text-muted); font-size:14px;">&gt;</span>
+                        </div>
+                        <div class="ipo-info-row">
+                            <div class="ipo-info-item">
+                                <div>Offer Starts On</div>
+                                <div>To be announced</div>
+                            </div>
+                            <div class="ipo-info-item right">
+                                <div>Bid Price Range</div>
+                                <div>₹0.00 - ₹0.00</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- OYO -->
+                    <div class="ipo-card-interactive" onclick="showIpoDetails('oyo')">
+                        <div class="ipo-card-top">
+                            <div style="display:flex; align-items:center; gap:12px;">
+                                <div class="ipo-logo" style="background:#fff1f2; color:#e11d48;">OY</div>
+                                <div class="ipo-card-title">
+                                    <h4>OYO</h4>
+                                    <span class="ipo-type-tag"
+                                        style="color:var(--text-secondary); background:var(--border); border:none;">MAINBOARD</span>
+                                </div>
+                            </div>
+                            <span style="color:var(--text-muted); font-size:14px;">&gt;</span>
+                        </div>
+                        <div class="ipo-info-row">
+                            <div class="ipo-info-item">
+                                <div>Offer Starts On</div>
+                                <div>To be announced</div>
+                            </div>
+                            <div class="ipo-info-item right">
+                                <div>Bid Price Range</div>
+                                <div>₹0.00 - ₹0.00</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Merritronix -->
+                    <div class="ipo-card-interactive" onclick="showIpoDetails('merritronix')">
+                        <div class="ipo-card-top">
+                            <div style="display:flex; align-items:center; gap:12px;">
+                                <div class="ipo-logo">MT</div>
+                                <div class="ipo-card-title">
+                                    <h4>Merritronix Ltd</h4>
+                                    <span class="ipo-type-tag">SME</span>
+                                </div>
+                            </div>
+                            <span style="color:var(--text-muted); font-size:14px;">&gt;</span>
+                        </div>
+                        <div class="ipo-info-row">
+                            <div class="ipo-info-item">
+                                <div>Offer Starts On</div>
+                                <div>01 Jun 2026</div>
+                            </div>
+                            <div class="ipo-info-item right">
+                                <div>Bid Price Range</div>
+                                <div>₹141.00 - ₹149.00</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Aureate Tradde -->
+                    <div class="ipo-card-interactive" onclick="showIpoDetails('aureate_tradde')">
+                        <div class="ipo-card-top">
+                            <div style="display:flex; align-items:center; gap:12px;">
+                                <div class="ipo-logo">AT</div>
+                                <div class="ipo-card-title">
+                                    <h4>Aureate Tradde Ltd</h4>
+                                    <span class="ipo-type-tag">SME</span>
+                                </div>
+                            </div>
+                            <span style="color:var(--text-muted); font-size:14px;">&gt;</span>
+                        </div>
+                        <div class="ipo-info-row">
+                            <div class="ipo-info-item">
+                                <div>Offer Starts On</div>
+                                <div>29 May 2026</div>
+                            </div>
+                            <div class="ipo-info-item right">
+                                <div>Fixed Price</div>
+                                <div>₹70.00 - ₹70.00</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. Closed IPOs -->
+                <div class="ipo-section-header-custom">
+                    <h2>Closed IPOs</h2>
+                    <span class="ipo-count-badge">448</span>
+                </div>
+                <div class="ipo-list-grid">
+                    <!-- Harikanta -->
+                    <div class="ipo-card-interactive" onclick="showIpoDetails('harikanta')">
+                        <div class="ipo-card-top">
+                            <div style="display:flex; align-items:center; gap:12px;">
+                                <div class="ipo-logo">HO</div>
+                                <div class="ipo-card-title">
+                                    <h4>Harikanta Overseas Ltd</h4>
+                                    <span class="ipo-type-tag">SME</span>
+                                </div>
+                            </div>
+                            <span class="gain-badge none">-</span>
+                        </div>
+                        <div class="ipo-info-row">
+                            <div class="ipo-info-item">
+                                <div>Listing Date</div>
+                                <div>02 Jun 2026</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Yaashvi -->
+                    <div class="ipo-card-interactive" onclick="showIpoDetails('yaashvi')">
+                        <div class="ipo-card-top">
+                            <div style="display:flex; align-items:center; gap:12px;">
+                                <div class="ipo-logo">YJ</div>
+                                <div class="ipo-card-title">
+                                    <h4>Yaashvi Jewellers Ltd</h4>
+                                    <span class="ipo-type-tag">SME</span>
+                                </div>
+                            </div>
+                            <span class="gain-badge none">-</span>
+                        </div>
+                        <div class="ipo-info-row">
+                            <div class="ipo-info-item">
+                                <div>Listing Date</div>
+                                <div>02 Jun 2026</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- M R Maniveni -->
+                    <div class="ipo-card-interactive" onclick="showIpoDetails('maniveni')">
+                        <div class="ipo-card-top">
+                            <div style="display:flex; align-items:center; gap:12px;">
+                                <div class="ipo-logo">MF</div>
+                                <div class="ipo-card-title">
+                                    <h4>M R Maniveni Foods Ltd</h4>
+                                    <span class="ipo-type-tag">SME</span>
+                                </div>
+                            </div>
+                            <span class="gain-badge none">-</span>
+                        </div>
+                        <div class="ipo-info-row">
+                            <div class="ipo-info-item">
+                                <div>Listing Date</div>
+                                <div>01 Jun 2026</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bio Medica -->
+                    <div class="ipo-card-interactive" onclick="showIpoDetails('biomedica')">
+                        <div class="ipo-card-top">
+                            <div style="display:flex; align-items:center; gap:12px;">
+                                <div class="ipo-logo">BM</div>
+                                <div class="ipo-card-title">
+                                    <h4>Bio Medica Laboratories Ltd</h4>
+                                    <span class="ipo-type-tag">SME</span>
+                                </div>
+                            </div>
+                            <span class="gain-badge none">-</span>
+                        </div>
+                        <div class="ipo-info-row">
+                            <div class="ipo-info-item">
+                                <div>Listing Date</div>
+                                <div>28 May 2026</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Vegorama -->
+                    <div class="ipo-card-interactive" onclick="showIpoDetails('vegorama')">
+                        <div class="ipo-card-top">
+                            <div style="display:flex; align-items:center; gap:12px;">
+                                <div class="ipo-logo">VP</div>
+                                <div class="ipo-card-title">
+                                    <h4>Vegorama Punjabi Angithi Ltd</h4>
+                                    <span class="ipo-type-tag">SME</span>
+                                </div>
+                            </div>
+                            <span class="gain-badge positive">61.04%</span>
+                        </div>
+                        <div class="ipo-info-row">
+                            <div class="ipo-info-item">
+                                <div>Listing Date</div>
+                                <div>27 May 2026</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Teamtech Formwork -->
+                    <div class="ipo-card-interactive" onclick="showIpoDetails('teamtech')">
+                        <div class="ipo-card-top">
+                            <div style="display:flex; align-items:center; gap:12px;">
+                                <div class="ipo-logo">TF</div>
+                                <div class="ipo-card-title">
+                                    <h4>Teamtech Formwork Solutions Ltd</h4>
+                                    <span class="ipo-type-tag">SME</span>
+                                </div>
+                            </div>
+                            <span class="gain-badge positive">15.87%</span>
+                        </div>
+                        <div class="ipo-info-row">
+                            <div class="ipo-info-item">
+                                <div>Listing Date</div>
+                                <div>26 May 2026</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- NFP Sampoorna -->
+                    <div class="ipo-card-interactive" onclick="showIpoDetails('nfp_foods')">
+                        <div class="ipo-card-top">
+                            <div style="display:flex; align-items:center; gap:12px;">
+                                <div class="ipo-logo">NF</div>
+                                <div class="ipo-card-title">
+                                    <h4>NFP Sampoorna Foods Ltd</h4>
+                                    <span class="ipo-type-tag">SME</span>
+                                </div>
+                            </div>
+                            <span class="gain-badge negative">-4.95%</span>
+                        </div>
+                        <div class="ipo-info-row">
+                            <div class="ipo-info-item">
+                                <div>Listing Date</div>
+                                <div>25 May 2026</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bagmane Prime REIT -->
+                    <div class="ipo-card-interactive" onclick="showIpoDetails('bagmane')">
+                        <div class="ipo-card-top">
+                            <div style="display:flex; align-items:center; gap:12px;">
+                                <div class="ipo-logo" style="background:#f3e8ff; color:#a855f7;">BP</div>
+                                <div class="ipo-card-title">
+                                    <h4>Bagmane Prime Office REIT</h4>
+                                    <span class="ipo-type-tag"
+                                        style="background:#f3e8ff; color:#a855f7; border:none;">REIT</span>
+                                </div>
+                            </div>
+                            <span class="gain-badge none">-</span>
+                        </div>
+                        <div class="ipo-info-row">
+                            <div class="ipo-info-item">
+                                <div>Listing Date</div>
+                                <div>14 May 2026</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="text-align:center; margin-bottom:40px;">
+                    <button class="btn-outline" style="padding: 10px 24px;"
+                        onclick="alert('Showing all 448 closed IPOs!')">VIEW MORE ▾</button>
+                </div>
+            </div>
+
+            <!-- applications tab -->
+            <div id="ipo-pane-my-apps"
+                style="display:none; text-align:center; padding: 48px 16px; background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-lg);">
+                <span style="font-size:36px; display:block; margin-bottom:12px;">📂</span>
+                <h3 style="font-weight:700; color:var(--text-primary); margin-bottom:4px;">No IPO Applications Yet</h3>
+                <p style="color:var(--text-muted); font-size:13px;">Any IPOs you apply for will be listed here with
+                    status tracking.</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Chatbot -->
+    <button class="chatbot-toggle" onclick="toggleChatbot()" title="RP Assistant">💬</button>
+    <div class="chatbot-container" id="chatbot-container">
+        <div class="chatbot-header"><span>RP Assistant</span><button class="close-btn"
+                onclick="toggleChatbot()">×</button></div>
+        <div class="chatbot-messages" id="chatbot-messages"></div>
+        <div class="chatbot-input">
+            <input type="text" id="chatbot-input" placeholder="Ask me anything…">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <footer>
+        <a href="/about">About</a>
+        <a href="/contact">Contact</a>
+        <a href="/privacy">Privacy Policy</a>
+        <a href="/terms">Terms of Use</a>
+    </footer>
+
+    <script>
+        // Tab switching logic for main IPO page
+        function switchIpoMainTab(tabName) {
+            document.getElementById('tab-open-upcoming').classList.remove('active');
+            document.getElementById('tab-my-apps').classList.remove('active');
+
+            document.getElementById('ipo-pane-open-upcoming').style.display = 'none';
+            document.getElementById('ipo-pane-my-apps').style.display = 'none';
+
+            if (tabName === 'open-upcoming') {
+                document.getElementById('tab-open-upcoming').classList.add('active');
+                document.getElementById('ipo-pane-open-upcoming').style.display = 'block';
+            } else {
+                document.getElementById('tab-my-apps').classList.add('active');
+                document.getElementById('ipo-pane-my-apps').style.display = 'block';
+            }
+        }
+    </script>
+    <script src="{{ url_for('static', filename='js/script.js') }}?v=1.3"></script>
+</body>
+
+</html>
