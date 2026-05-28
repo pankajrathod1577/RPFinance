@@ -167,6 +167,7 @@ init_live_feed()
 
 def fetch_real_prices():
     """Background task to fetch actual stock prices from yfinance in parallel and update LIVE_FEED."""
+    global USE_SIMULATED_DATA
     if USE_SIMULATED_DATA:
         for app_ticker in list(LIVE_FEED.keys()):
             try:
@@ -196,6 +197,8 @@ def fetch_real_prices():
             ticker_map[yf_ticker] = []
         ticker_map[yf_ticker].append(app_ticker)
 
+    failed_tickers = []
+
     def fetch_ticker_data(yf_ticker):
         try:
             headers = {
@@ -204,6 +207,7 @@ def fetch_real_prices():
             url = f"https://query1.finance.yahoo.com/v8/finance/chart/{yf_ticker}?interval=1m&range=1d"
             r = requests.get(url, headers=headers, timeout=5)
             if r.status_code != 200:
+                failed_tickers.append(yf_ticker)
                 return
 
             res = r.json()
@@ -288,6 +292,12 @@ def fetch_real_prices():
     with ThreadPoolExecutor(max_workers=10) as executor:
         executor.map(fetch_ticker_data, list(set(yf_tickers)))
 
+    # If the majority of tickers failed to fetch, set USE_SIMULATED_DATA to True
+    unique_yf_tickers = list(set(yf_tickers))
+    if unique_yf_tickers and len(failed_tickers) >= len(unique_yf_tickers) * 0.5:
+        USE_SIMULATED_DATA = True
+        print("Yahoo Finance API requests are blocked (likely by Render/cloud provider). Switching to simulated mode.")
+
 def background_price_updater():
     """Loops every 60 seconds to fetch real-time market data in background."""
     while True:
@@ -345,6 +355,7 @@ def update_live_prices():
             data["low"] = min(data["low"], yf_price)
 
 def fetch_and_add_to_live_feed(app_ticker):
+    global USE_SIMULATED_DATA
     if USE_SIMULATED_DATA:
         try:
             ticker = app_ticker.upper().strip()
@@ -387,7 +398,8 @@ def fetch_and_add_to_live_feed(app_ticker):
         url = f"https://query1.finance.yahoo.com/v8/finance/chart/{yf_ticker}?interval=1m&range=1d"
         r = requests.get(url, headers=headers, timeout=5)
         if r.status_code != 200:
-            return False
+            USE_SIMULATED_DATA = True
+            return fetch_and_add_to_live_feed(app_ticker)
 
         res = r.json()
         meta = res.get('chart', {}).get('result', [{}])[0].get('meta', {})
@@ -1044,6 +1056,8 @@ def remove_from_watchlist():
 
 
 def get_yf_history(ticker, period="3mo", interval="1d"):
+    if USE_SIMULATED_DATA:
+        return {}
     try:
         yf_symbol = to_yf_symbol(ticker)
         t = yf.Ticker(yf_symbol)
@@ -1323,12 +1337,13 @@ def stock_data(ticker):
                 points.append(loop_time)
                 loop_time -= delta
                 
-            points.reverse()
+            # Generate backward starting from the live price `p`
+            temp_p = p
             for dt_val in points:
                 date_str = dt_val.strftime('%Y-%m-%d %H:%M:%S')
                 drift = random.uniform(-0.003, 0.003)
                 close_p = round(temp_p, 2)
-                open_p = round(temp_p * (1 - drift * 0.3), 2)
+                open_p = round(close_p / (1 + drift), 2)
                 high_p = round(max(open_p, close_p) * (1 + random.uniform(0, 0.001)), 2)
                 low_p = round(min(open_p, close_p) * (1 - random.uniform(0, 0.001)), 2)
                 
@@ -1339,7 +1354,7 @@ def stock_data(ticker):
                     "4. close": str(close_p),
                     "5. volume": str(random.randint(1000, 20000))
                 }
-                temp_p = temp_p * (1 - drift)
+                temp_p = open_p
         else:
             # For minutes/hours
             days_to_gen = 1 if period == '1d' else 5
@@ -1365,12 +1380,15 @@ def stock_data(ticker):
                     loop_time += delta
                     
             points = sorted(points)[-300:] # Limit to last 300 to keep ApexCharts super fast
+            points.reverse() # Reverse to generate backward
             
+            # Generate backward starting from the live price `p`
+            temp_p = p
             for dt_val in points:
                 date_str = dt_val.strftime('%Y-%m-%d %H:%M')
                 drift = random.uniform(-0.005, 0.005)
                 close_p = round(temp_p, 2)
-                open_p = round(temp_p * (1 - drift * 0.3), 2)
+                open_p = round(close_p / (1 + drift), 2)
                 high_p = round(max(open_p, close_p) * (1 + random.uniform(0, 0.002)), 2)
                 low_p = round(min(open_p, close_p) * (1 - random.uniform(0, 0.002)), 2)
                 
@@ -1381,7 +1399,7 @@ def stock_data(ticker):
                     "4. close": str(close_p),
                     "5. volume": str(random.randint(10000, 200000))
                 }
-                temp_p = temp_p * (1 - drift)
+                temp_p = open_p
     else:
         # Daily / Weekly / Monthly daily simulation
         days_to_gen = 30 if period == '1mo' else 90 if period == '3mo' else 180 if period == '6mo' else 365 if period == '1y' else 1825
@@ -1403,12 +1421,13 @@ def stock_data(ticker):
                 continue
             points.append(target_day)
             
-        points.reverse()
+        # Do NOT reverse points so we iterate from newest to oldest
+        # Generate backward starting from the live price `p`
         for target_day in points:
             date_str = target_day.strftime('%Y-%m-%d')
             drift = random.uniform(-0.015, 0.015)
             close_p = round(temp_p, 2)
-            open_p = round(temp_p * (1 - drift * 0.3), 2)
+            open_p = round(close_p / (1 + drift), 2)
             high_p = round(max(open_p, close_p) * (1 + random.uniform(0, 0.01)), 2)
             low_p = round(min(open_p, close_p) * (1 - random.uniform(0, 0.01)), 2)
             
@@ -1419,7 +1438,7 @@ def stock_data(ticker):
                 "4. close": str(close_p),
                 "5. volume": str(random.randint(500000, 3000000))
             }
-            temp_p = temp_p * (1 - drift)
+            temp_p = open_p
             
     return jsonify(out)
 
