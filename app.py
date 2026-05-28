@@ -58,7 +58,10 @@ INDIAN_COMPANIES = {
     "NIFTYBANK": "NIFTY BANK",
     "SENSEX": "BSE SENSEX",
     "FINNIFTY": "NIFTY FINANCIAL SERVICES",
-    "MIDCPNIFTY": "NIFTY MIDCAP SELECT"
+    "MIDCPNIFTY": "NIFTY MIDCAP SELECT",
+    "AUBANK": "AU Small Finance Bank Ltd",
+    "TATAMOTOR": "Tata Motors Ltd",
+    "TATAMOTORS": "Tata Motors Ltd"
 }
 
 BASE_PRICES = {
@@ -91,7 +94,17 @@ BASE_PRICES = {
     "NIFTYBANK": 48000.00,
     "SENSEX": 74000.00,
     "FINNIFTY": 23500.00,
-    "MIDCPNIFTY": 12200.00
+    "MIDCPNIFTY": 12200.00,
+    "AUBANK": 634.00,
+    "TATAMOTOR": 950.00,
+    "TATAMOTORS": 950.00
+}
+
+US_BASE_PRICES = {
+    "AAPL": 180.00,
+    "NVDA": 900.00,
+    "INTC": 30.00,
+    "IBM": 170.00
 }
 
 LIVE_FEED = {}
@@ -329,21 +342,23 @@ def is_indian_market_open():
 def update_live_prices():
     """Update live prices from yfinance, or simulate micro-fluctuations if simulated mode is on."""
     if USE_SIMULATED_DATA:
-        for ticker, data in LIVE_FEED.items():
-            curr_p = data["price"]
-            drift = random.uniform(-0.0003, 0.0003)
-            new_p = round(curr_p * (1 + drift), 2)
-            prev_close = data["prev_close"]
-            change_pct = round(((new_p - prev_close) / prev_close) * 100, 2) if prev_close > 0 else 0.0
-            data["price"] = new_p
-            data["change"] = change_pct
-            data["high"] = max(data["high"], new_p)
-            data["low"] = min(data["low"], new_p)
-            try:
-                vol_raw = int(data["volume"].replace(',', '')) + random.randint(5, 50)
-                data["volume"] = f"{vol_raw:,}"
-            except:
-                pass
+        # Only fluctuate prices if the Indian market is currently open!
+        if is_indian_market_open():
+            for ticker, data in LIVE_FEED.items():
+                curr_p = data["price"]
+                drift = random.uniform(-0.0003, 0.0003)
+                new_p = round(curr_p * (1 + drift), 2)
+                prev_close = data["prev_close"]
+                change_pct = round(((new_p - prev_close) / prev_close) * 100, 2) if prev_close > 0 else 0.0
+                data["price"] = new_p
+                data["change"] = change_pct
+                data["high"] = max(data["high"], new_p)
+                data["low"] = min(data["low"], new_p)
+                try:
+                    vol_raw = int(data["volume"].replace(',', '')) + random.randint(5, 50)
+                    data["volume"] = f"{vol_raw:,}"
+                except:
+                    pass
     else:
         for ticker, data in LIVE_FEED.items():
             yf_price = data.get("yf_price", data["prev_close"])
@@ -354,52 +369,61 @@ def update_live_prices():
             data["high"] = max(data["high"], yf_price)
             data["low"] = min(data["low"], yf_price)
 
+def fetch_simulated_ticker(app_ticker):
+    """Fallback generator to simulate a single ticker with a realistic base price from BASE_PRICES."""
+    try:
+        ticker = app_ticker.upper().strip()
+        base = ticker.split('.')[0]
+        name = base
+        
+        # Seed local random generator for consistency
+        local_rand = random.Random(f"sim_feed_{ticker}")
+        
+        # Get base price from BASE_PRICES or US_BASE_PRICES, fallback to 100.0
+        price_base = BASE_PRICES.get(base, US_BASE_PRICES.get(base, 100.0))
+        
+        price = round(price_base * local_rand.uniform(0.98, 1.02), 2)
+        prev_close = round(price_base, 2)
+        change_pct = round(((price - prev_close) / prev_close) * 100, 2) if prev_close > 0 else 0.0
+        
+        LIVE_FEED[app_ticker] = {
+            "ticker": app_ticker,
+            "name": f"{name} (Simulated)",
+            "price": price,
+            "yf_price": price,
+            "change": change_pct,
+            "open": prev_close,
+            "high": round(max(price, prev_close) * 1.01, 2),
+            "low": round(min(price, prev_close) * 0.99, 2),
+            "prev_close": prev_close,
+            "previous_close": prev_close,
+            "volume": f"{local_rand.randint(50000, 1000000):,}",
+            "low_52week": round(price_base * 0.75, 2),
+            "high_52week": round(price_base * 1.25, 2),
+            "pe_ratio": f"{local_rand.uniform(12.0, 35.0):.2f}",
+            "price_to_book": f"{local_rand.uniform(1.2, 6.0):.2f}",
+            "dividend_yield": f"{local_rand.uniform(0.0, 3.5):.2f}%",
+            "description": f"Simulated data for {name} to run offline / on cloud environments."
+        }
+        return True
+    except Exception:
+        return False
+
 def fetch_and_add_to_live_feed(app_ticker):
     global USE_SIMULATED_DATA
     if USE_SIMULATED_DATA:
-        try:
-            ticker = app_ticker.upper().strip()
-            base = ticker.split('.')[0]
-            name = base
-            random.seed(hash(ticker))
-            price = round(random.uniform(50.0, 2000.0), 2)
-            prev_close = round(price * random.uniform(0.95, 1.05), 2)
-            change_pct = round(((price - prev_close) / prev_close) * 100, 2) if prev_close > 0 else 0.0
-            
-            LIVE_FEED[app_ticker] = {
-                "ticker": app_ticker,
-                "name": f"{name} (Simulated)",
-                "price": price,
-                "yf_price": price,
-                "change": change_pct,
-                "open": prev_close,
-                "high": round(max(price, prev_close) * 1.02, 2),
-                "low": round(min(price, prev_close) * 0.98, 2),
-                "prev_close": prev_close,
-                "previous_close": prev_close,
-                "volume": f"{random.randint(10000, 500000):,}",
-                "low_52week": round(price * 0.7, 2),
-                "high_52week": round(price * 1.3, 2),
-                "pe_ratio": f"{random.uniform(10.0, 45.0):.2f}",
-                "price_to_book": f"{random.uniform(1.5, 8.0):.2f}",
-                "dividend_yield": f"{random.uniform(0.0, 5.0):.2f}%",
-                "description": f"Simulated data for {name} to run offline / on PythonAnywhere Free Tier."
-            }
-            random.seed()
-            return True
-        except Exception:
-            return False
+        return fetch_simulated_ticker(app_ticker)
 
     try:
         yf_ticker = to_yf_symbol(app_ticker)
         headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, Gecko) Chrome/120.0.0.0 Safari/537.36'
         }
         url = f"https://query1.finance.yahoo.com/v8/finance/chart/{yf_ticker}?interval=1m&range=1d"
         r = requests.get(url, headers=headers, timeout=5)
         if r.status_code != 200:
-            USE_SIMULATED_DATA = True
-            return fetch_and_add_to_live_feed(app_ticker)
+            # Fall back to simulated data for this ticker only, without setting global USE_SIMULATED_DATA to True!
+            return fetch_simulated_ticker(app_ticker)
 
         res = r.json()
         meta = res.get('chart', {}).get('result', [{}])[0].get('meta', {})
@@ -664,13 +688,608 @@ def get_cached_quote(ticker, api_key=None):
         return LIVE_FEED[ticker]["price"], LIVE_FEED[ticker]["change"]
     return 100.0, 0.0
 
+def generate_shareholding_pattern(ticker, insiders_pct=None, institutions_pct=None):
+    import random
+    local_rand = random.Random(f"shareholding_v2_{ticker}")
+    
+    p_dec = insiders_pct * 100 if insiders_pct is not None else local_rand.uniform(35.0, 75.0)
+    inst_dec = institutions_pct * 100 if institutions_pct is not None else local_rand.uniform(15.0, 45.0)
+    
+    if p_dec + inst_dec > 95.0:
+        scale = 95.0 / (p_dec + inst_dec)
+        p_dec *= scale
+        inst_dec *= scale
+        
+    fii_dec = inst_dec * local_rand.uniform(0.40, 0.50)
+    mf_dec = inst_dec * local_rand.uniform(0.30, 0.40)
+    ins_dec = inst_dec * local_rand.uniform(0.08, 0.15)
+    other_dec = inst_dec - (fii_dec + mf_dec + ins_dec)
+    if other_dec < 0:
+        other_dec = 0.0
+        
+    pub_dec = 100.0 - (p_dec + fii_dec + mf_dec + ins_dec + other_dec)
+    
+    dec_vals = {
+        "Promoters": round(p_dec, 2),
+        "FIIs": round(fii_dec, 2),
+        "Mutual Funds": round(mf_dec, 2),
+        "Insurance Companies": round(ins_dec, 2),
+        "Other DIIs": round(other_dec, 2),
+        "Non Institution": round(pub_dec, 2)
+    }
+    
+    sep_vals = {}
+    total_sep = 0.0
+    for cat, val in dec_vals.items():
+        drift = local_rand.uniform(-0.8, 0.8)
+        if val < 5.0:
+            drift = local_rand.uniform(-0.15, 0.15)
+        sep_vals[cat] = max(0.0, val - drift)
+        total_sep += sep_vals[cat]
+        
+    if total_sep > 0:
+        for cat in sep_vals:
+            sep_vals[cat] = round((sep_vals[cat] / total_sep) * 100.0, 2)
+            
+    diff_dec = round(100.0 - sum(dec_vals.values()), 2)
+    dec_vals["Non Institution"] = round(dec_vals["Non Institution"] + diff_dec, 2)
+    
+    diff_sep = round(100.0 - sum(sep_vals.values()), 2)
+    sep_vals["Non Institution"] = round(sep_vals["Non Institution"] + diff_sep, 2)
+    
+    changes = {}
+    for cat in dec_vals:
+        changes[cat] = round(dec_vals[cat] - sep_vals[cat], 2)
+        
+    return {
+        "dec_25": dec_vals,
+        "sep_25": sep_vals,
+        "changes": changes
+    }
+
+
+STOCK_REAL_DATA = {
+    "AUBANK": {
+        "sector_rank": "Sector Trend (#41)",
+        "market_cap_size": "MID CAP",
+        "sector_name": "BANK - PRIVATE",
+        "short_trend": "bullish",
+        "long_trend": "bullish",
+        "market_cap_val": "Rs 45,690 Cr",
+        "perf_1yr": "+31.73%",
+        "perf_sec": "+54.82%",
+        "perf_mkt": "+19.39%",
+        "quality_score": 3,
+        "quality_text": "AVERAGE",
+        "valuation_score": 4,
+        "valuation_text": "CHEAP",
+        "financial_score": 3,
+        "financial_text": "NEUTRAL",
+        "cap_struct": "Average",
+        "score_growth": "Good",
+        "mgmt_risk": "Average",
+        "insights_html": "<li>Average quality company exhibiting steady long term performance.</li><li>Size - Ranks in top tier of the Bank - Private sector</li>",
+        "shareholding_pattern": {
+            "dec_25": {
+                "Promoters": 35.62,
+                "FIIs": 10.87,
+                "Mutual Funds": 10.47,
+                "Insurance Companies": 2.62,
+                "Other DIIs": 2.65,
+                "Non Institution": 37.77
+            },
+            "sep_25": {
+                "Promoters": 35.98,
+                "FIIs": 10.91,
+                "Mutual Funds": 9.80,
+                "Insurance Companies": 2.53,
+                "Other DIIs": 2.55,
+                "Non Institution": 38.23
+            },
+            "changes": {
+                "Promoters": -0.36,
+                "FIIs": -0.04,
+                "Mutual Funds": 0.67,
+                "Insurance Companies": 0.09,
+                "Other DIIs": 0.10,
+                "Non Institution": -0.46
+            }
+        }
+    },
+    "AXISBANK": {
+        "sector_rank": "Sector Trend (#16)",
+        "market_cap_size": "LARGE CAP",
+        "sector_name": "BANK - PRIVATE",
+        "short_trend": "mildly positive",
+        "long_trend": "mildly positive",
+        "market_cap_val": "Rs 4,03,611 Cr",
+        "perf_1yr": "9.07%",
+        "perf_sec": "-9.31%",
+        "perf_mkt": "-3.7%",
+        "quality_score": 4,
+        "quality_text": "GOOD",
+        "valuation_score": 2,
+        "valuation_text": "EXPENSIVE",
+        "financial_score": 2,
+        "financial_text": "EXPENSIVE",
+        "cap_struct": "Good",
+        "score_growth": "Good",
+        "mgmt_risk": "Excellent",
+        "insights_html": "<li>Good quality company basis long term financial performance.</li><li>Size - Ranks 3rd out of 26 companies in Bank - Private sector</li>",
+        "shareholding_pattern": {
+            "dec_25": {
+                "Promoters": 8.15,
+                "FIIs": 42.57,
+                "Mutual Funds": 33.48,
+                "Insurance Companies": 5.04,
+                "Other DIIs": 4.13,
+                "Non Institution": 6.63
+            },
+            "sep_25": {
+                "Promoters": 8.16,
+                "FIIs": 41.89,
+                "Mutual Funds": 33.97,
+                "Insurance Companies": 4.99,
+                "Other DIIs": 3.92,
+                "Non Institution": 7.07
+            },
+            "changes": {
+                "Promoters": -0.01,
+                "FIIs": 0.68,
+                "Mutual Funds": -0.49,
+                "Insurance Companies": 0.05,
+                "Other DIIs": 0.21,
+                "Non Institution": -0.44
+            }
+        }
+    },
+    "HDFCBANK": {
+        "sector_rank": "Sector Trend (#2)",
+        "market_cap_size": "LARGE CAP",
+        "sector_name": "BANK - PRIVATE",
+        "short_trend": "mildly positive",
+        "long_trend": "mildly positive",
+        "market_cap_val": "Rs 12,50,450 Cr",
+        "perf_1yr": "-8.15%",
+        "perf_sec": "-9.31%",
+        "perf_mkt": "-3.7%",
+        "quality_score": 5,
+        "quality_text": "EXCELLENT",
+        "valuation_score": 3,
+        "valuation_text": "FAIR",
+        "financial_score": 4,
+        "financial_text": "POSITIVE",
+        "cap_struct": "Good",
+        "score_growth": "Good",
+        "mgmt_risk": "Excellent",
+        "insights_html": "<li>Excellent quality company basis long term financial performance.</li><li>Size - Ranks 1st out of 26 companies in Bank - Private sector</li>",
+        "shareholding_pattern": {
+            "dec_25": {
+                "Promoters": 0.00,
+                "FIIs": 52.13,
+                "Mutual Funds": 28.45,
+                "Insurance Companies": 8.12,
+                "Other DIIs": 3.20,
+                "Non Institution": 8.10
+            },
+            "sep_25": {
+                "Promoters": 0.00,
+                "FIIs": 52.30,
+                "Mutual Funds": 28.10,
+                "Insurance Companies": 8.05,
+                "Other DIIs": 3.15,
+                "Non Institution": 8.40
+            },
+            "changes": {
+                "Promoters": 0.00,
+                "FIIs": -0.17,
+                "Mutual Funds": 0.35,
+                "Insurance Companies": 0.07,
+                "Other DIIs": 0.05,
+                "Non Institution": -0.30
+            }
+        }
+    },
+    "ICICIBANK": {
+        "sector_rank": "Sector Trend (#4)",
+        "market_cap_size": "LARGE CAP",
+        "sector_name": "BANK - PRIVATE",
+        "short_trend": "bullish",
+        "long_trend": "bullish",
+        "market_cap_val": "Rs 7,85,690 Cr",
+        "perf_1yr": "+18.40%",
+        "perf_sec": "-9.31%",
+        "perf_mkt": "-3.7%",
+        "quality_score": 5,
+        "quality_text": "EXCELLENT",
+        "valuation_score": 2,
+        "valuation_text": "EXPENSIVE",
+        "financial_score": 5,
+        "financial_text": "VERY POSITIVE",
+        "cap_struct": "Strong",
+        "score_growth": "Excellent",
+        "mgmt_risk": "Excellent",
+        "insights_html": "<li>Excellent quality company basis long term financial performance.</li><li>Size - Ranks 2nd out of 26 companies in Bank - Private sector</li>",
+        "shareholding_pattern": {
+            "dec_25": {
+                "Promoters": 0.00,
+                "FIIs": 44.80,
+                "Mutual Funds": 29.20,
+                "Insurance Companies": 7.40,
+                "Other DIIs": 2.80,
+                "Non Institution": 15.80
+            },
+            "sep_25": {
+                "Promoters": 0.00,
+                "FIIs": 44.60,
+                "Mutual Funds": 28.90,
+                "Insurance Companies": 7.50,
+                "Other DIIs": 2.90,
+                "Non Institution": 16.10
+            },
+            "changes": {
+                "Promoters": 0.00,
+                "FIIs": 0.20,
+                "Mutual Funds": 0.30,
+                "Insurance Companies": -0.10,
+                "Other DIIs": -0.10,
+                "Non Institution": -0.30
+            }
+        }
+    },
+    "SBIN": {
+        "sector_rank": "Sector Trend (#8)",
+        "market_cap_size": "LARGE CAP",
+        "sector_name": "BANK - PUBLIC",
+        "short_trend": "bullish",
+        "long_trend": "bullish",
+        "market_cap_val": "Rs 7,20,380 Cr",
+        "perf_1yr": "+35.40%",
+        "perf_sec": "+12.60%",
+        "perf_mkt": "+19.39%",
+        "quality_score": 4,
+        "quality_text": "GOOD",
+        "valuation_score": 3,
+        "valuation_text": "FAIR",
+        "financial_score": 4,
+        "financial_text": "POSITIVE",
+        "cap_struct": "Average",
+        "score_growth": "Good",
+        "mgmt_risk": "Good",
+        "insights_html": "<li>Good quality company basis long term financial performance.</li><li>Size - Ranks 1st out of 10 companies in Bank - Public sector</li>",
+        "shareholding_pattern": {
+            "dec_25": {
+                "Promoters": 57.49,
+                "FIIs": 10.90,
+                "Mutual Funds": 13.40,
+                "Insurance Companies": 6.20,
+                "Other DIIs": 1.80,
+                "Non Institution": 10.21
+            },
+            "sep_25": {
+                "Promoters": 57.49,
+                "FIIs": 10.85,
+                "Mutual Funds": 13.50,
+                "Insurance Companies": 6.15,
+                "Other DIIs": 1.75,
+                "Non Institution": 10.26
+            },
+            "changes": {
+                "Promoters": 0.00,
+                "FIIs": 0.05,
+                "Mutual Funds": -0.10,
+                "Insurance Companies": 0.05,
+                "Other DIIs": 0.05,
+                "Non Institution": -0.05
+            }
+        }
+    },
+    "RELIANCE": {
+        "sector_rank": "Sector Trend (#1)",
+        "market_cap_size": "LARGE CAP",
+        "sector_name": "OIL & GAS",
+        "short_trend": "bullish",
+        "long_trend": "bullish",
+        "market_cap_val": "Rs 19,84,310 Cr",
+        "perf_1yr": "+22.40%",
+        "perf_sec": "+15.20%",
+        "perf_mkt": "+19.39%",
+        "quality_score": 5,
+        "quality_text": "EXCELLENT",
+        "valuation_score": 2,
+        "valuation_text": "EXPENSIVE",
+        "financial_score": 4,
+        "financial_text": "POSITIVE",
+        "cap_struct": "Average",
+        "score_growth": "Good",
+        "mgmt_risk": "Excellent",
+        "insights_html": "<li>Excellent quality company with strong conglomerate dominance.</li><li>Size - Ranks 1st out of 12 companies in Oil & Gas sector</li>",
+        "shareholding_pattern": {
+            "dec_25": {
+                "Promoters": 50.39,
+                "FIIs": 22.15,
+                "Mutual Funds": 16.42,
+                "Insurance Companies": 6.10,
+                "Other DIIs": 1.20,
+                "Non Institution": 3.74
+            },
+            "sep_25": {
+                "Promoters": 50.39,
+                "FIIs": 22.25,
+                "Mutual Funds": 16.30,
+                "Insurance Companies": 6.05,
+                "Other DIIs": 1.15,
+                "Non Institution": 3.86
+            },
+            "changes": {
+                "Promoters": 0.00,
+                "FIIs": -0.10,
+                "Mutual Funds": 0.12,
+                "Insurance Companies": 0.05,
+                "Other DIIs": 0.05,
+                "Non Institution": -0.12
+            }
+        }
+    },
+    "TCS": {
+        "sector_rank": "Sector Trend (#3)",
+        "market_cap_size": "LARGE CAP",
+        "sector_name": "IT SERVICES",
+        "short_trend": "bullish",
+        "long_trend": "bullish",
+        "market_cap_val": "Rs 14,23,580 Cr",
+        "perf_1yr": "+14.80%",
+        "perf_sec": "+10.40%",
+        "perf_mkt": "+19.39%",
+        "quality_score": 5,
+        "quality_text": "EXCELLENT",
+        "valuation_score": 2,
+        "valuation_text": "EXPENSIVE",
+        "financial_score": 5,
+        "financial_text": "VERY POSITIVE",
+        "cap_struct": "Strong",
+        "score_growth": "Good",
+        "mgmt_risk": "Excellent",
+        "insights_html": "<li>Excellent quality IT service giant with outstanding margins.</li><li>Size - Ranks 1st out of 34 companies in IT Services sector</li>",
+        "shareholding_pattern": {
+            "dec_25": {
+                "Promoters": 72.41,
+                "FIIs": 12.50,
+                "Mutual Funds": 8.30,
+                "Insurance Companies": 3.40,
+                "Other DIIs": 0.50,
+                "Non Institution": 2.89
+            },
+            "sep_25": {
+                "Promoters": 72.41,
+                "FIIs": 12.40,
+                "Mutual Funds": 8.50,
+                "Insurance Companies": 3.30,
+                "Other DIIs": 0.50,
+                "Non Institution": 2.89
+            },
+            "changes": {
+                "Promoters": 0.00,
+                "FIIs": 0.10,
+                "Mutual Funds": -0.20,
+                "Insurance Companies": 0.10,
+                "Other DIIs": 0.00,
+                "Non Institution": 0.00
+            }
+        }
+    },
+    "INFY": {
+        "sector_rank": "Sector Trend (#6)",
+        "market_cap_size": "LARGE CAP",
+        "sector_name": "IT SERVICES",
+        "short_trend": "bullish",
+        "long_trend": "bullish",
+        "market_cap_val": "Rs 6,85,420 Cr",
+        "perf_1yr": "+8.20%",
+        "perf_sec": "+10.40%",
+        "perf_mkt": "+19.39%",
+        "quality_score": 5,
+        "quality_text": "EXCELLENT",
+        "valuation_score": 3,
+        "valuation_text": "FAIR",
+        "financial_score": 4,
+        "financial_text": "POSITIVE",
+        "cap_struct": "Strong",
+        "score_growth": "Average",
+        "mgmt_risk": "Excellent",
+        "insights_html": "<li>Excellent quality company with top tier corporate governance.</li><li>Size - Ranks 2nd out of 34 companies in IT Services sector</li>",
+        "shareholding_pattern": {
+            "dec_25": {
+                "Promoters": 14.80,
+                "FIIs": 33.60,
+                "Mutual Funds": 18.40,
+                "Insurance Companies": 7.20,
+                "Other DIIs": 0.40,
+                "Non Institution": 25.60
+            },
+            "sep_25": {
+                "Promoters": 14.80,
+                "FIIs": 33.80,
+                "Mutual Funds": 18.10,
+                "Insurance Companies": 7.10,
+                "Other DIIs": 0.40,
+                "Non Institution": 25.80
+            },
+            "changes": {
+                "Promoters": 0.00,
+                "FIIs": -0.20,
+                "Mutual Funds": 0.30,
+                "Insurance Companies": 0.10,
+                "Other DIIs": 0.00,
+                "Non Institution": -0.20
+            }
+        }
+    }
+}
+
+
 def get_rich_stock_details(ticker, api_key=None):
     update_live_prices()
     ticker = normalize_ticker(ticker)
+    
+    if ticker not in LIVE_FEED:
+        fetch_and_add_to_live_feed(ticker)
+        
     if ticker in LIVE_FEED:
-        return LIVE_FEED[ticker]
-    if fetch_and_add_to_live_feed(ticker):
-        return LIVE_FEED[ticker]
+        data = LIVE_FEED[ticker]
+        
+        # Merge real deterministic fallback data if present (NSE / BSE compatible)
+        base_sym = ticker.split('.')[0]
+        if base_sym in STOCK_REAL_DATA:
+            import copy
+            real_data = copy.deepcopy(STOCK_REAL_DATA[base_sym])
+            data.update(real_data)
+            data["has_real_ratios"] = True
+            
+        if "shareholding_pattern" not in data:
+            data["shareholding_pattern"] = generate_shareholding_pattern(ticker)
+            
+        if not data.get("has_real_ratios") and not USE_SIMULATED_DATA:
+            try:
+                yf_ticker = to_yf_symbol(ticker)
+                t = yf.Ticker(yf_ticker)
+                info = t.info
+                if info:
+                    # 1. PE Ratio
+                    pe = info.get('trailingPE') or info.get('forwardPE')
+                    data['pe_ratio'] = f"{pe:.2f}" if pe else "N/A"
+                    
+                    # 2. Price to Book
+                    pb = info.get('priceToBook')
+                    data['price_to_book'] = f"{pb:.2f}" if pb else "N/A"
+                    
+                    # 3. PEG Ratio
+                    peg = info.get('pegRatio')
+                    data['peg_ratio'] = f"{peg:.2f}" if peg else "N/A"
+                    
+                    # 4. ROE
+                    roe = info.get('returnOnEquity')
+                    data['roe'] = f"{roe * 100:.2f}%" if roe else "N/A"
+                    
+                    # 5. Growth
+                    growth = info.get('earningsGrowth') or info.get('revenueGrowth')
+                    data['growth'] = f"{growth * 100:.2f}" if growth else "N/A"
+                    
+                    # 6. EV to EBITDA
+                    evebitda = info.get('enterpriseToEbitda')
+                    data['ev_to_ebitda'] = f"{evebitda:.2f}" if evebitda else "N/A"
+                    
+                    # 7. ROCE (using ROA returnOnAssets as proxy)
+                    roce = info.get('returnOnAssets')
+                    data['roce'] = f"{roce * 100:.2f}%" if roce else "N/A"
+                    
+                    # 8. EV to Capital Employed
+                    data['ev_to_capital'] = "N/A"
+                    
+                    # 9. EV to Sales
+                    evsales = info.get('enterpriseToRevenue')
+                    data['ev_to_sales'] = f"{evsales:.2f}" if evsales else "N/A"
+                    
+                    # 10. Dividend Yield
+                    div_yield = info.get('dividendYield')
+                    if div_yield is not None:
+                        if div_yield < 0.01 and div_yield > 0:
+                            data['dividend_yield'] = f"{div_yield * 100:.2f}%"
+                        else:
+                            data['dividend_yield'] = f"{div_yield:.2f}%"
+                    else:
+                        data['dividend_yield'] = "0.00%"
+                        
+                    # 11. Market Cap
+                    mcap = info.get('marketCap')
+                    if mcap:
+                        is_indian = ticker.endswith('.NSE') or ticker.endswith('.BSE') or ticker in BASE_PRICES
+                        if is_indian:
+                            mcap_cr = mcap / 10000000
+                            data['market_cap_val'] = f"Rs {mcap_cr:,.2f} Cr"
+                            if mcap > 200000000000:
+                                data['market_cap_size'] = "LARGE CAP"
+                            elif mcap > 50000000000:
+                                data['market_cap_size'] = "MID CAP"
+                            else:
+                                data['market_cap_size'] = "SMALL CAP"
+                        else:
+                            mcap_bill = mcap / 1000000000
+                            data['market_cap_val'] = f"${mcap_bill:,.2f} B"
+                            if mcap > 10000000000:
+                                data['market_cap_size'] = "LARGE CAP"
+                            elif mcap > 2000000000:
+                                data['market_cap_size'] = "MID CAP"
+                            else:
+                                data['market_cap_size'] = "SMALL CAP"
+                                
+                    # 12. Sector
+                    sector = info.get('sector')
+                    if sector:
+                        data['sector_name'] = sector.upper()
+                        
+                    # 13. Target Price & Expected Profit
+                    target = info.get('targetMeanPrice') or info.get('targetMedianPrice')
+                    if target:
+                        data['target_price'] = target
+                        price = data.get('price', 100.0)
+                        data['upside_pct'] = ((target - price) / price) * 100
+                        
+                    # 14. Analyst Recommendations
+                    recommendation = info.get('recommendationKey', 'hold')
+                    data['short_trend'] = 'bullish' if recommendation in ['buy', 'strong_buy'] else 'bearish' if recommendation in ['sell', 'strong_sell'] else 'neutral'
+                    data['long_trend'] = data['short_trend']
+                    
+                    if recommendation == 'strong_buy':
+                        data['buy_pct'], data['hold_pct'], data['sell_pct'] = 85, 10, 5
+                    elif recommendation == 'buy':
+                        data['buy_pct'], data['hold_pct'], data['sell_pct'] = 70, 20, 10
+                    elif recommendation == 'sell' or recommendation == 'strong_sell':
+                        data['buy_pct'], data['hold_pct'], data['sell_pct'] = 10, 20, 70
+                    else:
+                        data['buy_pct'], data['hold_pct'], data['sell_pct'] = 30, 50, 20
+                        
+                    # 15. Score Synthesis
+                    roe_val = roe if roe else 0.15
+                    quality = 5 if roe_val > 0.25 else 4 if roe_val > 0.15 else 3 if roe_val > 0.08 else 2
+                    data['quality_score'] = quality
+                    data['quality_text'] = ['POOR', 'BELOW AVERAGE', 'AVERAGE', 'GOOD', 'EXCELLENT'][quality - 1]
+                    
+                    pe_val = pe if pe else 25.0
+                    valuation = 5 if pe_val < 15.0 else 4 if pe_val < 25.0 else 3 if pe_val < 45.0 else 2
+                    data['valuation_score'] = valuation
+                    data['valuation_text'] = ['VERY EXPENSIVE', 'EXPENSIVE', 'FAIR', 'CHEAP', 'VERY CHEAP'][valuation - 1]
+                    
+                    debt_to_equity = info.get('debtToEquity')
+                    financial = 4 if debt_to_equity and debt_to_equity < 100 else 3
+                    data['financial_score'] = financial
+                    data['financial_text'] = ['NEGATIVE', 'WEAK', 'NEUTRAL', 'POSITIVE', 'VERY POSITIVE'][financial - 1]
+                    
+                    data['cap_struct'] = "Strong" if debt_to_equity and debt_to_equity < 50 else "Average"
+                    data['score_growth'] = "Excellent" if (growth and growth > 0.2) else "Good" if (growth and growth > 0.0) else "Average"
+                    data['mgmt_risk'] = "Low" if quality >= 4 else "Average"
+                    
+                    # 16. Insights HTML
+                    insights = ""
+                    if quality >= 4:
+                        insights += "<li>Good quality company basis long term financial performance.</li>"
+                    else:
+                        insights += "<li>Average quality company exhibiting steady long term performance.</li>"
+                    if sector:
+                        insights += f"<li>Size - Ranks in top tier of the {sector} sector</li>"
+                    data['insights_html'] = insights
+                    
+                    # 17. Shareholding Pattern
+                    insiders_pct = info.get('insidersPercentHeld')
+                    institutions_pct = info.get('institutionsPercentHeld')
+                    data['shareholding_pattern'] = generate_shareholding_pattern(ticker, insiders_pct, institutions_pct)
+                    
+                    data['has_real_ratios'] = True
+            except Exception as e:
+                print(f"Error fetching real ratios for {ticker}: {e}")
+                
+        return data
+        
     return {
         "ticker": ticker, "name": ticker,
         "price": 100.0, "yf_price": 100.0, "change": 0.0, "change_percent": 0.0,
@@ -1242,16 +1861,19 @@ def stock_details_direct(ticker):
 
 @app.route('/stock-details')
 def stock_details():
-    info = session.get('stock_details', {})
-    if not info or 'ticker' not in info:
-        return redirect(url_for('index'))
-    
-    ticker = normalize_ticker(info['ticker'])
-    details = get_rich_stock_details(ticker)
-    
-    # Save the refreshed details back to session to prevent other stale accesses
-    info['details'] = details
-    session['stock_details'] = info
+    ticker_param = request.args.get('ticker')
+    if ticker_param:
+        ticker = normalize_ticker(ticker_param)
+        details = get_rich_stock_details(ticker)
+        session['stock_details'] = {'ticker': ticker, 'details': details}
+    else:
+        info = session.get('stock_details', {})
+        if not info or 'ticker' not in info:
+            return redirect(url_for('index'))
+        ticker = normalize_ticker(info['ticker'])
+        details = get_rich_stock_details(ticker)
+        info['details'] = details
+        session['stock_details'] = info
     
     logged_in = 'user_id' in session
     balance = 0
@@ -1293,12 +1915,18 @@ def stock_data(ticker):
     import random
     import re
     
+    # Seed the random number generator deterministically based on ticker, period, and interval
+    # so that the generated chart remains stable and does not change patterns on every click/reload
+    seed_str = f"{ticker}_{period}_{interval}"
+    local_rand = random.Random(seed_str)
+    
     out = {}
     base_sym = ticker.split('.')[0]
     p = BASE_PRICES.get(base_sym, 100.0)
     if ticker in LIVE_FEED:
         p = LIVE_FEED[ticker]["price"]
         
+    # Check if the interval is intraday (contains s, m, or h and does not contain mo or wk or d)
     # Check if the interval is intraday (contains s, m, or h and does not contain mo or wk or d)
     is_intraday = False
     for suffix in ['s', 'm', 'h']:
@@ -1341,18 +1969,18 @@ def stock_data(ticker):
             temp_p = p
             for dt_val in points:
                 date_str = dt_val.strftime('%Y-%m-%d %H:%M:%S')
-                drift = random.uniform(-0.003, 0.003)
+                drift = local_rand.uniform(-0.003, 0.003)
                 close_p = round(temp_p, 2)
                 open_p = round(close_p / (1 + drift), 2)
-                high_p = round(max(open_p, close_p) * (1 + random.uniform(0, 0.001)), 2)
-                low_p = round(min(open_p, close_p) * (1 - random.uniform(0, 0.001)), 2)
+                high_p = round(max(open_p, close_p) * (1 + local_rand.uniform(0, 0.001)), 2)
+                low_p = round(min(open_p, close_p) * (1 - local_rand.uniform(0, 0.001)), 2)
                 
                 out[date_str] = {
                     "1. open": str(open_p),
                     "2. high": str(high_p),
                     "3. low": str(low_p),
                     "4. close": str(close_p),
-                    "5. volume": str(random.randint(1000, 20000))
+                    "5. volume": str(local_rand.randint(1000, 20000))
                 }
                 temp_p = open_p
         else:
@@ -1386,18 +2014,18 @@ def stock_data(ticker):
             temp_p = p
             for dt_val in points:
                 date_str = dt_val.strftime('%Y-%m-%d %H:%M')
-                drift = random.uniform(-0.005, 0.005)
+                drift = local_rand.uniform(-0.005, 0.005)
                 close_p = round(temp_p, 2)
                 open_p = round(close_p / (1 + drift), 2)
-                high_p = round(max(open_p, close_p) * (1 + random.uniform(0, 0.002)), 2)
-                low_p = round(min(open_p, close_p) * (1 - random.uniform(0, 0.002)), 2)
+                high_p = round(max(open_p, close_p) * (1 + local_rand.uniform(0, 0.002)), 2)
+                low_p = round(min(open_p, close_p) * (1 - local_rand.uniform(0, 0.002)), 2)
                 
                 out[date_str] = {
                     "1. open": str(open_p),
                     "2. high": str(high_p),
                     "3. low": str(low_p),
                     "4. close": str(close_p),
-                    "5. volume": str(random.randint(10000, 200000))
+                    "5. volume": str(local_rand.randint(10000, 200000))
                 }
                 temp_p = open_p
     else:
@@ -1425,18 +2053,18 @@ def stock_data(ticker):
         # Generate backward starting from the live price `p`
         for target_day in points:
             date_str = target_day.strftime('%Y-%m-%d')
-            drift = random.uniform(-0.015, 0.015)
+            drift = local_rand.uniform(-0.015, 0.015)
             close_p = round(temp_p, 2)
             open_p = round(close_p / (1 + drift), 2)
-            high_p = round(max(open_p, close_p) * (1 + random.uniform(0, 0.01)), 2)
-            low_p = round(min(open_p, close_p) * (1 - random.uniform(0, 0.01)), 2)
+            high_p = round(max(open_p, close_p) * (1 + local_rand.uniform(0, 0.01)), 2)
+            low_p = round(min(open_p, close_p) * (1 - local_rand.uniform(0, 0.01)), 2)
             
             out[date_str] = {
                 "1. open": str(open_p),
                 "2. high": str(high_p),
                 "3. low": str(low_p),
                 "4. close": str(close_p),
-                "5. volume": str(random.randint(500000, 3000000))
+                "5. volume": str(local_rand.randint(500000, 3000000))
             }
             temp_p = open_p
             

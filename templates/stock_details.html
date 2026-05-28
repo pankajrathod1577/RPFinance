@@ -367,6 +367,14 @@
             background: var(--cyan-glow) !important;
             color: var(--cyan) !important;
         }
+        
+        /* Light Theme Chart Specific CSS */
+        #interval-dropdown-menu, #indicators-dropdown-menu {
+            border-color: var(--border) !important;
+        }
+        #custom-chart-wrapper .chart-period-btn {
+            border-color: var(--border) !important;
+        }
     </style>
 </head>
 <body>
@@ -644,128 +652,274 @@
 
                 <!-- 4. Performance Overview Panel (Full Width) -->
                 <div id="section-performance" style="background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 24px; margin-bottom: 24px; box-shadow: var(--shadow-card);">
-                    <h3 style="font-size: 14px; font-weight: 700; color: var(--text-primary); text-transform: uppercase; margin-bottom: 16px;">Performance Overview</h3>
+                    <h3 style="font-size: 15px; font-weight: 700; color: var(--text-primary); margin-bottom: 16px;">Performance Overview</h3>
                     
-                    <!-- Sector Trend Header -->
-                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px; flex-wrap: wrap;">
-                        <span style="font-size: 12px; font-weight: 600; color: var(--text-secondary);" id="val-sector-rank">Sector Trend (#11)</span>
-                        <span style="font-size: 10px; background: var(--bg-secondary); border: 1px solid var(--border); padding: 2px 8px; border-radius: 4px; color: var(--text-secondary); font-weight: 700;" id="val-market-cap-size">MID CAP</span>
-                        <span style="font-size: 10px; background: var(--bg-secondary); border: 1px solid var(--border); padding: 2px 8px; border-radius: 4px; color: var(--text-secondary); font-weight: 700;" id="val-sector-name">RENEWABLE ENERGY</span>
+                    <!-- Sector Trend Header Tags -->
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 24px; flex-wrap: wrap;">
+                        <span style="font-size: 11px; font-weight: 700; color: var(--green); background: var(--green-dim); border: 1px solid var(--green-dim); padding: 2.5px 8px; border-radius: 4px; display: inline-flex; align-items: center; gap: 4px;" id="val-sector-rank">
+                            <span style="width: 5px; height: 5px; background: var(--green); border-radius: 50%;"></span>
+                            Sector Trend (#11)
+                        </span>
+                        <span style="font-size: 10px; background: var(--bg-secondary); border: 1px solid var(--border); padding: 2.5px 8px; border-radius: 4px; color: var(--text-secondary); font-weight: 700; text-transform: uppercase;" id="val-market-cap-size">MID CAP</span>
+                        <span style="font-size: 10px; background: var(--bg-secondary); border: 1px solid var(--border); padding: 2.5px 8px; border-radius: 4px; color: var(--text-secondary); font-weight: 700; text-transform: uppercase;" id="val-sector-name">RENEWABLE ENERGY</span>
                     </div>
 
                     <!-- Trend Row Grid -->
-                    <div style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; margin-bottom: 24px; border-bottom: 1px solid var(--border-light); padding-bottom: 20px;">
-                        <div style="background: var(--bg-secondary); border: 1px solid var(--border); padding: 12px; border-radius: 6px; text-align: center;">
-                            <span style="font-size: 10px; color: var(--text-muted); display: block; text-transform: uppercase; margin-bottom: 4px;">Short Term</span>
-                            <span id="val-trend-short" style="font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--yellow);">Neutral</span>
+                    <div style="display: flex; align-items: center; gap: 24px; flex-wrap: wrap; margin-bottom: 24px; border-bottom: 1px solid var(--border-light); padding-bottom: 20px;">
+                        <!-- Short Term & Long Term Cards -->
+                        <div style="display: flex; gap: 12px; flex-shrink: 0;">
+                            <!-- Short Term Card -->
+                            <div style="border: 1px solid var(--border); padding: 12px 18px; border-radius: var(--radius-md); background: var(--bg-secondary); min-width: 140px; text-align: left; display: flex; flex-direction: column; gap: 4px;">
+                                <div style="display: flex; align-items: center; gap: 6px;">
+                                    <span id="val-trend-short-dot" style="width: 6px; height: 6px; background: var(--yellow); border-radius: 50%; display: inline-block;"></span>
+                                    <span style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px;">Short Term</span>
+                                </div>
+                                <span id="val-trend-short" style="font-size: 13px; font-weight: 700; color: var(--yellow); text-transform: capitalize;">Neutral</span>
+                            </div>
+
+                            <!-- Long Term Card -->
+                            <div style="border: 1px solid var(--border); padding: 12px 18px; border-radius: var(--radius-md); background: var(--bg-secondary); min-width: 140px; text-align: left; display: flex; flex-direction: column; gap: 4px;">
+                                <div style="display: flex; align-items: center; gap: 6px;">
+                                    <span id="val-trend-long-dot" style="width: 6px; height: 6px; background: var(--yellow); border-radius: 50%; display: inline-block;"></span>
+                                    <span style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px;">Long Term</span>
+                                </div>
+                                <span id="val-trend-long" style="font-size: 13px; font-weight: 700; color: var(--yellow); text-transform: capitalize;">Neutral</span>
+                            </div>
                         </div>
-                        <div style="background: var(--bg-secondary); border: 1px solid var(--border); padding: 12px; border-radius: 6px; text-align: center;">
-                            <span style="font-size: 10px; color: var(--text-muted); display: block; text-transform: uppercase; margin-bottom: 4px;">Long Term</span>
-                            <span id="val-trend-long" style="font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--yellow);">Neutral</span>
-                        </div>
-                        <div style="background: var(--bg-secondary); border: 1px solid var(--border); padding: 12px; border-radius: 6px; text-align: center;">
-                            <span style="font-size: 10px; color: var(--text-muted); display: block; text-transform: uppercase; margin-bottom: 4px;">Market Cap</span>
-                            <span id="val-perf-mcap" style="font-size: 11.5px; font-weight: 700; color: var(--text-primary); font-family: var(--font-mono);">Rs 74,979 Cr</span>
-                        </div>
-                        <div style="background: var(--bg-secondary); border: 1px solid var(--border); padding: 12px; border-radius: 6px; text-align: center;">
-                            <span style="font-size: 10px; color: var(--text-muted); display: block; text-transform: uppercase; margin-bottom: 4px;">1 Year Return</span>
-                            <span id="val-perf-1yr" style="font-size: 11.5px; font-weight: 700; color: var(--red); font-family: var(--font-mono);">-12.02%</span>
-                        </div>
-                        <div style="background: var(--bg-secondary); border: 1px solid var(--border); padding: 12px; border-radius: 6px; text-align: center;">
-                            <span style="font-size: 10px; color: var(--text-muted); display: block; text-transform: uppercase; margin-bottom: 4px;">Sector Return</span>
-                            <span id="val-perf-sec" style="font-size: 11.5px; font-weight: 700; color: var(--red); font-family: var(--font-mono);">-17.01%</span>
-                        </div>
-                        <div style="background: var(--bg-secondary); border: 1px solid var(--border); padding: 12px; border-radius: 6px; text-align: center;">
-                            <span style="font-size: 10px; color: var(--text-muted); display: block; text-transform: uppercase; margin-bottom: 4px;">Market Return</span>
-                            <span id="val-perf-mkt" style="font-size: 11.5px; font-weight: 700; color: var(--red); font-family: var(--font-mono);">-3.7%</span>
+
+                        <!-- Vertical Divider -->
+                        <div style="width: 1px; height: 50px; background: var(--border-light); flex-shrink: 0;"></div>
+
+                        <!-- Stats Row -->
+                        <div style="display: flex; flex-grow: 1; justify-content: space-around; gap: 16px; flex-wrap: wrap; text-align: left;">
+                            <div style="display: flex; flex-direction: column; gap: 4px;">
+                                <span style="font-size: 10.5px; color: var(--text-muted); text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px;">Market Cap</span>
+                                <span id="val-perf-mcap" style="font-size: 13.5px; font-weight: 700; color: var(--text-primary); font-family: var(--font-mono);">Rs 74,979 Cr</span>
+                            </div>
+                            <div style="display: flex; flex-direction: column; gap: 4px;">
+                                <span style="font-size: 10.5px; color: var(--text-muted); text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px;">1 Year Return</span>
+                                <span id="val-perf-1yr" style="font-size: 13.5px; font-weight: 700; color: var(--red); font-family: var(--font-mono);">-12.02%</span>
+                            </div>
+                            <div style="display: flex; flex-direction: column; gap: 4px;">
+                                <span style="font-size: 10.5px; color: var(--text-muted); text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px;">Sector Return</span>
+                                <span id="val-perf-sec" style="font-size: 13.5px; font-weight: 700; color: var(--red); font-family: var(--font-mono);">-17.01%</span>
+                            </div>
+                            <div style="display: flex; flex-direction: column; gap: 4px;">
+                                <span style="font-size: 10.5px; color: var(--text-muted); text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px;">Market Return</span>
+                                <span id="val-perf-mkt" style="font-size: 13.5px; font-weight: 700; color: var(--red); font-family: var(--font-mono);">-3.7%</span>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Quality / Valuation Grid -->
-                    <div style="display: grid; grid-template-columns: 1fr 1.2fr 1.5fr; gap: 24px;">
+                    <!-- Scores & Insights Split Layout -->
+                    <div style="display: grid; grid-template-columns: 280px 1fr; gap: 32px;">
                         <!-- Col 1: Quality, Valuation, Financial -->
-                        <div style="display: flex; flex-direction: column; gap: 16px; border-right: 1px solid var(--border-light); padding-right: 20px;">
-                            <div>
-                                <span style="font-size: 11px; color: var(--text-muted); display: block;">Quality</span>
-                                <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 4px;">
-                                    <span style="font-size: 13px; font-weight: 700; color: var(--green);" id="score-quality-text">GOOD</span>
-                                    <span style="font-size: 11px; background: var(--green-dim); color: var(--green); padding: 1px 6px; border-radius: 4px; font-weight: 600;" id="score-quality-val">4/5</span>
+                        <div style="display: flex; flex-direction: column; gap: 16px; border-right: 1px solid var(--border-light); padding-right: 28px;">
+                            <!-- Quality Row -->
+                            <div style="display: flex; align-items: center; justify-content: space-between;">
+                                <span style="font-size: 13px; font-weight: 600; color: var(--text-secondary);">Quality</span>
+                                <div style="display: flex; gap: 6px;">
+                                    <span id="score-quality-text" style="font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; color: var(--green); background: var(--green-dim); min-width: 60px; text-align: center;">GOOD</span>
+                                    <span id="score-quality-val" style="font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; color: var(--green); background: var(--green-dim); min-width: 30px; text-align: center;">4/5</span>
                                 </div>
                             </div>
-                            <div>
-                                <span style="font-size: 11px; color: var(--text-muted); display: block;">Valuation</span>
-                                <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 4px;">
-                                    <span style="font-size: 13px; font-weight: 700; color: var(--red);" id="score-valuation-text">EXPENSIVE</span>
-                                    <span style="font-size: 11px; background: var(--red-dim); color: var(--red); padding: 1px 6px; border-radius: 4px; font-weight: 600;" id="score-valuation-val">2/5</span>
+
+                            <!-- Valuation Row -->
+                            <div style="display: flex; align-items: center; justify-content: space-between;">
+                                <span style="font-size: 13px; font-weight: 600; color: var(--text-secondary);">Valuation</span>
+                                <div style="display: flex; gap: 6px;">
+                                    <span id="score-valuation-text" style="font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; color: var(--red); background: var(--red-dim); min-width: 60px; text-align: center;">EXPENSIVE</span>
+                                    <span id="score-valuation-val" style="font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; color: var(--red); background: var(--red-dim); min-width: 30px; text-align: center;">2/5</span>
                                 </div>
                             </div>
-                            <div>
-                                <span style="font-size: 11px; color: var(--text-muted); display: block;">Financial</span>
-                                <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 4px;">
-                                    <span style="font-size: 13px; font-weight: 700; color: var(--green);" id="score-financial-text">POSITIVE</span>
-                                    <span style="font-size: 11px; background: var(--green-dim); color: var(--green); padding: 1px 6px; border-radius: 4px; font-weight: 600;" id="score-financial-val">3/5</span>
+
+                            <!-- Financial Row -->
+                            <div style="display: flex; align-items: center; justify-content: space-between;">
+                                <span style="font-size: 13px; font-weight: 600; color: var(--text-secondary);">Financial</span>
+                                <div style="display: flex; gap: 6px;">
+                                    <span id="score-financial-text" style="font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; color: var(--green); background: var(--green-dim); min-width: 60px; text-align: center;">POSITIVE</span>
+                                    <span id="score-financial-val" style="font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; color: var(--green); background: var(--green-dim); min-width: 30px; text-align: center;">3/5</span>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Col 2: Capital Structure, Growth, Management Risk -->
-                        <div style="display: flex; flex-direction: column; gap: 16px; border-right: 1px solid var(--border-light); padding-right: 20px; justify-content: space-between;">
-                            <div>
-                                <span style="font-size: 11px; color: var(--text-muted); display: block;">Capital Structure</span>
-                                <strong style="font-size: 13px; color: var(--text-primary); margin-top: 4px; display: block;" id="score-capstruct">Average</strong>
+                        <!-- Right Area: Sub-metrics & Insights -->
+                        <div style="display: flex; flex-direction: column; gap: 20px;">
+                            <!-- Sub-metrics Row -->
+                            <div style="display: flex; justify-content: space-around; gap: 16px; border-bottom: 1px solid var(--border-light); padding-bottom: 16px; flex-wrap: wrap; text-align: left;">
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <span id="score-capstruct-dot" style="width: 6px; height: 6px; background: var(--green); border-radius: 50%; display: inline-block;"></span>
+                                    <span style="font-size: 12px; color: var(--text-muted); font-weight: 500;">Capital Structure:</span>
+                                    <strong id="score-capstruct" style="font-size: 12.5px; color: var(--text-primary); font-weight: 600;">Average</strong>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <span id="score-growth-dot" style="width: 6px; height: 6px; background: var(--green); border-radius: 50%; display: inline-block;"></span>
+                                    <span style="font-size: 12px; color: var(--text-muted); font-weight: 500;">Growth:</span>
+                                    <strong id="score-growth" style="font-size: 12.5px; color: var(--green); font-weight: 600;">Good</strong>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <span id="score-mgt-risk-dot" style="width: 6px; height: 6px; background: var(--green); border-radius: 50%; display: inline-block;"></span>
+                                    <span style="font-size: 12px; color: var(--text-muted); font-weight: 500;">Management Risk:</span>
+                                    <strong id="score-mgt-risk" style="font-size: 12.5px; color: var(--green); font-weight: 600;">Good</strong>
+                                </div>
                             </div>
-                            <div>
-                                <span style="font-size: 11px; color: var(--text-muted); display: block;">Growth</span>
-                                <strong style="font-size: 13px; color: var(--green); margin-top: 4px; display: block;" id="score-growth">Excellent</strong>
-                            </div>
-                            <div>
-                                <span style="font-size: 11px; color: var(--text-muted); display: block;">Management Risk</span>
-                                <strong style="font-size: 13px; color: var(--green); margin-top: 4px; display: block;" id="score-mgt-risk">Good</strong>
-                            </div>
-                        </div>
 
-                        <!-- Col 3: Insights to Look For -->
-                        <div style="display: flex; flex-direction: column; gap: 12px;">
-                            <span style="font-size: 11px; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Insights to Look For</span>
-                            <ul style="margin: 0; padding-left: 16px; font-size: 12px; color: var(--text-secondary); line-height: 1.6;" id="list-insights">
-                                <li>Good quality company basis long term financial performance.</li>
-                                <li>Size - Ranks 3rd out of 18 companies in Renewable Energy sector</li>
-                            </ul>
+                            <!-- Insights list -->
+                            <div>
+                                <span style="font-size: 11px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; display: block; margin-bottom: 10px; letter-spacing: 0.5px;">Insights to Look For</span>
+                                <ul style="margin: 0; padding-left: 0; font-size: 12.5px; color: var(--text-secondary); line-height: 1.8; list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: 10px 24px;" id="list-insights">
+                                    {% if details.get('insights_html') %}
+                                        {{ details.get('insights_html') | safe }}
+                                    {% else %}
+                                        <li style="position: relative; padding-left: 14px;">
+                                            <span style="position: absolute; left: 0; top: 0; color: var(--text-muted);">•</span>
+                                            Average quality company exhibiting steady long term performance.
+                                        </li>
+                                        <li style="position: relative; padding-left: 14px;">
+                                            <span style="position: absolute; left: 0; top: 0; color: var(--text-muted);">•</span>
+                                            Size - Ranks in top tier of the sector
+                                        </li>
+                                    {% endif %}
+                                </ul>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- 5. Shareholding Pattern Panel -->
-                <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; margin-bottom: 24px; box-shadow: var(--shadow-card);">
-                    <h3 style="font-size: 13px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 16px;">Percentage of Shareholding</h3>
-                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;">
+                <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 24px; margin-bottom: 24px; box-shadow: var(--shadow-card);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 10px;">
                         <div>
-                            <span style="font-size: 10px; color: var(--text-muted); display: block; margin-bottom: 2px;">Promoters</span>
-                            <strong style="font-size: 14px; font-family: var(--font-mono); color: var(--text-primary);" id="share-promoters">63.00%</strong>
-                            <div style="height: 4px; background: var(--border-light); border-radius: 2px; margin-top: 6px; overflow: hidden;">
-                                <div id="share-promoters-bar" style="height: 100%; background: var(--cyan); width: 63%;"></div>
+                            <h3 style="font-size: 15px; font-weight: 700; color: var(--text-primary); margin: 0;">Shareholdings Patterns</h3>
+                            <span style="font-size: 11px; color: var(--text-muted); display: block; margin-top: 2px;">Percentage of Shareholding</span>
+                        </div>
+                        <!-- Legend -->
+                        <div style="display: flex; gap: 16px; font-size: 12px; color: var(--text-secondary); font-weight: 600;">
+                            <div style="display: flex; align-items: center; gap: 6px;">
+                                <div style="width: 12px; height: 12px; background: #b4457a; border-radius: 2px;"></div>
+                                <span>Dec 25</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 6px;">
+                                <div style="width: 12px; height: 12px; background: #8b5cf6; border-radius: 2px;"></div>
+                                <span>Sep 25</span>
                             </div>
                         </div>
-                        <div>
-                            <span style="font-size: 10px; color: var(--text-muted); display: block; margin-bottom: 2px;">Foreign Institutions (FII)</span>
-                            <strong style="font-size: 14px; font-family: var(--font-mono); color: var(--text-primary);" id="share-fii">25.50%</strong>
-                            <div style="height: 4px; background: var(--border-light); border-radius: 2px; margin-top: 6px; overflow: hidden;">
-                                <div id="share-fii-bar" style="height: 100%; background: var(--green); width: 25.5%;"></div>
-                            </div>
+                    </div>
+
+                    <!-- Chart Grid Layout Container -->
+                    <div style="position: relative; width: 100%;">
+                        {% set pattern = details.get('shareholding_pattern', {}) %}
+                        {% set dec = pattern.get('dec_25', {}) %}
+                        {% set sep = pattern.get('sep_25', {}) %}
+                        {% set changes = pattern.get('changes', {}) %}
+
+                        {% set categories = [
+                            ('Promoters', 'Promoters'),
+                            ('FIIs', 'FIIs'),
+                            ('Mutual Funds', 'Mutual Funds'),
+                            ('Insurance Companies', 'Insurance Companies'),
+                            ('Other DIIs', 'Other DIIs'),
+                            ('Non Institution', 'Non Institution')
+                        ] %}
+
+                        <!-- Dynamic scale based on maximum value in dec_25 -->
+                        {% set max_val = namespace(val=0.0) %}
+                        {% for key, label in categories %}
+                            {% set current_val = dec.get(key, 0.0) %}
+                            {% if current_val > max_val.val %}
+                                {% set max_val.val = current_val %}
+                            {% endif %}
+                        {% endfor %}
+
+                        <!-- Set scale limit: 60% if max is under 60, otherwise 100% -->
+                        {% set scale_max = 60.0 if max_val.val <= 60.0 else 100.0 %}
+
+                        <!-- Background Grid Lines behind the bars -->
+                        <div style="position: absolute; left: 160px; right: 140px; top: 0; bottom: 24px; display: flex; justify-content: space-between; pointer-events: none; z-index: 1;">
+                            <div style="width: 1px; border-left: 1px dashed var(--border-light); height: 100%;"></div>
+                            <div style="width: 1px; border-left: 1px dashed var(--border-light); height: 100%;"></div>
+                            <div style="width: 1px; border-left: 1px dashed var(--border-light); height: 100%;"></div>
+                            <div style="width: 1px; border-left: 1px dashed var(--border-light); height: 100%;"></div>
+                            <div style="width: 1px; border-left: 1px dashed var(--border-light); height: 100%;"></div>
+                            <div style="width: 1px; border-left: 1px dashed var(--border-light); height: 100%;"></div>
+                            <div style="width: 1px; border-left: 1px dashed var(--border-light); height: 100%;"></div>
                         </div>
-                        <div>
-                            <span style="font-size: 10px; color: var(--text-muted); display: block; margin-bottom: 2px;">Domestic Institutions (DII)</span>
-                            <strong style="font-size: 14px; font-family: var(--font-mono); color: var(--text-primary);" id="share-dii">3.20%</strong>
-                            <div style="height: 4px; background: var(--border-light); border-radius: 2px; margin-top: 6px; overflow: hidden;">
-                                <div id="share-dii-bar" style="height: 100%; background: var(--yellow); width: 3.2%;"></div>
-                            </div>
+
+                        <!-- Rows of categories -->
+                        <div style="display: flex; flex-direction: column; gap: 18px; position: relative; z-index: 2;">
+                            {% for key, label in categories %}
+                                {% set val_dec = dec.get(key, 0.0) %}
+                                {% set val_sep = sep.get(key, 0.0) %}
+                                {% set chg = changes.get(key, 0.0) %}
+                                
+                                <!-- Calculate widths relative to scale_max -->
+                                {% set dec_pct = (val_dec / scale_max) * 100.0 %}
+                                {% set sep_pct = (val_sep / scale_max) * 100.0 %}
+                                {% set max_bar_pct = dec_pct if dec_pct > sep_pct else sep_pct %}
+
+                                <div style="display: grid; grid-template-columns: 140px 1fr 120px; align-items: center; gap: 20px;">
+                                    <!-- Category Label (Plain, right-aligned) -->
+                                    <div style="text-align: right; font-size: 13px; font-weight: 700; color: var(--text-primary); padding-right: 4px;">
+                                        {{ label }}
+                                    </div>
+
+                                    <!-- Bars Container -->
+                                    <div style="position: relative; display: flex; flex-direction: column; gap: 6px; flex-grow: 1; height: 26px; justify-content: center;">
+                                        <!-- Dec 25 Bar (Top, Pink) -->
+                                        <div style="height: 8px; background: transparent; width: 100%;">
+                                            <div style="height: 100%; background: #b4457a; width: {{ dec_pct }}%; border-radius: 0 4px 4px 0; transition: width 0.6s ease-out;"></div>
+                                        </div>
+
+                                        <!-- Sep 25 Bar (Bottom, Purple) -->
+                                        <div style="height: 8px; background: transparent; width: 100%;">
+                                            <div style="height: 100%; background: #8b5cf6; width: {{ sep_pct }}%; border-radius: 0 4px 4px 0; transition: width 0.6s ease-out;"></div>
+                                        </div>
+
+                                        <!-- Floating Change Badge next to the bars -->
+                                        {% set cap_badge_left = max_bar_pct if max_bar_pct < 88 else 88 %}
+                                        <div style="position: absolute; left: {{ cap_badge_left }}%; transform: translateX(8px); display: flex; align-items: center; z-index: 10;">
+                                            {% if chg > 0 %}
+                                                <div style="width: 5px; height: 5px; background: var(--green); border-radius: 50%; margin-right: 4px; flex-shrink: 0;"></div>
+                                            {% endif %}
+                                            <span style="font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 3px; font-family: var(--font-mono); white-space: nowrap;
+                                                {% if chg >= 0 %}
+                                                    color: var(--green); background: var(--green-dim);
+                                                {% else %}
+                                                    color: var(--red); background: var(--red-dim);
+                                                {% endif %}">
+                                                {{ '+' if chg >= 0 }}{{ "%.2f" | format(chg) }}%
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Value Boxes (Far Right, Clean values, no borders) -->
+                                    <div style="display: flex; gap: 16px; justify-content: flex-end; font-family: var(--font-mono); font-size: 12.5px;">
+                                        <div style="font-weight: 700; color: var(--text-primary); min-width: 50px; text-align: right;">{{ "%.2f" | format(val_dec) }}%</div>
+                                        <div style="font-weight: 500; color: var(--text-muted); min-width: 50px; text-align: right;">{{ "%.2f" | format(val_sep) }}%</div>
+                                    </div>
+                                </div>
+                            {% endfor %}
                         </div>
-                        <div>
-                            <span style="font-size: 10px; color: var(--text-muted); display: block; margin-bottom: 2px;">Public & Retail</span>
-                            <strong style="font-size: 14px; font-family: var(--font-mono); color: var(--text-primary);" id="share-public">8.30%</strong>
-                            <div style="height: 4px; background: var(--border-light); border-radius: 2px; margin-top: 6px; overflow: hidden;">
-                                <div id="share-public-bar" style="height: 100%; background: var(--text-muted); width: 8.3%;"></div>
-                            </div>
+
+                        <!-- Grid Labels Row (at the bottom) -->
+                        <div style="margin-left: 160px; margin-right: 140px; margin-top: 14px; display: flex; justify-content: space-between; font-size: 10px; color: var(--text-muted); font-family: var(--font-mono); position: relative; z-index: 2;">
+                            {% if scale_max == 60.0 %}
+                                <span>0</span>
+                                <span>10</span>
+                                <span>20</span>
+                                <span>30</span>
+                                <span>40</span>
+                                <span>50</span>
+                                <span>60</span>
+                            {% else %}
+                                <span>0</span>
+                                <span>16.7</span>
+                                <span>33.3</span>
+                                <span>50</span>
+                                <span>66.7</span>
+                                <span>83.3</span>
+                                <span>100</span>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
@@ -795,28 +949,28 @@
 
                 <!-- Custom ApexCharts Wrapper -->
                 <div id="custom-chart-wrapper" style="display: none; width: 100%;">
-                    <div class="metrics-section" style="padding: 24px; position: relative;">
+                    <div class="metrics-section" style="padding: 24px; position: relative; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg);">
                         <!-- Trading Chart Toolbar -->
-                        <div style="display: flex; align-items: center; background: var(--bg-secondary); border: 1px solid var(--border); padding: 8px 16px; border-radius: 6px; gap: 16px; flex-wrap: wrap; margin-bottom: 12px; font-family: var(--font-mono); font-size: 12px; position: relative;">
+                        <div style="display: flex; align-items: center; background: var(--bg-secondary); border: 1px solid var(--border); padding: 8px 16px; border-radius: 6px; gap: 16px; flex-wrap: wrap; margin-bottom: 12px; font-family: var(--font-mono); font-size: 12px; position: relative; color: var(--text-primary);">
                             <!-- Timeframe Selection -->
                             <div style="display: flex; align-items: center; gap: 6px; position: relative;">
-                                <span style="color: var(--text-muted); font-size: 11px; font-weight: 600; text-transform: uppercase;">Interval:</span>
+                                <span style="color: var(--text-secondary); font-size: 11px; font-weight: 600; text-transform: uppercase;">Interval:</span>
                                 <div id="chart-interval-dropdown-container" style="position: relative;">
-                                    <button id="btn-interval-trigger" onclick="toggleIntervalDropdown(event)" style="display: flex; align-items: center; gap: 8px; font-size: 11px; font-weight: 600; padding: 5px 12px; border-radius: 4px; background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border); cursor: pointer; min-width: 100px; justify-content: space-between; outline: none; transition: background-color 0.2s;">
+                                    <button id="btn-interval-trigger" onclick="toggleIntervalDropdown(event)" style="display: flex; align-items: center; gap: 8px; font-size: 11px; font-weight: 600; padding: 5px 12px; border-radius: 4px; background: var(--bg-secondary); color: var(--text-primary); border: 1px solid var(--border); cursor: pointer; min-width: 100px; justify-content: space-between; outline: none; transition: background-color 0.2s;">
                                         <span id="active-interval-text">1 day</span>
-                                        <span style="font-size: 8px; color: var(--text-secondary);">▼</span>
+                                        <span style="font-size: 8px; color: var(--text-muted);">▼</span>
                                     </button>
                                     
                                     <!-- Interval Dropdown Menu -->
-                                    <div id="interval-dropdown-menu" style="display: none; position: absolute; top: calc(100% + 4px); left: 0; background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px; width: 170px; z-index: 1000; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08); max-height: 280px; overflow-y: auto; padding: 4px 0;">
+                                    <div id="interval-dropdown-menu" style="display: none; position: absolute; top: calc(100% + 4px); left: 0; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 6px; width: 170px; z-index: 1000; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08); max-height: 280px; overflow-y: auto; padding: 4px 0;">
                                         <!-- SECONDS -->
                                         <div style="font-size: 9px; font-weight: 700; color: var(--text-muted); padding: 6px 12px 2px; text-transform: uppercase; letter-spacing: 0.8px;">Seconds</div>
                                         <div class="dropdown-item" onclick="selectInterval('15s', '15 seconds')" data-interval="15s">15 seconds</div>
                                         <div class="dropdown-item" onclick="selectInterval('30s', '30 seconds')" data-interval="30s">30 seconds</div>
                                         <div class="dropdown-item" onclick="selectInterval('45s', '45 seconds')" data-interval="45s">45 seconds</div>
-
+ 
                                         <!-- MINUTES -->
-                                        <div style="font-size: 9px; font-weight: 700; color: var(--text-muted); padding: 8px 12px 2px; text-transform: uppercase; letter-spacing: 0.8px; border-top: 1px solid var(--border-light); margin-top: 4px;">Minutes</div>
+                                        <div style="font-size: 9px; font-weight: 700; color: var(--text-muted); padding: 8px 12px 2px; text-transform: uppercase; letter-spacing: 0.8px; border-top: 1px solid var(--border); margin-top: 4px;">Minutes</div>
                                         <div class="dropdown-item" onclick="selectInterval('1m', '1 minute')" data-interval="1m">1 minute</div>
                                         <div class="dropdown-item" onclick="selectInterval('2m', '2 minutes')" data-interval="2m">2 minutes</div>
                                         <div class="dropdown-item" onclick="selectInterval('3m', '3 minutes')" data-interval="3m">3 minutes</div>
@@ -827,15 +981,15 @@
                                         <div class="dropdown-item" onclick="selectInterval('30m', '30 minutes')" data-interval="30m">30 minutes</div>
                                         <div class="dropdown-item" onclick="selectInterval('75m', '75 minutes')" data-interval="75m">75 minutes</div>
                                         <div class="dropdown-item" onclick="selectInterval('125m', '125 minutes')" data-interval="125m">125 minutes</div>
-
+ 
                                         <!-- HOURS -->
-                                        <div style="font-size: 9px; font-weight: 700; color: var(--text-muted); padding: 8px 12px 2px; text-transform: uppercase; letter-spacing: 0.8px; border-top: 1px solid var(--border-light); margin-top: 4px;">Hours</div>
+                                        <div style="font-size: 9px; font-weight: 700; color: var(--text-muted); padding: 8px 12px 2px; text-transform: uppercase; letter-spacing: 0.8px; border-top: 1px solid var(--border); margin-top: 4px;">Hours</div>
                                         <div class="dropdown-item" onclick="selectInterval('1h', '1 hour')" data-interval="1h">1 hour</div>
                                         <div class="dropdown-item" onclick="selectInterval('2h', '2 hours')" data-interval="2h">2 hours</div>
                                         <div class="dropdown-item" onclick="selectInterval('3h', '3 hours')" data-interval="3h">3 hours</div>
-
+ 
                                         <!-- DAYS -->
-                                        <div style="font-size: 9px; font-weight: 700; color: var(--text-muted); padding: 8px 12px 2px; text-transform: uppercase; letter-spacing: 0.8px; border-top: 1px solid var(--border-light); margin-top: 4px;">Days</div>
+                                        <div style="font-size: 9px; font-weight: 700; color: var(--text-muted); padding: 8px 12px 2px; text-transform: uppercase; letter-spacing: 0.8px; border-top: 1px solid var(--border); margin-top: 4px;">Days</div>
                                         <div class="dropdown-item active" onclick="selectInterval('1d', '1 day')" data-interval="1d" style="background: var(--cyan-glow); color: var(--cyan);">1 day</div>
                                         <div class="dropdown-item" onclick="selectInterval('1wk', '1 week')" data-interval="1wk">1 week</div>
                                         <div class="dropdown-item" onclick="selectInterval('1mo', '1 month')" data-interval="1mo">1 month</div>
@@ -851,7 +1005,7 @@
                                 <button class="chart-type-btn" onclick="changeChartType('area')">📈 Area</button>
                                 <button class="chart-type-btn active" onclick="changeChartType('candlestick')">🕯️ Candles</button>
                             </div>
-
+ 
                             <!-- Divider -->
                             <div style="width: 1px; height: 16px; background: var(--border);"></div>
                             
@@ -862,7 +1016,7 @@
                                 </button>
                                 
                                 <!-- Indicators Dropdown Menu -->
-                                <div id="indicators-dropdown-menu" style="display: none; position: absolute; top: calc(100% + 4px); left: 0; background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px; width: 180px; z-index: 1000; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08); padding: 8px 0;">
+                                <div id="indicators-dropdown-menu" style="display: none; position: absolute; top: calc(100% + 4px); left: 0; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 6px; width: 180px; z-index: 1000; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08); padding: 8px 0;">
                                     <div style="font-size: 9px; font-weight: 700; color: var(--text-muted); padding: 4px 14px 6px; text-transform: uppercase; letter-spacing: 0.8px;">Chart Overlays</div>
                                     <label class="indicator-item" style="display: flex; align-items: center; gap: 10px; padding: 6px 14px; color: var(--text-secondary); font-size: 12px; cursor: pointer; transition: background 0.15s;" onmouseover="this.style.background='var(--bg-hover)';" onmouseout="this.style.background='transparent';">
                                         <input type="checkbox" id="chk-ema9" onchange="toggleIndicatorState('ema9')" style="cursor: pointer;">
@@ -873,7 +1027,7 @@
                                         <span>SMA (20)</span>
                                     </label>
                                     
-                                    <div style="font-size: 9px; font-weight: 700; color: var(--text-muted); padding: 8px 14px 6px; text-transform: uppercase; letter-spacing: 0.8px; border-top: 1px solid var(--border-light); margin-top: 6px;">Lower Panes</div>
+                                    <div style="font-size: 9px; font-weight: 700; color: var(--text-muted); padding: 8px 14px 6px; text-transform: uppercase; letter-spacing: 0.8px; border-top: 1px solid var(--border); margin-top: 6px;">Lower Panes</div>
                                     <label class="indicator-item" style="display: flex; align-items: center; gap: 10px; padding: 6px 14px; color: var(--text-secondary); font-size: 12px; cursor: pointer; transition: background 0.15s;" onmouseover="this.style.background='var(--bg-hover)';" onmouseout="this.style.background='transparent';">
                                         <input type="checkbox" id="chk-macd" onchange="toggleIndicatorState('macd')" style="cursor: pointer;">
                                         <span>MACD</span>
@@ -885,8 +1039,8 @@
                                 </div>
                             </div>
                         </div>
-
-                    <div id="chart-loader" style="display: flex; align-items: center; justify-content: center; height: 400px; color: var(--text-secondary); font-size: 14px;">
+ 
+                    <div id="chart-loader" style="display: flex; align-items: center; justify-content: center; height: 400px; color: var(--text-muted); font-size: 14px;">
                         <div style="text-align: center;">
                             <div class="loader-spinner" style="border: 3px solid var(--border); border-top: 3px solid var(--cyan); border-radius: 50%; width: 36px; height: 36px; animation: spin 1s linear infinite; margin: 0 auto 12px;"></div>
                             <span>Fetching market data...</span>
@@ -894,10 +1048,10 @@
                     </div>
                     <div id="custom-chart-container" style="width: 100%; display: none;">
                         <!-- OHLCV Info Bar -->
-                        <div id="chart-info-bar" style="display: flex; flex-wrap: wrap; gap: 14px; font-family: var(--font-mono); font-size: 11px; color: var(--text-secondary); margin-bottom: 16px; padding: 6px 12px; background: var(--bg-primary); border: 1px solid var(--border); border-radius: 4px;">
+                        <div id="chart-info-bar" style="display: flex; flex-wrap: wrap; gap: 14px; font-family: var(--font-mono); font-size: 11px; color: var(--text-secondary); margin-bottom: 16px; padding: 6px 12px; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 4px;">
                             <span style="font-weight: 700; color: var(--text-primary);">{{ ticker }}</span>
-                            <span style="color: var(--text-muted);">|</span>
-                            <span id="chart-info-date" style="color: var(--text-muted); min-width: 80px;"></span>
+                            <span style="color: var(--border);">|</span>
+                            <span id="chart-info-date" style="color: var(--text-secondary); min-width: 80px;"></span>
                             <span id="chart-info-open"></span>
                             <span id="chart-info-high"></span>
                             <span id="chart-info-low"></span>
@@ -910,8 +1064,8 @@
                         <div id="chart-rsi" style="width: 100%; margin-top: -15px; display: none;"></div>
                         
                         <!-- Period Selector Bar (TradingView style below chart) -->
-                        <div id="chart-period-bar" style="display: flex; align-items: center; justify-content: flex-start; gap: 4px; padding: 8px 12px; border-top: 1px solid var(--border-light); margin-top: 10px; font-family: var(--font-mono); font-size: 11px;">
-                            <span style="color: var(--text-muted); font-size: 10px; font-weight: 600; text-transform: uppercase; margin-right: 8px;">Period:</span>
+                        <div id="chart-period-bar" style="display: flex; align-items: center; justify-content: flex-start; gap: 4px; padding: 8px 12px; border-top: 1px solid var(--border); margin-top: 10px; font-family: var(--font-mono); font-size: 11px;">
+                            <span style="color: var(--text-secondary); font-size: 10px; font-weight: 600; text-transform: uppercase; margin-right: 8px;">Period:</span>
                             <button class="chart-period-btn" onclick="selectPeriod('1d')" data-period="1d">1D</button>
                             <button class="chart-period-btn" onclick="selectPeriod('5d')" data-period="5d">5D</button>
                             <button class="chart-period-btn active" onclick="selectPeriod('1mo')" data-period="1mo">1M</button>
@@ -922,7 +1076,7 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </div> <!-- closes tab-chart -->
         </div> <!-- closes tab-chart -->
 
             <!-- Option Chain Tab Content -->
@@ -1064,10 +1218,10 @@
                     "symbol": tvSymbol,
                     "interval": "D",
                     "timezone": "Asia/Kolkata",
-                    "theme": "dark",
+                    "theme": "light",
                     "style": "1",
                     "locale": "en",
-                    "toolbar_bg": "#111827",
+                    "toolbar_bg": "#f1f3f6",
                     "enable_publishing": false,
                     "hide_side_toolbar": false,
                     "allow_symbol_change": true,
@@ -1298,8 +1452,8 @@
 
                 if (dateEl) dateEl.textContent = dateStr;
                 if (openEl) openEl.innerHTML = `O: <strong style="color:var(--text-primary)">₹${openVal.toFixed(2)}</strong>`;
-                if (highEl) highEl.innerHTML = `H: <strong style="color:var(--green)">₹${highVal.toFixed(2)}</strong>`;
-                if (lowEl) lowEl.innerHTML = `L: <strong style="color:var(--red)">₹${lowVal.toFixed(2)}</strong>`;
+                if (highEl) highEl.innerHTML = `H: <strong style="color:#089981">₹${highVal.toFixed(2)}</strong>`;
+                if (lowEl) lowEl.innerHTML = `L: <strong style="color:#f23645">₹${lowVal.toFixed(2)}</strong>`;
                 if (closeEl) closeEl.innerHTML = `C: <strong style="color:var(--text-primary)">₹${closeVal.toFixed(2)}</strong>`;
                 if (volEl) volEl.innerHTML = `Vol: <strong style="color:var(--cyan)">${volVal.toLocaleString('en-IN')}</strong>`;
             }
@@ -1482,7 +1636,7 @@
             if (currentChartType === 'area') {
                 chartColors.push(chartColor);
             } else {
-                chartColors.push('#00d97e'); // dummy, overridden by candlestick options
+                chartColors.push('#089981'); // dummy, overridden by candlestick options
             }
             if (showEMA9) chartColors.push('#4f46e5'); // Indigo
             if (showSMA20) chartColors.push('#f59e0b'); // Amber/Orange
@@ -1495,7 +1649,7 @@
             }
             if (showEMA9) strokeWidths.push(1.5);
             if (showSMA20) strokeWidths.push(1.5);
-
+ 
             let priceOptions = {
                 chart: {
                     id: 'price-chart',
@@ -1505,7 +1659,7 @@
                     toolbar: { show: false },
                     animations: { enabled: false },
                     background: 'transparent',
-                    foreColor: 'var(--text-secondary)',
+                    foreColor: '#787b86',
                     fontFamily: "'Inter', sans-serif",
                     events: {
                         mouseMove: function(event, chartContext, config) {
@@ -1517,7 +1671,7 @@
                 },
                 theme: { mode: 'light' },
                 grid: {
-                    borderColor: 'var(--border)',
+                    borderColor: '#e0e3eb',
                     strokeDashArray: 3,
                     xaxis: { lines: { show: false } },
                     yaxis: { lines: { show: true } }
@@ -1541,7 +1695,7 @@
                         formatter: function (val) {
                             return '₹' + val.toLocaleString('en-IN', { maximumFractionDigits: 1 });
                         },
-                        style: { colors: 'var(--text-secondary)', fontSize: '10px', fontFamily: 'var(--font-mono)' }
+                        style: { colors: '#787b86', fontSize: '10px', fontFamily: 'var(--font-mono)' }
                     }
                 },
                 tooltip: {
@@ -1557,7 +1711,7 @@
                     }
                 }
             };
-
+ 
             if (currentChartType === 'area' && !hasOverlays) {
                 priceOptions.fill = {
                     type: 'gradient',
@@ -1576,8 +1730,8 @@
                 priceOptions.plotOptions = {
                     candlestick: {
                         colors: {
-                            upward: '#00d97e',
-                            downward: '#ff4d6a'
+                            upward: '#089981',
+                            downward: '#f23645'
                         },
                         wick: {
                             useFillColor: true
@@ -1589,10 +1743,10 @@
 
             // Volume Chart
             const volumeColors = filteredVolume.map((d, idx) => {
-                if (idx === 0) return '#00d97e';
+                if (idx === 0) return '#089981';
                 const prevClose = filteredArea[idx - 1].y;
                 const currClose = filteredArea[idx].y;
-                return currClose >= prevClose ? '#00d97e' : '#ff4d6a';
+                return currClose >= prevClose ? '#089981' : '#f23645';
             });
 
             let volumeOptions = {
@@ -1604,7 +1758,7 @@
                     toolbar: { show: false },
                     animations: { enabled: false },
                     background: 'transparent',
-                    foreColor: 'var(--text-secondary)',
+                    foreColor: '#787b86',
                     fontFamily: "'Inter', sans-serif",
                     events: {
                         mouseMove: function(event, chartContext, config) {
@@ -1616,7 +1770,7 @@
                 },
                 theme: { mode: 'light' },
                 grid: {
-                    borderColor: 'var(--border)',
+                    borderColor: '#e0e3eb',
                     strokeDashArray: 3,
                     xaxis: { lines: { show: false } },
                     yaxis: { lines: { show: false } }
@@ -1625,11 +1779,6 @@
                 colors: volumeColors,
                 plotOptions: {
                     bar: {
-                        colors: {
-                            ranges: [
-                                { from: 0, to: 999999999999, color: '#00d97e' }
-                            ]
-                        },
                         columnWidth: '60%'
                     }
                 },
@@ -1645,7 +1794,7 @@
                     type: 'category',
                     labels: {
                         show: volumeXLabelsShow,
-                        style: { colors: 'var(--text-secondary)', fontSize: '10px' }
+                        style: { colors: '#787b86', fontSize: '10px' }
                     },
                     tickAmount: 8,
                     axisBorder: { show: false },
@@ -1660,7 +1809,7 @@
                             if (val >= 1000) return (val/1000).toFixed(0) + 'K';
                             return val;
                         },
-                        style: { colors: 'var(--text-secondary)', fontSize: '9px', fontFamily: 'var(--font-mono)' }
+                        style: { colors: '#787b86', fontSize: '9px', fontFamily: 'var(--font-mono)' }
                     }
                 },
                 tooltip: { enabled: false }
@@ -1684,7 +1833,7 @@
                         toolbar: { show: false },
                         animations: { enabled: false },
                         background: 'transparent',
-                        foreColor: 'var(--text-secondary)',
+                        foreColor: '#787b86',
                         fontFamily: "'Inter', sans-serif",
                         events: {
                             mouseMove: function(event, chartContext, config) {
@@ -1696,7 +1845,7 @@
                     },
                     theme: { mode: 'light' },
                     grid: {
-                        borderColor: 'var(--border)',
+                        borderColor: '#e0e3eb',
                         strokeDashArray: 3,
                         xaxis: { lines: { show: false } },
                         yaxis: { lines: { show: true } }
@@ -1706,13 +1855,13 @@
                         width: [1.5, 1.5, 0],
                         curve: 'smooth'
                     },
-                    colors: ['#0080ff', '#ff8000', '#00d97e'],
+                    colors: ['#2962ff', '#ff6d00', '#089981'],
                     plotOptions: {
                         bar: {
                             colors: {
                                 ranges: [
-                                    { from: -100000, to: 0, color: '#ff4d6a' },
-                                    { from: 0, to: 100000, color: '#00d97e' }
+                                    { from: -100000, to: 0, color: '#f23645' },
+                                    { from: 0, to: 100000, color: '#089981' }
                                 ]
                             },
                             columnWidth: '60%'
@@ -1740,7 +1889,7 @@
                         tickAmount: 8,
                         labels: {
                             show: macdXLabelsShow,
-                            style: { colors: 'var(--text-secondary)', fontSize: '10px' }
+                            style: { colors: '#787b86', fontSize: '10px' }
                         },
                         axisBorder: { show: false },
                         axisTicks: { show: false }
@@ -1752,7 +1901,7 @@
                             formatter: function (val) {
                                 return val.toFixed(2);
                             },
-                            style: { colors: 'var(--text-secondary)', fontSize: '10px', fontFamily: 'var(--font-mono)' }
+                            style: { colors: '#787b86', fontSize: '10px', fontFamily: 'var(--font-mono)' }
                         }
                     },
                     tooltip: { enabled: false }
@@ -1777,7 +1926,7 @@
                         toolbar: { show: false },
                         animations: { enabled: false },
                         background: 'transparent',
-                        foreColor: 'var(--text-secondary)',
+                        foreColor: '#787b86',
                         fontFamily: "'Inter', sans-serif",
                         events: {
                             mouseMove: function(event, chartContext, config) {
@@ -1789,7 +1938,7 @@
                     },
                     theme: { mode: 'light' },
                     grid: {
-                        borderColor: 'var(--border)',
+                        borderColor: '#e0e3eb',
                         strokeDashArray: 3,
                         xaxis: { lines: { show: false } },
                         yaxis: { lines: { show: true } }
@@ -1804,20 +1953,20 @@
                         yaxis: [
                             {
                                 y: 70,
-                                borderColor: '#ff4d6a',
+                                borderColor: '#f23645',
                                 strokeDashArray: 2,
                                 label: {
                                     text: 'Overbought (70)',
-                                    style: { color: '#ff4d6a', fontSize: '9px', background: 'transparent' }
+                                    style: { color: '#f23645', fontSize: '9px', background: 'transparent' }
                                 }
                             },
                             {
                                 y: 30,
-                                borderColor: '#00d97e',
+                                borderColor: '#089981',
                                 strokeDashArray: 2,
                                 label: {
                                     text: 'Oversold (30)',
-                                    style: { color: '#00d97e', fontSize: '9px', background: 'transparent' }
+                                    style: { color: '#089981', fontSize: '9px', background: 'transparent' }
                                 }
                             }
                         ]
@@ -1827,7 +1976,7 @@
                         tickAmount: 8,
                         labels: {
                             show: rsiXLabelsShow,
-                            style: { colors: 'var(--text-secondary)', fontSize: '10px' }
+                            style: { colors: '#787b86', fontSize: '10px' }
                         },
                         axisBorder: { show: false },
                         axisTicks: { show: false }
@@ -1842,7 +1991,7 @@
                             formatter: function (val) {
                                 return val.toFixed(0);
                             },
-                            style: { colors: 'var(--text-secondary)', fontSize: '10px', fontFamily: 'var(--font-mono)' }
+                            style: { colors: '#787b86', fontSize: '10px', fontFamily: 'var(--font-mono)' }
                         }
                     },
                     tooltip: { enabled: false }
@@ -2298,6 +2447,47 @@
 
                 updateSliderPointers(basePrice);
             } else {
+                // Read from backend details, fall back to seeded random if not present
+                const backendPE = "{{ details.get('pe_ratio', '') }}";
+                const backendPB = "{{ details.get('price_to_book', '') }}";
+                const backendPEG = "{{ details.get('peg_ratio', '') }}";
+                const backendROE = "{{ details.get('roe', '') }}";
+                const backendGrowth = "{{ details.get('growth', '') }}";
+                const backendEVEbitda = "{{ details.get('ev_to_ebitda', '') }}";
+                const backendROCE = "{{ details.get('roce', '') }}";
+                const backendEVCap = "{{ details.get('ev_to_capital', '') }}";
+                const backendEVSales = "{{ details.get('ev_to_sales', '') }}";
+                const backendDivYield = "{{ details.get('dividend_yield', '') }}";
+                
+                const backendSectorRank = "{{ details.get('sector_rank', '') }}";
+                const backendCapSize = "{{ details.get('market_cap_size', '') }}";
+                const backendSectorName = "{{ details.get('sector_name', '') }}";
+                const backendShortTrend = "{{ details.get('short_trend', '') }}";
+                const backendLongTrend = "{{ details.get('long_trend', '') }}";
+                const backendMCapVal = "{{ details.get('market_cap_val', '') }}";
+                
+                const backendTargetPrice = "{{ details.get('target_price', '') }}";
+                const backendUpsidePct = "{{ details.get('upside_pct', '') }}";
+                const backendBuyPct = "{{ details.get('buy_pct', '') }}";
+                const backendHoldPct = "{{ details.get('hold_pct', '') }}";
+                const backendSellPct = "{{ details.get('sell_pct', '') }}";
+                
+                const backend1YrReturn = "{{ details.get('perf_1yr', '') }}";
+                const backendSectorReturn = "{{ details.get('perf_sec', '') }}";
+                const backendMarketReturn = "{{ details.get('perf_mkt', '') }}";
+                
+                const backendQualityText = "{{ details.get('quality_text', '') }}";
+                const backendQualityScore = "{{ details.get('quality_score', '') }}";
+                const backendValuationText = "{{ details.get('valuation_text', '') }}";
+                const backendValuationScore = "{{ details.get('valuation_score', '') }}";
+                const backendFinancialText = "{{ details.get('financial_text', '') }}";
+                const backendFinancialScore = "{{ details.get('financial_score', '') }}";
+                
+                const backendCapStruct = "{{ details.get('cap_struct', '') }}";
+                const backendScoreGrowth = "{{ details.get('score_growth', '') }}";
+                const backendMgmtRisk = "{{ details.get('mgmt_risk', '') }}";
+                const backendInsights = `{{ details.get('insights_html', '') | safe }}`;
+
                 // Seed random stats deterministically based on ticker hash
                 const seed = getTickerSeed(normalizedTicker);
                 const rand = new SeededRandom(seed);
@@ -2311,129 +2501,194 @@
                 // 52 Week Low/High
                 const low52 = basePrice * rand.nextRange(0.55, 0.92);
                 const high52 = basePrice * rand.nextRange(1.08, 1.95);
-                document.getElementById('val-52wk-low').textContent = '₹' + low52.toFixed(2);
-                document.getElementById('val-52wk-high').textContent = '₹' + high52.toFixed(2);
+                document.getElementById('val-52wk-low').textContent = '₹' + (parseFloat("{{ details.get('low_52week', '0') }}") || low52).toFixed(2);
+                document.getElementById('val-52wk-high').textContent = '₹' + (parseFloat("{{ details.get('high_52week', '0') }}") || high52).toFixed(2);
 
                 // Valuation ratios
-                document.getElementById('ratio-pe').textContent = rand.nextRange(8, 95).toFixed(2);
-                document.getElementById('ratio-pb').textContent = rand.nextRange(0.8, 22.0).toFixed(2);
-                document.getElementById('ratio-peg').textContent = rand.nextRange(0.15, 4.5).toFixed(2);
-                document.getElementById('ratio-roe').textContent = rand.nextRange(2, 48).toFixed(2) + '%';
+                document.getElementById('ratio-pe').textContent = backendPE && backendPE !== 'N/A' && backendPE !== 'None' ? backendPE : rand.nextRange(8, 95).toFixed(2);
+                document.getElementById('ratio-pb').textContent = backendPB && backendPB !== 'N/A' && backendPB !== 'None' ? backendPB : rand.nextRange(0.8, 22.0).toFixed(2);
+                document.getElementById('ratio-peg').textContent = backendPEG && backendPEG !== 'N/A' && backendPEG !== 'None' ? backendPEG : rand.nextRange(0.15, 4.5).toFixed(2);
+                document.getElementById('ratio-roe').textContent = backendROE && backendROE !== 'N/A' && backendROE !== 'None' ? backendROE : (rand.nextRange(2, 48).toFixed(2) + '%');
 
                 // Growth
-                document.getElementById('ratio-growth-val').textContent = rand.nextRange(-10, 65).toFixed(2);
-                document.getElementById('ratio-evebitda').textContent = rand.nextRange(4, 52).toFixed(2);
-                document.getElementById('ratio-roce').textContent = rand.nextRange(2, 52).toFixed(2) + '%';
+                document.getElementById('ratio-growth-val').textContent = backendGrowth && backendGrowth !== 'N/A' && backendGrowth !== 'None' ? backendGrowth : rand.nextRange(-10, 65).toFixed(2);
+                document.getElementById('ratio-evebitda').textContent = backendEVEbitda && backendEVEbitda !== 'N/A' && backendEVEbitda !== 'None' ? backendEVEbitda : rand.nextRange(4, 52).toFixed(2);
+                document.getElementById('ratio-roce').textContent = backendROCE && backendROCE !== 'N/A' && backendROCE !== 'None' ? backendROCE : (rand.nextRange(2, 52).toFixed(2) + '%');
 
                 // Financial
-                document.getElementById('ratio-evcap').textContent = rand.nextRange(1.5, 32.0).toFixed(2);
-                document.getElementById('ratio-evsales').textContent = rand.nextRange(0.2, 18.0).toFixed(2);
+                document.getElementById('ratio-evcap').textContent = backendEVCap && backendEVCap !== 'N/A' && backendEVCap !== 'None' ? backendEVCap : rand.nextRange(1.5, 32.0).toFixed(2);
+                document.getElementById('ratio-evsales').textContent = backendEVSales && backendEVSales !== 'N/A' && backendEVSales !== 'None' ? backendEVSales : rand.nextRange(0.2, 18.0).toFixed(2);
 
                 // Dividend Yield
                 const divYield = rand.next() > 0.45 ? rand.nextRange(0.1, 5.5).toFixed(2) + '%' : 'NA';
-                document.getElementById('ratio-divyield').textContent = divYield;
+                document.getElementById('ratio-divyield').textContent = backendDivYield && backendDivYield !== 'N/A' && backendDivYield !== 'None' ? backendDivYield : divYield;
 
                 // Sector Rank
                 const rankNum = Math.floor(rand.nextRange(1, 45, 0));
-                document.getElementById('val-sector-rank').textContent = `Sector Trend (#${rankNum})`;
+                document.getElementById('val-sector-rank').textContent = backendSectorRank ? backendSectorRank : `Sector Trend (#${rankNum})`;
 
                 const capSize = rand.choice(['LARGE CAP', 'MID CAP', 'SMALL CAP']);
-                document.getElementById('val-market-cap-size').textContent = capSize;
+                document.getElementById('val-market-cap-size').textContent = backendCapSize ? backendCapSize : capSize;
 
                 const sectorName = rand.choice(['RENEWABLE ENERGY', 'BANKING', 'IT SERVICES', 'AUTOMOBILE', 'PHARMACEUTICALS', 'TELECOM', 'POWER & ENERGY', 'METALS & MINING', 'OIL & GAS']);
-                document.getElementById('val-sector-name').textContent = sectorName;
+                document.getElementById('val-sector-name').textContent = backendSectorName ? backendSectorName : sectorName;
+
+                // Helper to resolve colors dynamically to match status
+                function getStatusColor(status) {
+                    if (!status) return 'var(--yellow)';
+                    const s = status.toString().toLowerCase();
+                    if (s.includes('strong') || s.includes('good') || s.includes('excellent') || s.includes('low') || s.includes('bullish') || s.includes('positive') || s.includes('cheap') || s.includes('mildly positive') || s.includes('great')) {
+                        return 'var(--green)';
+                    }
+                    if (s.includes('weak') || s.includes('poor') || s.includes('high') || s.includes('bearish') || s.includes('negative') || s.includes('expensive') || s.includes('mildly negative')) {
+                        return 'var(--red)';
+                    }
+                    return 'var(--yellow)';
+                }
 
                 // Trends
                 const shortSignal = rand.choice(['bullish', 'neutral', 'bearish']);
                 const shortTrend = document.getElementById('val-trend-short');
-                shortTrend.textContent = shortSignal;
-                shortTrend.style.color = shortSignal === 'bullish' ? 'var(--green)' : shortSignal === 'bearish' ? 'var(--red)' : 'var(--yellow)';
+                const activeShortTrend = backendShortTrend ? backendShortTrend : shortSignal;
+                shortTrend.textContent = activeShortTrend;
+                const shortColor = getStatusColor(activeShortTrend);
+                shortTrend.style.color = shortColor;
+                document.getElementById('val-trend-short-dot').style.backgroundColor = shortColor;
 
                 const longSignal = rand.choice(['bullish', 'neutral', 'bearish']);
                 const longTrend = document.getElementById('val-trend-long');
-                longTrend.textContent = longSignal;
-                longTrend.style.color = longSignal === 'bullish' ? 'var(--green)' : longSignal === 'bearish' ? 'var(--red)' : 'var(--yellow)';
+                const activeLongTrend = backendLongTrend ? backendLongTrend : longSignal;
+                longTrend.textContent = activeLongTrend;
+                const longColor = getStatusColor(activeLongTrend);
+                longTrend.style.color = longColor;
+                document.getElementById('val-trend-long-dot').style.backgroundColor = longColor;
 
                 // Market Cap size formatting
-                const mcapInCr = Math.floor(rand.nextRange(1000, capSize === 'LARGE CAP' ? 1200000 : capSize === 'MID CAP' ? 150000 : 20000));
-                document.getElementById('val-perf-mcap').textContent = 'Rs ' + mcapInCr.toLocaleString('en-IN') + ' Cr';
+                const mcapInCr = Math.floor(rand.nextRange(1000, (backendCapSize || capSize) === 'LARGE CAP' ? 1200000 : (backendCapSize || capSize) === 'MID CAP' ? 150000 : 20000));
+                document.getElementById('val-perf-mcap').textContent = backendMCapVal ? backendMCapVal : ('Rs ' + mcapInCr.toLocaleString('en-IN') + ' Cr');
 
-                const ret1yr = rand.nextRange(-65, 320);
+                // Returns
                 const perf1yr = document.getElementById('val-perf-1yr');
-                perf1yr.textContent = (ret1yr >= 0 ? '+' : '') + ret1yr.toFixed(2) + '%';
-                perf1yr.style.color = ret1yr >= 0 ? 'var(--green)' : 'var(--red)';
+                if (backend1YrReturn) {
+                    perf1yr.textContent = backend1YrReturn;
+                    perf1yr.style.color = backend1YrReturn.startsWith('-') ? 'var(--red)' : 'var(--green)';
+                } else {
+                    const ret1yr = rand.nextRange(-65, 320);
+                    perf1yr.textContent = (ret1yr >= 0 ? '+' : '') + ret1yr.toFixed(2) + '%';
+                    perf1yr.style.color = ret1yr >= 0 ? 'var(--green)' : 'var(--red)';
+                }
 
-                const retSec = rand.nextRange(-45, 180);
                 const perfSec = document.getElementById('val-perf-sec');
-                perfSec.textContent = (retSec >= 0 ? '+' : '') + retSec.toFixed(2) + '%';
-                perfSec.style.color = retSec >= 0 ? 'var(--green)' : 'var(--red)';
+                if (backendSectorReturn) {
+                    perfSec.textContent = backendSectorReturn;
+                    perfSec.style.color = backendSectorReturn.startsWith('-') ? 'var(--red)' : 'var(--green)';
+                } else {
+                    const retSec = rand.nextRange(-45, 180);
+                    perfSec.textContent = (retSec >= 0 ? '+' : '') + retSec.toFixed(2) + '%';
+                    perfSec.style.color = retSec >= 0 ? 'var(--green)' : 'var(--red)';
+                }
 
-                const retMkt = rand.nextRange(-15, 45);
                 const perfMkt = document.getElementById('val-perf-mkt');
-                perfMkt.textContent = (retMkt >= 0 ? '+' : '') + retMkt.toFixed(2) + '%';
-                perfMkt.style.color = retMkt >= 0 ? 'var(--green)' : 'var(--red)';
+                if (backendMarketReturn) {
+                    perfMkt.textContent = backendMarketReturn;
+                    perfMkt.style.color = backendMarketReturn.startsWith('-') ? 'var(--red)' : 'var(--green)';
+                } else {
+                    const retMkt = rand.nextRange(-15, 45);
+                    perfMkt.textContent = (retMkt >= 0 ? '+' : '') + retMkt.toFixed(2) + '%';
+                    perfMkt.style.color = retMkt >= 0 ? 'var(--green)' : 'var(--red)';
+                }
 
                 // Scores (1 to 5)
                 const qualityScore = Math.floor(rand.nextRange(1, 6, 0));
                 const qualityText = ['POOR', 'BELOW AVERAGE', 'AVERAGE', 'GOOD', 'EXCELLENT'][qualityScore - 1];
-                const qualityColor = qualityScore >= 4 ? 'var(--green)' : qualityScore <= 2 ? 'var(--red)' : 'var(--yellow)';
-                document.getElementById('score-quality-text').textContent = qualityText;
+                const activeQualityScore = backendQualityScore ? parseInt(backendQualityScore) : qualityScore;
+                const activeQualityText = backendQualityText ? backendQualityText : qualityText;
+                const qualityColor = getStatusColor(activeQualityText);
+                const qualityBg = activeQualityScore >= 4 ? 'var(--green-dim)' : activeQualityScore <= 2 ? 'var(--red-dim)' : 'var(--yellow-dim)';
+                
+                document.getElementById('score-quality-text').textContent = activeQualityText;
                 document.getElementById('score-quality-text').style.color = qualityColor;
-                document.getElementById('score-quality-val').textContent = `${qualityScore}/5`;
-                document.getElementById('score-quality-val').style.background = qualityScore >= 4 ? 'var(--green-dim)' : qualityScore <= 2 ? 'var(--red-dim)' : 'var(--yellow-dim)';
+                document.getElementById('score-quality-text').style.background = qualityBg;
+                document.getElementById('score-quality-val').textContent = `${activeQualityScore}/5`;
+                document.getElementById('score-quality-val').style.background = qualityBg;
                 document.getElementById('score-quality-val').style.color = qualityColor;
 
                 const valuationScore = Math.floor(rand.nextRange(1, 6, 0));
                 const valuationText = ['VERY EXPENSIVE', 'EXPENSIVE', 'FAIR', 'CHEAP', 'VERY CHEAP'][valuationScore - 1];
-                const valuationColor = valuationScore >= 4 ? 'var(--green)' : valuationScore <= 2 ? 'var(--red)' : 'var(--yellow)';
-                document.getElementById('score-valuation-text').textContent = valuationText;
+                const activeValuationScore = backendValuationScore ? parseInt(backendValuationScore) : valuationScore;
+                const activeValuationText = backendValuationText ? backendValuationText : valuationText;
+                const valuationColor = getStatusColor(activeValuationText);
+                const valuationBg = activeValuationScore >= 4 ? 'var(--green-dim)' : activeValuationScore <= 2 ? 'var(--red-dim)' : 'var(--yellow-dim)';
+                
+                document.getElementById('score-valuation-text').textContent = activeValuationText;
                 document.getElementById('score-valuation-text').style.color = valuationColor;
-                document.getElementById('score-valuation-val').textContent = `${valuationScore}/5`;
-                document.getElementById('score-valuation-val').style.background = valuationScore >= 4 ? 'var(--green-dim)' : valuationScore <= 2 ? 'var(--red-dim)' : 'var(--yellow-dim)';
+                document.getElementById('score-valuation-text').style.background = valuationBg;
+                document.getElementById('score-valuation-val').textContent = `${activeValuationScore}/5`;
+                document.getElementById('score-valuation-val').style.background = valuationBg;
                 document.getElementById('score-valuation-val').style.color = valuationColor;
 
                 const financialScore = Math.floor(rand.nextRange(1, 6, 0));
                 const financialText = ['NEGATIVE', 'WEAK', 'NEUTRAL', 'POSITIVE', 'VERY POSITIVE'][financialScore - 1];
-                const financialColor = financialScore >= 4 ? 'var(--green)' : financialScore <= 2 ? 'var(--red)' : 'var(--yellow)';
-                document.getElementById('score-financial-text').textContent = financialText;
+                const activeFinancialScore = backendFinancialScore ? parseInt(backendFinancialScore) : financialScore;
+                const activeFinancialText = backendFinancialText ? backendFinancialText : financialText;
+                const financialColor = getStatusColor(activeFinancialText);
+                const financialBg = activeFinancialScore >= 4 ? 'var(--green-dim)' : activeFinancialScore <= 2 ? 'var(--red-dim)' : 'var(--yellow-dim)';
+                
+                document.getElementById('score-financial-text').textContent = activeFinancialText;
                 document.getElementById('score-financial-text').style.color = financialColor;
-                document.getElementById('score-financial-val').textContent = `${financialScore}/5`;
-                document.getElementById('score-financial-val').style.background = financialScore >= 4 ? 'var(--green-dim)' : financialScore <= 2 ? 'var(--red-dim)' : 'var(--yellow-dim)';
+                document.getElementById('score-financial-text').style.background = financialBg;
+                document.getElementById('score-financial-val').textContent = `${activeFinancialScore}/5`;
+                document.getElementById('score-financial-val').style.background = financialBg;
                 document.getElementById('score-financial-val').style.color = financialColor;
 
                 // Sub-metrics
                 const capStruct = rand.choice(['Weak', 'Average', 'Strong']);
-                document.getElementById('score-capstruct').textContent = capStruct;
-                document.getElementById('score-capstruct').style.color = capStruct === 'Strong' ? 'var(--green)' : capStruct === 'Weak' ? 'var(--red)' : 'var(--text-primary)';
+                const activeCapStruct = backendCapStruct ? backendCapStruct : capStruct;
+                document.getElementById('score-capstruct').textContent = activeCapStruct;
+                const capStructColor = getStatusColor(activeCapStruct);
+                document.getElementById('score-capstruct').style.color = capStructColor;
+                document.getElementById('score-capstruct-dot').style.backgroundColor = capStructColor;
 
                 const growthScore = rand.choice(['Poor', 'Average', 'Good', 'Excellent']);
-                document.getElementById('score-growth').textContent = growthScore;
-                document.getElementById('score-growth').style.color = ['Good', 'Excellent'].includes(growthScore) ? 'var(--green)' : growthScore === 'Poor' ? 'var(--red)' : 'var(--text-primary)';
+                const activeGrowthScore = backendScoreGrowth ? backendScoreGrowth : growthScore;
+                document.getElementById('score-growth').textContent = activeGrowthScore;
+                const growthColor = getStatusColor(activeGrowthScore);
+                document.getElementById('score-growth').style.color = growthColor;
+                document.getElementById('score-growth-dot').style.backgroundColor = growthColor;
 
                 const mgmtRisk = rand.choice(['High', 'Average', 'Good', 'Low']);
-                document.getElementById('score-mgt-risk').textContent = mgmtRisk;
-                document.getElementById('score-mgt-risk').style.color = ['Good', 'Low'].includes(mgmtRisk) ? 'var(--green)' : mgmtRisk === 'High' ? 'var(--red)' : 'var(--text-primary)';
+                const activeMgmtRisk = backendMgmtRisk ? backendMgmtRisk : mgmtRisk;
+                document.getElementById('score-mgt-risk').textContent = activeMgmtRisk;
+                const mgmtColor = getStatusColor(activeMgmtRisk);
+                document.getElementById('score-mgt-risk').style.color = mgmtColor;
+                document.getElementById('score-mgt-risk-dot').style.backgroundColor = mgmtColor;
 
                 // Target Price & Expected Profit
                 const targetPrice = basePrice * rand.nextRange(0.85, 1.45);
-                document.getElementById('val-target-price').textContent = '₹' + targetPrice.toFixed(2);
+                const activeTargetPrice = backendTargetPrice ? parseFloat(backendTargetPrice) : targetPrice;
+                document.getElementById('val-target-price').textContent = '₹' + activeTargetPrice.toFixed(2);
                 
-                const upsidePct = ((targetPrice - basePrice) / basePrice) * 100;
+                const upsidePct = ((activeTargetPrice - basePrice) / basePrice) * 100;
+                const activeUpsidePct = backendUpsidePct ? parseFloat(backendUpsidePct) : upsidePct;
                 const expProfit = document.getElementById('val-expected-profit');
-                expProfit.textContent = (upsidePct >= 0 ? '+' : '') + upsidePct.toFixed(2) + '%';
-                expProfit.style.color = upsidePct >= 0 ? 'var(--green)' : 'var(--red)';
+                expProfit.textContent = (activeUpsidePct >= 0 ? '+' : '') + activeUpsidePct.toFixed(2) + '%';
+                expProfit.style.color = activeUpsidePct >= 0 ? 'var(--green)' : 'var(--red)';
 
                 // Analyst Ratings
                 const buyPct = Math.floor(rand.nextRange(15, 85, 0));
                 const holdPct = Math.floor(rand.nextRange(5, 100 - buyPct, 0));
                 const sellPct = 100 - buyPct - holdPct;
 
-                document.getElementById('rating-buy-pct').textContent = buyPct + '%';
-                document.getElementById('rating-buy-bar').style.width = buyPct + '%';
-                document.getElementById('rating-hold-pct').textContent = holdPct + '%';
-                document.getElementById('rating-hold-bar').style.width = holdPct + '%';
-                document.getElementById('rating-sell-pct').textContent = sellPct + '%';
-                document.getElementById('rating-sell-bar').style.width = sellPct + '%';
+                const activeBuyPct = backendBuyPct ? parseInt(backendBuyPct) : buyPct;
+                const activeHoldPct = backendHoldPct ? parseInt(backendHoldPct) : holdPct;
+                const activeSellPct = backendSellPct ? parseInt(backendSellPct) : sellPct;
+
+                document.getElementById('rating-buy-pct').textContent = activeBuyPct + '%';
+                document.getElementById('rating-buy-bar').style.width = activeBuyPct + '%';
+                document.getElementById('rating-hold-pct').textContent = activeHoldPct + '%';
+                document.getElementById('rating-hold-bar').style.width = activeHoldPct + '%';
+                document.getElementById('rating-sell-pct').textContent = activeSellPct + '%';
+                document.getElementById('rating-sell-bar').style.width = activeSellPct + '%';
 
                 // Price details
                 const oiVal = Math.floor(rand.nextRange(10000, 8500000, 0));
@@ -2448,16 +2703,20 @@
 
                 // Insights to Look For
                 const listInsights = document.getElementById('list-insights');
-                let insightsHtml = '';
-                if (qualityScore >= 4) {
-                    insightsHtml += '<li>Good quality company basis long term financial performance.</li>';
-                } else if (qualityScore <= 2) {
-                    insightsHtml += '<li>Keep an eye on company metrics due to weaker long term performance.</li>';
+                if (backendInsights) {
+                    listInsights.innerHTML = backendInsights;
                 } else {
-                    insightsHtml += '<li>Average quality company exhibiting steady long term performance.</li>';
+                    let insightsHtml = '';
+                    if (qualityScore >= 4) {
+                        insightsHtml += '<li>Good quality company basis long term financial performance.</li>';
+                    } else if (qualityScore <= 2) {
+                        insightsHtml += '<li>Keep an eye on company metrics due to weaker long term performance.</li>';
+                    } else {
+                        insightsHtml += '<li>Average quality company exhibiting steady long term performance.</li>';
+                    }
+                    insightsHtml += `<li>Size - Ranks ${Math.floor(rand.nextRange(1, 15, 0))}rd out of ${Math.floor(rand.nextRange(15, 45, 0))} companies in ${sectorName} sector</li>`;
+                    listInsights.innerHTML = insightsHtml;
                 }
-                insightsHtml += `<li>Size - Ranks ${Math.floor(rand.nextRange(1, 15, 0))}rd out of ${Math.floor(rand.nextRange(15, 45, 0))} companies in ${sectorName} sector</li>`;
-                listInsights.innerHTML = insightsHtml;
 
                 updateSliderPointers(basePrice);
             }
