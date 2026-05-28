@@ -3589,12 +3589,16 @@ footer a:hover { color: var(--cyan); }
   .user-options {
     gap: 8px;
   }
-  .user-options > a {
-    font-size: 12px;
-    padding: 6px 10px;
+  .top-bar .user-options > a {
+    display: none !important;
   }
-  .btn-signup {
-    padding: 6px 12px !important;
+  #nav-indices-container {
+    display: none !important;
+  }
+  .section-title-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
   }
 }
 
@@ -3638,7 +3642,7 @@ footer a:hover { color: var(--cyan); }
   
   /* Hide search bar inside topbar on extra small screens to save space */
   .top-bar .search-bar {
-    display: none;
+    display: none !important;
   }
   .top-bar .user-options {
     gap: 6px;
