@@ -5,6 +5,87 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tutorials — RP Finance</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        /* Tutorial Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s ease;
+        }
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .tutorial-modal {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            width: 90%;
+            max-width: 520px;
+            padding: 28px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.02);
+            position: relative;
+            transform: scale(0.95);
+            transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .modal-overlay.active .tutorial-modal {
+            transform: scale(1);
+        }
+        .modal-close {
+            position: absolute;
+            top: 14px;
+            right: 14px;
+            background: none;
+            border: none;
+            font-size: 22px;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: color 0.2s;
+            line-height: 1;
+        }
+        .modal-close:hover {
+            color: var(--text-primary);
+        }
+        .modal-icon {
+            font-size: 40px;
+            margin-bottom: 12px;
+            text-align: center;
+        }
+        .tutorial-modal h2 {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 12px;
+            text-align: center;
+        }
+        .modal-body {
+            font-size: 13.5px;
+            line-height: 1.65;
+            color: var(--text-secondary);
+        }
+        .modal-body p {
+            margin-bottom: 12px;
+        }
+        .modal-body ul {
+            margin-left: 20px;
+            margin-bottom: 12px;
+        }
+        .modal-body li {
+            margin-bottom: 6px;
+        }
+    </style>
 </head>
 <body>
 
@@ -26,8 +107,8 @@
             {% if logged_in %}
                 <a href="/logout">Logout</a>
             {% else %}
-                <a href="/login">Login</a>
-                <a href="/signup" class="btn-signup">Sign Up</a>
+                <a href="/auth?mode=login">Login</a>
+                <a href="/auth?mode=signup" class="btn-signup">Sign Up</a>
             {% endif %}
         </div>
     </header>
@@ -42,42 +123,42 @@
                     <div class="tutorial-icon">📊</div>
                     <h2>Introduction to Stock Trading</h2>
                     <p>Understand the basics of buying and selling stocks, market terminology, and beginner strategies.</p>
-                    <button class="cta-btn" onclick="alert('Coming soon!')">Learn More</button>
+                    <button class="cta-btn" onclick="showTutorial('intro')">Learn More</button>
                 </div>
 
                 <div class="tutorial-item">
                     <div class="tutorial-icon">💼</div>
                     <h2>Building a Winning Portfolio</h2>
                     <p>Discover how to diversify your investments, manage risk, and build long-term wealth.</p>
-                    <button class="cta-btn" onclick="alert('Coming soon!')">Learn More</button>
+                    <button class="cta-btn" onclick="showTutorial('portfolio')">Learn More</button>
                 </div>
 
                 <div class="tutorial-item">
                     <div class="tutorial-icon">⚡</div>
                     <h2>Mastering Algo Trading</h2>
                     <p>Learn how to automate trades using moving averages, RSI, MACD, and crossover signals.</p>
-                    <button class="cta-btn" onclick="alert('Coming soon!')">Learn More</button>
+                    <button class="cta-btn" onclick="showTutorial('algo')">Learn More</button>
                 </div>
 
                 <div class="tutorial-item">
                     <div class="tutorial-icon">📰</div>
                     <h2>Reading Market News</h2>
                     <p>Get tips on interpreting financial news and its real-world impact on stock prices.</p>
-                    <button class="cta-btn" onclick="alert('Coming soon!')">Learn More</button>
+                    <button class="cta-btn" onclick="showTutorial('news')">Learn More</button>
                 </div>
 
                 <div class="tutorial-item">
                     <div class="tutorial-icon">🔮</div>
                     <h2>Technical Analysis 101</h2>
                     <p>Chart patterns, candlesticks, support/resistance levels — a practical introduction.</p>
-                    <button class="cta-btn" onclick="alert('Coming soon!')">Learn More</button>
+                    <button class="cta-btn" onclick="showTutorial('analysis')">Learn More</button>
                 </div>
 
                 <div class="tutorial-item">
                     <div class="tutorial-icon">🛡️</div>
                     <h2>Risk Management</h2>
                     <p>Learn position sizing, stop-losses, and how to protect your capital in volatile markets.</p>
-                    <button class="cta-btn" onclick="alert('Coming soon!')">Learn More</button>
+                    <button class="cta-btn" onclick="showTutorial('risk')">Learn More</button>
                 </div>
             </div>
         </div>
@@ -104,6 +185,116 @@
         <a href="/terms">Terms of Use</a>
     </footer>
 
+    <!-- Tutorial Detail Modal -->
+    <div class="modal-overlay" id="tutorial-modal-overlay" onclick="closeTutorialModal()">
+        <div class="tutorial-modal" onclick="event.stopPropagation()">
+            <button class="modal-close" onclick="closeTutorialModal()">×</button>
+            <div class="modal-icon" id="modal-icon">📊</div>
+            <h2 id="modal-title">Tutorial</h2>
+            <div class="modal-body" id="modal-body"></div>
+        </div>
+    </div>
+
+    <script>
+        const tutorialContents = {
+            "intro": {
+                icon: "📊",
+                title: "Introduction to Stock Trading",
+                body: `
+                    <p>Stock trading involves buying and selling shares of publicly traded companies. This tutorial covers the essential concepts every beginner needs to master:</p>
+                    <ul>
+                        <li><strong>What is a Stock?</strong> A fractional share of ownership in a company.</li>
+                        <li><strong>Market vs. Limit Orders:</strong> Market orders execute instantly at the current price, while limit orders execute only at your specified price or better.</li>
+                        <li><strong>The Bid-Ask Spread:</strong> The difference between the highest price a buyer is willing to pay and the lowest price a seller is willing to accept.</li>
+                        <li><strong>Trading Volume:</strong> The total number of shares traded during a given period. High volume typically means higher liquidity.</li>
+                    </ul>
+                    <p><em>Pro Tip: Start by tracking stocks in your Watchlist and testing your ideas using virtual balance before trading real capital.</em></p>
+                `
+            },
+            "portfolio": {
+                icon: "💼",
+                title: "Building a Winning Portfolio",
+                body: `
+                    <p>A portfolio is a collection of financial investments. Diversification is key to managing risks and maximizing returns:</p>
+                    <ul>
+                        <li><strong>Asset Allocation:</strong> Distributing your money across different stock categories (e.g., Tech, Banking, Commodities).</li>
+                        <li><strong>Sector Diversification:</strong> Avoid placing all your capital in one industry. Spread it out to buffer against sector-specific downturns.</li>
+                        <li><strong>Rebalancing:</strong> Periodically resetting your asset mix back to your target allocation as values change over time.</li>
+                        <li><strong>Compounding:</strong> Reinvesting your gains and dividends to accelerate wealth creation.</li>
+                    </ul>
+                    <p><em>Check out the Portfolio tab on your Dashboard to see your live holdings and total virtual net worth.</em></p>
+                `
+            },
+            "algo": {
+                icon: "⚡",
+                title: "Mastering Algo Trading",
+                body: `
+                    <p>Algorithmic trading uses rule-based computer strategies to execute trades automatically. RP Finance includes a simulated Moving Average (MA) crossover strategy builder:</p>
+                    <ul>
+                        <li><strong>Simple Moving Average (SMA):</strong> The average price of a stock over a specific number of days.</li>
+                        <li><strong>Golden Crossover (Buy Signal):</strong> Occurs when a shorter-term moving average (e.g., 20-day) crosses above a longer-term moving average (e.g., 50-day). This indicates bullish momentum.</li>
+                        <li><strong>Death Crossover (Sell Signal):</strong> Occurs when the shorter-term moving average crosses below the longer-term moving average, indicating bearish momentum.</li>
+                    </ul>
+                    <p><em>Go to the Algo Trading tab, enter a ticker and two periods (e.g., 20 and 50), and see the AI generate backtested indicators and signals!</em></p>
+                `
+            },
+            "news": {
+                icon: "📰",
+                title: "Reading Market News",
+                body: `
+                    <p>Market news has a direct, immediate impact on stock prices. Learning to read and analyze financial updates is crucial:</p>
+                    <ul>
+                        <li><strong>Earnings Reports:</strong> Quarterly reports of company revenues, net profit, and EPS (Earnings Per Share). Beating expectations often pushes stock prices up.</li>
+                        <li><strong>Monetary Policy:</strong> Interest rate hikes or cuts by central banks (like RBI or Fed) affect borrowing costs and stock valuations.</li>
+                        <li><strong>Corporate Actions:</strong> Stock splits, mergers, dividend announcements, and management changes.</li>
+                    </ul>
+                    <p><em>Check out our News tab to stay updated with real-time financial market news.</em></p>
+                `
+            },
+            "analysis": {
+                icon: "🔮",
+                title: "Technical Analysis 101",
+                body: `
+                    <p>Technical analysis is the study of historical price action and volume patterns to predict future price moves:</p>
+                    <ul>
+                        <li><strong>Candlestick Charts:</strong> Visual representation of Open, High, Low, and Close prices for a given timeframe.</li>
+                        <li><strong>Support and Resistance:</strong> Support is a price level where buying interest prevents prices from falling further. Resistance is where selling pressure stops upward moves.</li>
+                        <li><strong>Chart Patterns:</strong> Recognizable shapes like double bottoms, head-and-shoulders, and wedges that signal trend reversals or continuations.</li>
+                    </ul>
+                `
+            },
+            "risk": {
+                icon: "🛡️",
+                title: "Risk Management",
+                body: `
+                    <p>Risk management is the most critical element of trading. It keeps you in the game even during a losing streak:</p>
+                    <ul>
+                        <li><strong>Position Sizing:</strong> Never invest too much of your total account value in a single trade. A common rule is risking only 1-2% of capital per trade.</li>
+                        <li><strong>Stop-Loss Orders:</strong> A pre-set order that automatically sells a stock when it falls to a certain price, capping your maximum loss.</li>
+                        <li><strong>Risk-to-Reward Ratio:</strong> Aim for trades where the potential reward is at least twice the size of the potential risk (e.g., 1:2 ratio).</li>
+                    </ul>
+                    <p><em>Always protect your virtual capital so you can practice trading longer.</em></p>
+                `
+            }
+        };
+
+        function showTutorial(key) {
+            const data = tutorialContents[key];
+            if (!data) return;
+            document.getElementById('modal-icon').textContent = data.icon;
+            document.getElementById('modal-title').textContent = data.title;
+            document.getElementById('modal-body').innerHTML = data.body;
+            document.getElementById('tutorial-modal-overlay').classList.add('active');
+        }
+
+        function closeTutorialModal() {
+            document.getElementById('tutorial-modal-overlay').classList.remove('active');
+        }
+        
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') closeTutorialModal();
+        });
+    </script>
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
 </body>
 </html>

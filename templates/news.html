@@ -26,8 +26,8 @@
             {% if logged_in %}
                 <a href="/logout">Logout</a>
             {% else %}
-                <a href="/login">Login</a>
-                <a href="/signup" class="btn-signup">Sign Up</a>
+                <a href="/auth?mode=login">Login</a>
+                <a href="/auth?mode=signup" class="btn-signup">Sign Up</a>
             {% endif %}
         </div>
     </header>

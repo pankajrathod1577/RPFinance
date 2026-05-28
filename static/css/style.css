@@ -3600,6 +3600,10 @@ footer a:hover { color: var(--cyan); }
     align-items: flex-start;
     gap: 4px;
   }
+  .fo-grid {
+    grid-template-columns: 1fr !important;
+    gap: 20px !important;
+  }
 }
 
 @media (max-width: 576px) {
@@ -3646,5 +3650,61 @@ footer a:hover { color: var(--cyan); }
   }
   .top-bar .user-options {
     gap: 6px;
+  }
+}
+
+@media (max-width: 480px) {
+  /* F&O Select Dropdowns distribution on mobile */
+  .fo-dropdown-filters {
+    padding: 10px 12px !important;
+    gap: 6px !important;
+  }
+  .fo-dropdown-filters .fo-select {
+    flex: 1;
+    min-width: 60px;
+    padding: 5px 20px 5px 8px !important;
+    background-position: right 4px center !important;
+  }
+}
+
+/* Additional Mobile Layout Optimizations */
+@media (max-width: 576px) {
+  /* Portfolio buy stock input stacking */
+  .add-portfolio {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+    padding: 16px !important;
+  }
+  .add-portfolio input,
+  #buy-ticker,
+  #buy-shares {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  .add-portfolio button {
+    width: 100% !important;
+    padding: 12px !important;
+  }
+
+  /* Watchlist add stock input stacking */
+  .watchlist-add-bar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+    padding: 16px !important;
+  }
+  .watchlist-add-bar input {
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+  .watchlist-add-bar button {
+    width: 100% !important;
+    padding: 12px !important;
+  }
+
+  /* IPO Modal content padding reduction */
+  .ipo-modal-content {
+    padding: 20px 16px !important;
   }
 }

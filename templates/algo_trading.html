@@ -224,6 +224,48 @@
             font-size: 12.5px;
             font-weight: 600;
         }
+
+        /* Responsive Overrides */
+        @media (max-width: 768px) {
+            .ai-results-header {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 16px;
+            }
+            .ai-price-wrap {
+                text-align: left;
+                display: flex;
+                flex-direction: row-reverse;
+                justify-content: space-between;
+                align-items: center;
+                border-top: 1px solid var(--border-light);
+                padding-top: 16px;
+                margin-top: 8px;
+            }
+            .ai-price-val {
+                font-size: 20px;
+            }
+            .ai-rec-badge {
+                margin-top: 0;
+            }
+            .gauge-container {
+                flex-direction: column;
+                gap: 16px;
+                text-align: center;
+            }
+            .gauge-desc {
+                padding-left: 0;
+            }
+            .indicator-row {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 6px;
+                padding: 12px 0;
+            }
+            .ind-value {
+                font-size: 11px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -246,8 +288,8 @@
             {% if logged_in %}
                 <a href="/logout">Logout</a>
             {% else %}
-                <a href="/login">Login</a>
-                <a href="/signup" class="btn-signup">Sign Up</a>
+                <a href="/auth?mode=login">Login</a>
+                <a href="/auth?mode=signup" class="btn-signup">Sign Up</a>
             {% endif %}
         </div>
     </header>
@@ -261,7 +303,7 @@
                 <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:48px;text-align:center;margin-top:24px;">
                     <div style="font-size:36px;margin-bottom:12px;">🔒</div>
                     <p style="color:var(--text-muted);margin-bottom:20px;">Please log in to use Algo Trading & AI Prediction tools.</p>
-                    <a href="/login" class="cta-btn">Login</a>
+                    <a href="/auth?mode=login" class="cta-btn">Login</a>
                 </div>
             {% else %}
                 {% if error %}
@@ -367,7 +409,7 @@
                                             <div class="chart-tooltip-price" id="chart-tooltip-price">-</div>
                                         </div>
                                     </div>
-                                    <div style="display:flex;justify-content:center;gap:24px;margin-top:10px;font-size:12px;color:var(--text-secondary);">
+                                    <div style="display:flex;justify-content:center;gap:24px;margin-top:10px;font-size:12px;color:var(--text-secondary);flex-wrap:wrap;">
                                         <div style="display:flex;align-items:center;gap:6px;">
                                             <span style="display:inline-block;width:12px;height:3px;background:var(--cyan);"></span> Historical Close (Last 15 Days)
                                         </div>
@@ -410,28 +452,30 @@
                             <!-- Historical Signal Crossover Points -->
                             {% if signals %}
                                 <h2 style="font-size:14px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:16px;margin-top:24px;">Recent MA Crossover Event Signals</h2>
-                                <table class="algo-table">
-                                    <thead>
-                                        <tr>
-                                            <th>Crossover Date</th>
-                                            <th>Signal Trigger</th>
-                                            <th>Execution Price</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for signal in signals %}
-                                            <tr class="signal-row-{{ signal.action | lower }}">
-                                                <td style="font-family:var(--font-mono);color:var(--text-secondary);">{{ signal.date }}</td>
-                                                <td>
-                                                    <span class="{% if signal.action == 'Buy' %}badge-green{% else %}badge-red{% endif %}">
-                                                        {{ "BULLISH CROSS (BUY)" if signal.action == 'Buy' else "BEARISH CROSS (SELL)" }}
-                                                    </span>
-                                                </td>
-                                                <td style="font-family:var(--font-mono);font-weight:600;">₹{{ "%.2f"|format(signal.price) }}</td>
+                                <div class="table-responsive">
+                                    <table class="algo-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Crossover Date</th>
+                                                <th>Signal Trigger</th>
+                                                <th>Execution Price</th>
                                             </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
+                                        </thead>
+                                        <tbody>
+                                            {% for signal in signals %}
+                                                <tr class="signal-row-{{ signal.action | lower }}">
+                                                    <td style="font-family:var(--font-mono);color:var(--text-secondary);">{{ signal.date }}</td>
+                                                    <td>
+                                                        <span class="{% if signal.action == 'Buy' %}badge-green{% else %}badge-red{% endif %}">
+                                                            {{ "BULLISH CROSS (BUY)" if signal.action == 'Buy' else "BEARISH CROSS (SELL)" }}
+                                                        </span>
+                                                    </td>
+                                                    <td style="font-family:var(--font-mono);font-weight:600;">₹{{ "%.2f"|format(signal.price) }}</td>
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
                             {% endif %}
                         {% else %}
                             <div style="text-align:center;padding:80px 20px;">

@@ -26,8 +26,8 @@
             {% if logged_in %}
                 <a href="/logout">Logout</a>
             {% else %}
-                <a href="/login">Login</a>
-                <a href="/signup" class="btn-signup">Sign Up</a>
+                <a href="/auth?mode=login">Login</a>
+                <a href="/auth?mode=signup" class="btn-signup">Sign Up</a>
             {% endif %}
         </div>
     </header>
@@ -104,8 +104,8 @@
                 <h1>Track Your <span>Favorite Stocks</span></h1>
                 <p>Log in to build a personalized watchlist and monitor real-time price changes.</p>
                 <div class="cta-buttons">
-                    <a href="/login" class="cta-btn">Login</a>
-                    <a href="/signup" class="btn-outline">Sign Up</a>
+                    <a href="/auth?mode=login" class="cta-btn">Login</a>
+                    <a href="/auth?mode=signup" class="btn-outline">Sign Up</a>
                 </div>
             </section>
         {% endif %}

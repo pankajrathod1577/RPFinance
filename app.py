@@ -104,7 +104,40 @@ US_BASE_PRICES = {
     "AAPL": 180.00,
     "NVDA": 900.00,
     "INTC": 30.00,
-    "IBM": 170.00
+    "IBM": 170.00,
+    "MSFT": 420.00,
+    "TSLA": 175.00,
+    "GOOG": 170.00,
+    "GOOGL": 172.00,
+    "AMZN": 180.00,
+    "META": 475.00,
+    "NFLX": 600.00,
+    "AMD": 160.00,
+    "BABA": 75.00,
+    "SPY": 510.00,
+    "QQQ": 440.00,
+    "DIA": 390.00,
+    "IWM": 200.00
+}
+
+US_COMPANIES = {
+    "AAPL": "Apple Inc.",
+    "NVDA": "NVIDIA Corporation",
+    "INTC": "Intel Corporation",
+    "IBM": "IBM Common Stock",
+    "MSFT": "Microsoft Corporation",
+    "TSLA": "Tesla, Inc.",
+    "GOOG": "Alphabet Inc. Class C",
+    "GOOGL": "Alphabet Inc. Class A",
+    "AMZN": "Amazon.com, Inc.",
+    "META": "Meta Platforms, Inc.",
+    "NFLX": "Netflix, Inc.",
+    "AMD": "Advanced Micro Devices, Inc.",
+    "BABA": "Alibaba Group Holding Ltd",
+    "SPY": "SPDR S&P 500 ETF Trust",
+    "QQQ": "Invesco QQQ Trust",
+    "DIA": "SPDR Dow Jones Industrial Average ETF",
+    "IWM": "iShares Russell 2000 ETF"
 }
 
 LIVE_FEED = {}
@@ -175,6 +208,28 @@ def init_live_feed():
                 "dividend_yield": "1.21%",
                 "description": f"{name} is a leading Indian corporation traded on the Bombay Stock Exchange (BSE)." if sym != 'SENSEX' else f"{name} is a major Indian stock market index."
             }
+        
+    for sym, base_p in US_BASE_PRICES.items():
+        name = US_COMPANIES.get(sym, sym)
+        LIVE_FEED[sym] = {
+            "ticker": sym,
+            "name": name,
+            "price": base_p,
+            "yf_price": base_p,
+            "change": 0.0,
+            "open": base_p,
+            "high": base_p,
+            "low": base_p,
+            "prev_close": base_p,
+            "previous_close": base_p,
+            "volume": "12,450,100",
+            "low_52week": round(base_p * 0.75, 2),
+            "high_52week": round(base_p * 1.25, 2),
+            "pe_ratio": "28.50",
+            "price_to_book": "6.20",
+            "dividend_yield": "0.80%",
+            "description": f"{name} is a leading global technology/finance entity traded in the US markets."
+        }
 
 init_live_feed()
 
@@ -1832,14 +1887,45 @@ def tutorials():
 @app.route('/news')
 def news():
     logged_in = 'user_id' in session
+    news_items = []
     try:
         url = f"https://newsapi.org/v2/everything?q=indian+stock+market&apiKey={NEWS_API_KEY}&language=en&sortBy=publishedAt&pageSize=12"
         resp = requests.get(url, timeout=8)
         articles = resp.json().get('articles', [])
         news_items = [{'title': a.get('title',''), 'description': a.get('description','') or 'Click to read more.',
                        'url': a.get('url','#'), 'thumbnail': a.get('urlToImage') or ''} for a in articles if a.get('title')]
-    except:
+    except Exception as e:
+        print(f"News API error: {e}")
         news_items = []
+        
+    if not news_items:
+        news_items = [
+            {
+                "title": "Nifty 50 Reclaims 22,500 Mark Amid Strong Buying in Banking & IT Stocks",
+                "description": "Indian benchmark indices witnessed strong momentum as HDFC Bank, TCS, and Reliance Industries led the rally. Analysts attribute the gains to positive global cues and robust domestic inflows.",
+                "url": "https://www.moneycontrol.com",
+                "thumbnail": ""
+            },
+            {
+                "title": "IPO Market Highlights: Multiple Companies Set to List on NSE & BSE Next Week",
+                "description": "The Indian primary market remains hot as three mainboard IPOs are scheduled to open for subscription. Promoters seek to raise over Rs 15,000 crores collectively.",
+                "url": "https://www.chittorgarh.com",
+                "thumbnail": ""
+            },
+            {
+                "title": "Federal Reserve Signals Pause in Interest Rate Hikes, Global Markets Rejoice",
+                "description": "US Federal Reserve officials hint at holding key interest rates steady, easing pressure on emerging markets including India. Bond yields decline while technology indices surge.",
+                "url": "https://www.reuters.com",
+                "thumbnail": ""
+            },
+            {
+                "title": "Crude Oil Prices Stabilize Around $83/Barrel Amid OPEC Supply Decisions",
+                "description": "Brent crude oil futures trade flat as OPEC+ continues production cuts. Indian oil marketing companies watch refining margins closely amid retail price revisions.",
+                "url": "https://www.bloomberg.com",
+                "thumbnail": ""
+            }
+        ]
+        
     return render_template('news.html', logged_in=logged_in, news_items=news_items)
 
 

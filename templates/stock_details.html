@@ -508,8 +508,8 @@
             {% if logged_in %}
                 <a href="/logout">Logout</a>
             {% else %}
-                <a href="/login">Login</a>
-                <a href="/signup" class="btn-signup">Sign Up</a>
+                <a href="/auth?mode=login">Login</a>
+                <a href="/auth?mode=signup" class="btn-signup">Sign Up</a>
             {% endif %}
         </div>
     </header>
@@ -1206,7 +1206,7 @@
                 <h2>Quick Trade ⚡</h2>
                 {% if not logged_in %}
                     <p style="font-size:13px;color:var(--text-muted);text-align:center;margin: 20px 0;">Please log in to trade stocks.</p>
-                    <a href="/login" class="cta-btn" style="display:block;text-align:center;text-decoration:none;">Login</a>
+                    <a href="/auth?mode=login" class="cta-btn" style="display:block;text-align:center;text-decoration:none;">Login</a>
                 {% else %}
                     <div class="trade-input-group">
                         <label>Stock Ticker</label>
