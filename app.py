@@ -8,18 +8,17 @@ from flask_session import Session
 # ── Ticker normalization & Indian Stocks Live Feed ───────────────────────────
 import random
 import os
+import threading
 import yfinance as yf
+from concurrent.futures import ThreadPoolExecutor
 
 # ── Auto-detection for PythonAnywhere Free Tier (Offline/Simulated Mode) ──────
-# PythonAnywhere FREE plan blocks all external domains except a small whitelist.
-# We detect this by trying a whitelisted endpoint. If that fails, we're offline.
-USE_SIMULATED_DATA = True  # Default to simulated; detect live below
+USE_SIMULATED_DATA = False
 
 def check_external_apis():
     global USE_SIMULATED_DATA
     try:
-        # Try httpbin.org which IS on PythonAnywhere free whitelist
-        resp = requests.get("https://httpbin.org/get", timeout=3)
+        resp = requests.get("https://www.google.com", timeout=1.5)
         if resp.status_code == 200:
             USE_SIMULATED_DATA = False
         else:
@@ -298,8 +297,8 @@ def background_price_updater():
             print(f"Background update error: {e}")
         time.sleep(60)
 
-# NOTE: Background thread removed for PythonAnywhere free tier compatibility.
-# Prices are updated lazily on each request via update_live_prices().
+# Run updater thread
+threading.Thread(target=background_price_updater, daemon=True).start()
 
 def is_indian_market_open():
     import datetime
@@ -672,10 +671,7 @@ def get_rich_stock_details(ticker, api_key=None):
 # ── App Setup ─────────────────────────────────────────────────────────────────
 app = Flask(__name__)
 app.secret_key = 'rp_finance_secret_2024'
-_session_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'flask_session')
-os.makedirs(_session_dir, exist_ok=True)
 app.config['SESSION_TYPE'] = 'filesystem'
-app.config['SESSION_FILE_DIR'] = _session_dir
 Session(app)
 chatbot = Chatbot()
 chatbot.live_feed = LIVE_FEED
