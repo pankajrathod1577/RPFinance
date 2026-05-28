@@ -2978,9 +2978,100 @@ function initializeLogoImages() {
     });
 }
 
+// Dynamic Mobile Menu setup for full responsiveness
+function setupMobileMenu() {
+    const topBar = document.querySelector('.top-bar');
+    if (!topBar) return;
+
+    // 1. Create hamburger button
+    const hamburger = document.createElement('button');
+    hamburger.className = 'mobile-menu-toggle';
+    hamburger.innerHTML = '☰';
+    hamburger.setAttribute('aria-label', 'Open Menu');
+    topBar.appendChild(hamburger);
+
+    // 2. Create mobile drawer layout
+    const drawer = document.createElement('div');
+    drawer.className = 'mobile-drawer';
+
+    const overlay = document.createElement('div');
+    overlay.className = 'mobile-drawer-overlay';
+
+    // 3. Clone existing navigation links
+    const desktopLinks = topBar.querySelector('.nav-links');
+    let clonedLinksHtml = '';
+    if (desktopLinks) {
+        const links = desktopLinks.querySelectorAll('a');
+        links.forEach(link => {
+            const activeClass = link.classList.contains('active') ? 'class="active"' : '';
+            clonedLinksHtml += `<a href="${link.getAttribute('href')}" ${activeClass}>${link.innerHTML}</a>`;
+        });
+    } else {
+        // Fallback standard links if none found on current page
+        clonedLinksHtml = `
+            <a href="/">Dashboard</a>
+            <a href="/portfolio">Portfolio</a>
+            <a href="/watchlist">Watchlist</a>
+            <a href="/algo_trading">Algo Trading</a>
+            <a href="/tutorials">Tutorials</a>
+            <a href="/news">News</a>
+        `;
+    }
+
+    // Check user logged in status from page markup
+    const userOptions = topBar.querySelector('.user-options');
+    const isLogoutBtn = userOptions && (userOptions.innerHTML.toLowerCase().includes('logout') || userOptions.innerHTML.includes('/logout'));
+    let footerHtml = '';
+    if (isLogoutBtn) {
+        footerHtml = `<a href="/logout" style="background:var(--red-dim); color:var(--red);">Logout</a>`;
+    } else {
+        footerHtml = `
+            <a href="/auth?mode=login" style="background:var(--border-light); color:var(--text-secondary);">Login</a>
+            <a href="/auth?mode=signup" style="background:var(--cyan); color:#ffffff; font-weight:700;">Sign Up</a>
+        `;
+    }
+
+    // 4. Fill drawer contents
+    drawer.innerHTML = `
+        <div class="mobile-drawer-header">
+            <a href="/" class="logo" style="text-decoration:none;"><span>RP</span> Finance</a>
+            <button class="mobile-drawer-close" aria-label="Close Menu">✕</button>
+        </div>
+        <div class="mobile-drawer-links">
+            ${clonedLinksHtml}
+        </div>
+        <div class="mobile-drawer-footer">
+            ${footerHtml}
+        </div>
+    `;
+
+    document.body.appendChild(drawer);
+    document.body.appendChild(overlay);
+
+    // 5. Toggle drawer handlers
+    const closeBtn = drawer.querySelector('.mobile-drawer-close');
+
+    function openMenu() {
+        drawer.classList.add('open');
+        overlay.classList.add('open');
+        document.body.style.overflow = 'hidden'; // prevent page scroll
+    }
+
+    function closeMenu() {
+        drawer.classList.remove('open');
+        overlay.classList.remove('open');
+        document.body.style.overflow = '';
+    }
+
+    hamburger.addEventListener('click', openMenu);
+    closeBtn.addEventListener('click', closeMenu);
+    overlay.addEventListener('click', closeMenu);
+}
+
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', () => {
     renderAppliedIpos();
     updateIpoStatusBadges();
     initializeLogoImages();
+    setupMobileMenu();
 });

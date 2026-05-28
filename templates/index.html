@@ -753,7 +753,7 @@
                     (function () {
                         const data = [
                             {% for item in portfolio_data %}
-                    { ticker: "{{ item.ticker }}", value: { { item.value_inr | round(0) } } },
+                    { ticker: "{{ item.ticker }}", value: {{ item.value_inr | round(0) }} },
                     {% endfor %}
                 ];
                     const total = data.reduce((s, d) => s + d.value, 0);
@@ -934,7 +934,7 @@
     <script>
         const userHoldings = [
             {% for item in portfolio_data %}
-        { ticker: "{{ item.ticker }}", shares: { { item.shares } } },
+        { ticker: "{{ item.ticker }}", shares: {{ item.shares }} },
         {% endfor %}
         ];
     </script>

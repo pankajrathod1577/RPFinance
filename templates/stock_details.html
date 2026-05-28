@@ -375,6 +375,117 @@
         #custom-chart-wrapper .chart-period-btn {
             border-color: var(--border) !important;
         }
+
+        /* ============================================
+           STOCK DETAILS RESPONSIVE OVERRIDES
+           ============================================ */
+        @media (max-width: 768px) {
+            /* Details Header stacking */
+            .details-header {
+                flex-direction: column !important;
+                align-items: stretch !important;
+                gap: 16px !important;
+                padding: 16px !important;
+            }
+            .details-header-right {
+                text-align: left !important;
+                display: flex;
+                flex-direction: row-reverse;
+                justify-content: space-between;
+                align-items: center;
+                border-top: 1px solid var(--border-light);
+                padding-top: 16px;
+                margin-top: 8px;
+            }
+            .price-large {
+                text-align: left !important;
+                font-size: 24px !important;
+            }
+            .change-badge {
+                margin-top: 0 !important;
+            }
+            
+            /* Stacking details section activity grids */
+            #section-activity, #section-circuits, #section-ratings {
+                grid-template-columns: 1fr !important;
+                gap: 16px !important;
+            }
+            
+            /* Stacking scores split layout */
+            div[style*="grid-template-columns: 280px 1fr"] {
+                grid-template-columns: 1fr !important;
+                gap: 20px !important;
+            }
+            div[style*="border-right: 1px solid var(--border-light)"] {
+                border-right: none !important;
+                border-bottom: 1px solid var(--border-light) !important;
+                padding-right: 0 !important;
+                padding-bottom: 20px !important;
+            }
+            
+            /* Stacking list insights */
+            #list-insights {
+                grid-template-columns: 1fr !important;
+                gap: 8px !important;
+            }
+            
+            /* Option chain columns stacking or scroll */
+            .tab-content {
+                overflow-x: auto !important;
+                width: 100% !important;
+            }
+            
+            /* Option Chain table responsiveness */
+            #tab-options table {
+                min-width: 600px !important;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            /* Sub-navigation tabs spacing */
+            div[style*="overflow-x: auto;"]::-webkit-scrollbar {
+                display: none;
+            }
+            
+            /* Custom chart toolbar items wrapping */
+            div[style*="flex-wrap: wrap;"] {
+                gap: 10px !important;
+            }
+            
+            /* Details button tabs stack or space */
+            .details-tabs {
+                gap: 2px !important;
+            }
+            .tab-btn {
+                padding: 10px 12px !important;
+                font-size: 12.5px !important;
+            }
+            
+            /* Activity sub-grids stacking */
+            div[style*="grid-template-columns: 1fr 1fr; gap: 16px;"] {
+                grid-template-columns: 1fr !important;
+                gap: 12px !important;
+            }
+            
+            /* Shareholding pattern row spacing */
+            div[style*="grid-template-columns: 140px 1fr 120px;"] {
+                grid-template-columns: 80px 1fr !important;
+                gap: 12px !important;
+            }
+            div[style*="grid-template-columns: 140px 1fr 120px;"] > div:last-child {
+                grid-column: 1 / span 2;
+                justify-content: flex-start !important;
+                padding-left: 92px !important;
+                margin-top: -4px !important;
+                margin-bottom: 8px !important;
+            }
+
+            /* Shareholding Pattern grid labels margins override */
+            div[style*="margin-left: 160px; margin-right: 140px;"] {
+                margin-left: 92px !important;
+                margin-right: 10px !important;
+            }
+        }
     </style>
 </head>
 <body>
