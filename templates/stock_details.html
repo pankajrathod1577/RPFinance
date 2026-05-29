@@ -1291,6 +1291,7 @@
                 btnCustom.style.color = 'var(--text-secondary)';
                 
                 initTradingViewWidget();
+                stopChartPolling();
             } else {
                 tvContainer.style.display = 'none';
                 customWrapper.style.display = 'block';
@@ -1305,6 +1306,7 @@
                 btnTv.style.color = 'var(--text-secondary)';
                 
                 initCustomStockChart();
+                startChartPolling();
             }
         }
 
@@ -1356,12 +1358,15 @@
             // Show selected tab content
             if (tabId === 'overview') {
                 document.getElementById('tab-overview').style.display = 'block';
+                stopChartPolling();
             } else if (tabId === 'chart') {
                 document.getElementById('tab-chart').style.display = 'block';
                 toggleChartSource(activeSource);
+                startChartPolling();
             } else if (tabId === 'options') {
                 document.getElementById('tab-options').style.display = 'block';
                 generateOptionChain();
+                stopChartPolling();
             }
         }
 
@@ -1373,6 +1378,7 @@
         let currentChartType = 'candlestick'; // Default to candles matching the user's reference image
         let currentPeriod = '1mo';
         let currentInterval = '1d';
+        let chartPollInterval = null;
         
         // Indicator States
         let showEMA9 = false;
@@ -1468,18 +1474,39 @@
             return { macd: macdOut, signal: signalOut, hist: histOut };
         }
 
-        async function initCustomStockChart() {
+        function startChartPolling() {
+            stopChartPolling();
+            if (activeSource === 'custom') {
+                chartPollInterval = setInterval(() => {
+                    const tabChart = document.getElementById('tab-chart');
+                    if (tabChart && tabChart.style.display === 'block' && !document.hidden) {
+                        initCustomStockChart(true);
+                    }
+                }, 10000); // Poll chart every 10 seconds
+            }
+        }
+
+        function stopChartPolling() {
+            if (chartPollInterval) {
+                clearInterval(chartPollInterval);
+                chartPollInterval = null;
+            }
+        }
+
+        async function initCustomStockChart(isUpdate = false) {
             const container = document.getElementById('custom-chart-container');
             const loader = document.getElementById('chart-loader');
             if (!container) return;
 
-            if (chartData) {
+            if (chartData && !isUpdate) {
                 renderChart();
                 return;
             }
 
-            loader.style.display = 'flex';
-            container.style.display = 'none';
+            if (!isUpdate) {
+                loader.style.display = 'flex';
+                container.style.display = 'none';
+            }
 
             try {
                 const response = await fetch(`/stock/{{ ticker }}?period=${currentPeriod}&interval=${currentInterval}`);
@@ -1515,17 +1542,21 @@
                     }))
                 };
 
-                loader.style.display = 'none';
-                container.style.display = 'block';
+                if (!isUpdate) {
+                    loader.style.display = 'none';
+                    container.style.display = 'block';
+                }
                 renderChart();
             } catch (err) {
                 console.error("Custom chart fetch error:", err);
-                loader.innerHTML = `
-                    <div style="text-align: center; color: var(--red);">
-                        <span style="font-size: 24px; display: block; margin-bottom: 8px;">⚠️</span>
-                        <span>Failed to load stock history. Showing simulation instead.</span>
-                    </div>
-                `;
+                if (!isUpdate) {
+                    loader.innerHTML = `
+                        <div style="text-align: center; color: var(--red);">
+                            <span style="font-size: 24px; display: block; margin-bottom: 8px;">⚠️</span>
+                            <span>Failed to load stock history. Showing simulation instead.</span>
+                        </div>
+                    `;
+                }
             }
         }
 
@@ -2838,6 +2869,7 @@
             toggleChartSource(activeSource);
             populateOverviewData();
             initPriceObserver();
+            startChartPolling();
         }, 300);
     </script>
 </body>

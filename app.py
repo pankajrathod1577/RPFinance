@@ -233,9 +233,11 @@ def init_live_feed():
 
 init_live_feed()
 
+SIMULATED_MODE_COOLDOWN = 0
+
 def fetch_real_prices():
     """Background task to fetch actual stock prices from yfinance in parallel and update LIVE_FEED."""
-    global USE_SIMULATED_DATA
+    global USE_SIMULATED_DATA, SIMULATED_MODE_COOLDOWN
     if USE_SIMULATED_DATA:
         for app_ticker in list(LIVE_FEED.keys()):
             try:
@@ -269,6 +271,8 @@ def fetch_real_prices():
 
     def fetch_ticker_data(yf_ticker):
         try:
+            # Stagger requests to Yahoo Finance to avoid rate limiting
+            time.sleep(random.uniform(0.1, 0.4))
             headers = {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
             }
@@ -357,19 +361,43 @@ def fetch_real_prices():
         except Exception as e:
             pass
 
-    with ThreadPoolExecutor(max_workers=10) as executor:
+    # Reduce thread workers to 3 to prevent API rate limiting blocks
+    with ThreadPoolExecutor(max_workers=3) as executor:
         executor.map(fetch_ticker_data, list(set(yf_tickers)))
 
     # If the majority of tickers failed to fetch, set USE_SIMULATED_DATA to True
     unique_yf_tickers = list(set(yf_tickers))
     if unique_yf_tickers and len(failed_tickers) >= len(unique_yf_tickers) * 0.5:
         USE_SIMULATED_DATA = True
+        SIMULATED_MODE_COOLDOWN = 10  # Try again after 10 loops (10 minutes)
         print("Yahoo Finance API requests are blocked (likely by Render/cloud provider). Switching to simulated mode.")
 
 def background_price_updater():
-    """Loops every 60 seconds to fetch real-time market data in background."""
+    """Loops every 60 seconds to fetch real-time market data in background, with automatic recovery."""
+    global USE_SIMULATED_DATA, SIMULATED_MODE_COOLDOWN
     while True:
         try:
+            if USE_SIMULATED_DATA:
+                # If we are in simulated mode, check if rate limiting block has cleared
+                if SIMULATED_MODE_COOLDOWN > 0:
+                    SIMULATED_MODE_COOLDOWN -= 1
+                else:
+                    print("Checking if Yahoo Finance API block has cleared...")
+                    try:
+                        headers = {
+                            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+                        }
+                        # Query a single major index ticker to test availability
+                        r = requests.get("https://query1.finance.yahoo.com/v8/finance/chart/^NSEI?interval=1m&range=1d", headers=headers, timeout=5)
+                        if r.status_code == 200:
+                            USE_SIMULATED_DATA = False
+                            print("Successfully recovered from simulated mode! Yahoo Finance API is online.")
+                        else:
+                            SIMULATED_MODE_COOLDOWN = 10
+                            print(f"Yahoo Finance API still offline (status {r.status_code}). Retrying in 10 minutes.")
+                    except Exception as ex:
+                        SIMULATED_MODE_COOLDOWN = 10
+                        print(f"Failed to connect to Yahoo Finance during recovery check: {ex}. Retrying in 10 minutes.")
             fetch_real_prices()
         except Exception as e:
             print(f"Background update error: {e}")
@@ -397,23 +425,22 @@ def is_indian_market_open():
 def update_live_prices():
     """Update live prices from yfinance, or simulate micro-fluctuations if simulated mode is on."""
     if USE_SIMULATED_DATA:
-        # Only fluctuate prices if the Indian market is currently open!
-        if is_indian_market_open():
-            for ticker, data in LIVE_FEED.items():
-                curr_p = data["price"]
-                drift = random.uniform(-0.0003, 0.0003)
-                new_p = round(curr_p * (1 + drift), 2)
-                prev_close = data["prev_close"]
-                change_pct = round(((new_p - prev_close) / prev_close) * 100, 2) if prev_close > 0 else 0.0
-                data["price"] = new_p
-                data["change"] = change_pct
-                data["high"] = max(data["high"], new_p)
-                data["low"] = min(data["low"], new_p)
-                try:
-                    vol_raw = int(data["volume"].replace(',', '')) + random.randint(5, 50)
-                    data["volume"] = f"{vol_raw:,}"
-                except:
-                    pass
+        # Simulate micro-fluctuations at all times to allow local testing and demo
+        for ticker, data in LIVE_FEED.items():
+            curr_p = data["price"]
+            drift = random.uniform(-0.0003, 0.0003)
+            new_p = round(curr_p * (1 + drift), 2)
+            prev_close = data["prev_close"]
+            change_pct = round(((new_p - prev_close) / prev_close) * 100, 2) if prev_close > 0 else 0.0
+            data["price"] = new_p
+            data["change"] = change_pct
+            data["high"] = max(data["high"], new_p)
+            data["low"] = min(data["low"], new_p)
+            try:
+                vol_raw = int(data["volume"].replace(',', '')) + random.randint(5, 50)
+                data["volume"] = f"{vol_raw:,}"
+            except:
+                pass
     else:
         for ticker, data in LIVE_FEED.items():
             yf_price = data.get("yf_price", data["prev_close"])
@@ -1729,9 +1756,24 @@ def remove_from_watchlist():
     return jsonify({'status': 'success', 'ticker': ticker_raw})
 
 
+YF_HISTORY_CACHE = {}
+
 def get_yf_history(ticker, period="3mo", interval="1d"):
     if USE_SIMULATED_DATA:
         return {}
+        
+    cache_key = (ticker, period, interval)
+    now = time.time()
+    
+    # 30 seconds cache for intraday, 5 minutes for daily/weekly
+    is_intraday = any(x in interval for x in ['m', 'h', 's']) and 'mo' not in interval and 'wk' not in interval and 'd' not in interval
+    cache_duration = 30 if is_intraday else 300
+    
+    if cache_key in YF_HISTORY_CACHE:
+        cached_data, timestamp = YF_HISTORY_CACHE[cache_key]
+        if now - timestamp < cache_duration:
+            return cached_data
+
     try:
         yf_symbol = to_yf_symbol(ticker)
         t = yf.Ticker(yf_symbol)
@@ -1750,6 +1792,7 @@ def get_yf_history(ticker, period="3mo", interval="1d"):
                     "4. close": str(round(row['Close'], 2)),
                     "5. volume": str(int(row['Volume']))
                 }
+            YF_HISTORY_CACHE[cache_key] = (out, now)
             return out
     except Exception as e:
         print(f"yfinance history error for {ticker}: {e}")
@@ -2008,12 +2051,9 @@ def stock_data(ticker):
     
     out = {}
     base_sym = ticker.split('.')[0]
-    p = BASE_PRICES.get(base_sym, 100.0)
-    if ticker in LIVE_FEED:
-        p = LIVE_FEED[ticker]["price"]
-        
-    # Check if the interval is intraday (contains s, m, or h and does not contain mo or wk or d)
-    # Check if the interval is intraday (contains s, m, or h and does not contain mo or wk or d)
+    base_p = BASE_PRICES.get(base_sym, 100.0)
+    
+    # Check if the interval is intraday
     is_intraday = False
     for suffix in ['s', 'm', 'h']:
         if suffix in interval and 'mo' not in interval and 'wk' not in interval and 'd' not in interval:
@@ -2033,11 +2073,11 @@ def stock_data(ticker):
         else: # minutes
             delta = datetime.timedelta(minutes=val)
             
-        temp_p = p
-        
         if 's' in interval:
             # For seconds, generate last 100 points of the current active day
-            curr_date = datetime.datetime.today()
+            import datetime
+            tz_ist = datetime.timezone(datetime.timedelta(hours=5, minutes=30))
+            curr_date = datetime.datetime.now(tz_ist)
             if curr_date.hour > 15 or (curr_date.hour == 15 and curr_date.minute > 30):
                 end_time = curr_date.replace(hour=15, minute=30, second=0, microsecond=0)
             else:
@@ -2051,24 +2091,37 @@ def stock_data(ticker):
                 points.append(loop_time)
                 loop_time -= delta
                 
-            # Generate backward starting from the live price `p`
-            temp_p = p
-            for dt_val in points:
+            # Sort chronologically to walk forward
+            points = sorted(points)
+            
+            temp_p = base_p
+            for idx, dt_val in enumerate(points):
                 date_str = dt_val.strftime('%Y-%m-%d %H:%M:%S')
-                drift = local_rand.uniform(-0.003, 0.003)
-                close_p = round(temp_p, 2)
-                open_p = round(close_p / (1 + drift), 2)
-                high_p = round(max(open_p, close_p) * (1 + local_rand.uniform(0, 0.001)), 2)
-                low_p = round(min(open_p, close_p) * (1 - local_rand.uniform(0, 0.001)), 2)
+                
+                # If it's the latest point, merge live feed values
+                if idx == len(points) - 1 and ticker in LIVE_FEED:
+                    feed_data = LIVE_FEED[ticker]
+                    close_p = round(feed_data["price"], 2)
+                    open_p = round(feed_data.get("open", temp_p), 2)
+                    high_p = round(max(feed_data.get("high", close_p), open_p, close_p), 2)
+                    low_p = round(min(feed_data.get("low", close_p), open_p, close_p), 2)
+                    vol_val = int(feed_data["volume"].replace(',', '')) if isinstance(feed_data["volume"], str) else int(feed_data["volume"])
+                else:
+                    drift = local_rand.uniform(-0.003, 0.003)
+                    open_p = round(temp_p, 2)
+                    close_p = round(open_p * (1 + drift), 2)
+                    high_p = round(max(open_p, close_p) * (1 + local_rand.uniform(0, 0.001)), 2)
+                    low_p = round(min(open_p, close_p) * (1 - local_rand.uniform(0, 0.001)), 2)
+                    vol_val = local_rand.randint(1000, 20000)
                 
                 out[date_str] = {
                     "1. open": str(open_p),
                     "2. high": str(high_p),
                     "3. low": str(low_p),
                     "4. close": str(close_p),
-                    "5. volume": str(local_rand.randint(1000, 20000))
+                    "5. volume": str(vol_val)
                 }
-                temp_p = open_p
+                temp_p = close_p
         else:
             # For minutes/hours
             days_to_gen = 1 if period == '1d' else 5
@@ -2077,7 +2130,9 @@ def stock_data(ticker):
             elif period in ['6mo', '1y', '5y']:
                 days_to_gen = 30
                 
-            curr_date = datetime.datetime.today()
+            import datetime
+            tz_ist = datetime.timezone(datetime.timedelta(hours=5, minutes=30))
+            curr_date = datetime.datetime.now(tz_ist)
             points = []
             
             for day_offset in range(days_to_gen):
@@ -2093,27 +2148,36 @@ def stock_data(ticker):
                     points.append(loop_time)
                     loop_time += delta
                     
-            points = sorted(points)[-300:] # Limit to last 300 to keep ApexCharts super fast
-            points.reverse() # Reverse to generate backward
+            points = sorted(points)[-300:] # Limit to last 300
             
-            # Generate backward starting from the live price `p`
-            temp_p = p
-            for dt_val in points:
+            temp_p = base_p
+            for idx, dt_val in enumerate(points):
                 date_str = dt_val.strftime('%Y-%m-%d %H:%M')
-                drift = local_rand.uniform(-0.005, 0.005)
-                close_p = round(temp_p, 2)
-                open_p = round(close_p / (1 + drift), 2)
-                high_p = round(max(open_p, close_p) * (1 + local_rand.uniform(0, 0.002)), 2)
-                low_p = round(min(open_p, close_p) * (1 - local_rand.uniform(0, 0.002)), 2)
+                
+                # If it's the latest point, merge live feed values
+                if idx == len(points) - 1 and ticker in LIVE_FEED:
+                    feed_data = LIVE_FEED[ticker]
+                    close_p = round(feed_data["price"], 2)
+                    open_p = round(feed_data.get("open", temp_p), 2)
+                    high_p = round(max(feed_data.get("high", close_p), open_p, close_p), 2)
+                    low_p = round(min(feed_data.get("low", close_p), open_p, close_p), 2)
+                    vol_val = int(feed_data["volume"].replace(',', '')) if isinstance(feed_data["volume"], str) else int(feed_data["volume"])
+                else:
+                    drift = local_rand.uniform(-0.005, 0.005)
+                    open_p = round(temp_p, 2)
+                    close_p = round(open_p * (1 + drift), 2)
+                    high_p = round(max(open_p, close_p) * (1 + local_rand.uniform(0, 0.002)), 2)
+                    low_p = round(min(open_p, close_p) * (1 - local_rand.uniform(0, 0.002)), 2)
+                    vol_val = local_rand.randint(10000, 200000)
                 
                 out[date_str] = {
                     "1. open": str(open_p),
                     "2. high": str(high_p),
                     "3. low": str(low_p),
                     "4. close": str(close_p),
-                    "5. volume": str(local_rand.randint(10000, 200000))
+                    "5. volume": str(vol_val)
                 }
-                temp_p = open_p
+                temp_p = close_p
     else:
         # Daily / Weekly / Monthly daily simulation
         days_to_gen = 30 if period == '1mo' else 90 if period == '3mo' else 180 if period == '6mo' else 365 if period == '1y' else 1825
@@ -2126,8 +2190,9 @@ def stock_data(ticker):
         elif interval == '1mo':
             step_days = 30
             
-        curr_date = datetime.date.today()
-        temp_p = p
+        import datetime
+        tz_ist = datetime.timezone(datetime.timedelta(hours=5, minutes=30))
+        curr_date = datetime.datetime.now(tz_ist).date()
         points = []
         for i in range(days_to_gen):
             target_day = curr_date - datetime.timedelta(days=i * step_days)
@@ -2135,24 +2200,37 @@ def stock_data(ticker):
                 continue
             points.append(target_day)
             
-        # Do NOT reverse points so we iterate from newest to oldest
-        # Generate backward starting from the live price `p`
-        for target_day in points:
+            # Sort chronologically to walk forward
+        points = sorted(points)
+        
+        temp_p = base_p
+        for idx, target_day in enumerate(points):
             date_str = target_day.strftime('%Y-%m-%d')
-            drift = local_rand.uniform(-0.015, 0.015)
-            close_p = round(temp_p, 2)
-            open_p = round(close_p / (1 + drift), 2)
-            high_p = round(max(open_p, close_p) * (1 + local_rand.uniform(0, 0.01)), 2)
-            low_p = round(min(open_p, close_p) * (1 - local_rand.uniform(0, 0.01)), 2)
+            
+            # If it's the latest point, merge live feed values
+            if idx == len(points) - 1 and ticker in LIVE_FEED:
+                feed_data = LIVE_FEED[ticker]
+                close_p = round(feed_data["price"], 2)
+                open_p = round(feed_data.get("open", temp_p), 2)
+                high_p = round(max(feed_data.get("high", close_p), open_p, close_p), 2)
+                low_p = round(min(feed_data.get("low", close_p), open_p, close_p), 2)
+                vol_val = int(feed_data["volume"].replace(',', '')) if isinstance(feed_data["volume"], str) else int(feed_data["volume"])
+            else:
+                drift = local_rand.uniform(-0.015, 0.015)
+                open_p = round(temp_p, 2)
+                close_p = round(open_p * (1 + drift), 2)
+                high_p = round(max(open_p, close_p) * (1 + local_rand.uniform(0, 0.01)), 2)
+                low_p = round(min(open_p, close_p) * (1 - local_rand.uniform(0, 0.01)), 2)
+                vol_val = local_rand.randint(500000, 3000000)
             
             out[date_str] = {
                 "1. open": str(open_p),
                 "2. high": str(high_p),
                 "3. low": str(low_p),
                 "4. close": str(close_p),
-                "5. volume": str(local_rand.randint(500000, 3000000))
+                "5. volume": str(vol_val)
             }
-            temp_p = open_p
+            temp_p = close_p
             
     return jsonify(out)
 
