@@ -121,7 +121,7 @@ h1, h2, h3, h4, h5, h6, .logo {
   position: sticky;
   top: 0;
   z-index: 1000;
-  gap: 16px;
+  gap: 12px;
 }
 
 .logo {
@@ -152,15 +152,15 @@ h1, h2, h3, h4, h5, h6, .logo {
 .nav-links {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 2px;
 }
 
 .nav-links a {
   color: var(--text-secondary);
   text-decoration: none;
-  font-size: 14px;
+  font-size: 13.5px;
   font-weight: 500;
-  padding: 8px 16px;
+  padding: 6px 12px;
   border-radius: var(--radius-sm);
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   white-space: nowrap;
@@ -180,7 +180,7 @@ h1, h2, h3, h4, h5, h6, .logo {
 .user-options {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   flex-shrink: 0;
 }
 
@@ -1299,24 +1299,43 @@ button {
   right: 28px;
   width: 52px;
   height: 52px;
-  background: var(--cyan);
-  color: #0b0f1a;
-  border: none;
+  background: #ffffff;
+  border: 1px solid var(--border);
   border-radius: 50%;
-  font-size: 22px;
   cursor: pointer;
   z-index: 999;
-  box-shadow: 0 4px 20px rgba(0,200,255,0.35);
-  transition: all 0.2s ease;
+  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.12);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
+/* Pulsing Online Green Indicator Dot */
+.chatbot-toggle::after {
+  content: '';
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  width: 12px;
+  height: 12px;
+  background: #10b981;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+  animation: pulseOnlineDot 2s infinite;
+}
+
+@keyframes pulseOnlineDot {
+  0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+  70% { box-shadow: 0 0 0 5px rgba(16, 185, 129, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
 .chatbot-toggle:hover {
-  background: #33d4ff;
-  transform: scale(1.08);
-  box-shadow: 0 6px 28px rgba(0,200,255,0.45);
+  transform: scale(1.08) translateY(-2px);
+  border-color: var(--cyan);
+  box-shadow: 0 10px 25px rgba(6, 182, 212, 0.2);
 }
 
 .chatbot-container {
@@ -1480,6 +1499,76 @@ button {
 @keyframes typing {
   0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
   30% { transform: translateY(-4px); opacity: 1; }
+}
+
+/* Bot Welcome & Chips styling */
+.bot-welcome-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 16px 12px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  margin-bottom: 8px;
+}
+
+.bot-welcome-avatar {
+  margin-bottom: 8px;
+  animation: floatWelcome 3s ease-in-out infinite;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@keyframes floatWelcome {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+.bot-welcome-container h4 {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.bot-welcome-container p {
+  font-size: 11.5px;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+  line-height: 1.45;
+  padding: 0 4px;
+}
+
+.chatbot-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+  width: 100%;
+}
+
+.chat-chip {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 5px 10px;
+  font-size: 10.5px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+}
+
+.chat-chip:hover {
+  background: var(--cyan-glow2);
+  border-color: var(--cyan-dim);
+  color: var(--cyan);
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(6, 182, 212, 0.08);
 }
 
 /* ============================================
@@ -3612,20 +3701,34 @@ footer a:hover { color: var(--cyan); }
    RESPONSIVE LAYOUT BREAKPOINTS
    ============================================ */
 
-@media (max-width: 992px) {
-  .top-bar {
-    padding: 0 20px;
-  }
-}
-
-@media (max-width: 768px) {
-  /* Toggle navbar links */
+@media (max-width: 1280px) {
+  /* Toggle navbar links to hamburger menu for clean top bar layout */
   .top-bar .nav-links {
     display: none !important;
   }
   .mobile-menu-toggle {
-    display: block;
+    display: block !important;
   }
+}
+
+@media (max-width: 1024px) {
+  /* Hide live indices widget in navbar on medium screens to prevent crowding */
+  #nav-indices-container {
+    display: none !important;
+  }
+}
+
+@media (max-width: 992px) {
+  .top-bar {
+    padding: 0 20px;
+  }
+  /* Hide desktop auth buttons to keep search bar visible, drawer will have these links */
+  .top-bar .user-options > a {
+    display: none !important;
+  }
+}
+
+@media (max-width: 768px) {
   .top-bar {
     height: 56px;
   }
@@ -3654,12 +3757,6 @@ footer a:hover { color: var(--cyan); }
   }
   .user-options {
     gap: 8px;
-  }
-  .top-bar .user-options > a {
-    display: none !important;
-  }
-  #nav-indices-container {
-    display: none !important;
   }
   .section-title-bar {
     flex-direction: column;

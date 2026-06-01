@@ -159,6 +159,99 @@ function toggleChatbot() {
     const container = document.getElementById('chatbot-container');
     if (!container) return;
     container.classList.toggle('active');
+
+    // Auto-focus input when opened
+    if (container.classList.contains('active')) {
+        const input = document.getElementById('chatbot-input');
+        if (input) input.focus();
+
+        // Render welcome screen if chat history is empty
+        const messages = document.getElementById('chatbot-messages');
+        if (messages && (messages.children.length === 0 || messages.querySelector('.bot-welcome-container') === null && messages.children.length <= 1)) {
+            initChatbotWelcome();
+        }
+    }
+}
+
+function sendQuickQuery(text) {
+    const input = document.getElementById('chatbot-input');
+    if (!input) return;
+    input.value = text;
+    sendMessage();
+}
+
+function initChatbotWelcome() {
+    const messages = document.getElementById('chatbot-messages');
+    if (!messages) return;
+    
+    // Clear any previous default message
+    messages.innerHTML = '';
+    
+    const welcome = document.createElement('div');
+    welcome.className = 'bot-welcome-container';
+    welcome.innerHTML = `
+        <div class="bot-welcome-avatar" style="width: 44px; height: 44px; border-radius: 50%; overflow: hidden; border: 2px solid #ffffff; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15); margin-bottom: 8px;">
+            <img src="/static/images/rp_bot_icon.png" alt="RP Assistant" style="width: 100%; height: 100%; object-fit: cover;">
+        </div>
+        <h4>RP Finance Advisor</h4>
+        <p>Your AI assistant for live market updates, portfolio details, and automated strategies. Pick a quick question below:</p>
+        <div class="chatbot-chips">
+            <button class="chat-chip" onclick="sendQuickQuery('Show NIFTY 50 price')">📈 Live Nifty 50</button>
+            <button class="chat-chip" onclick="sendQuickQuery('Best stocks to buy')">🚀 Best Buy Stocks</button>
+            <button class="chat-chip" onclick="sendQuickQuery('How to use Algo Trading')">⚡ Setup Algo Trading</button>
+            <button class="chat-chip" onclick="sendQuickQuery('Check my portfolio')">💼 My Portfolio</button>
+        </div>
+    `;
+    messages.appendChild(welcome);
+}
+
+function formatBotResponse(text) {
+    if (!text) return '';
+    
+    // Escape HTML to prevent XSS (except allowed formatting elements)
+    let html = text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+        
+    // Restore styling codes
+    // Bold: **text** -> <strong>text</strong>
+    html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    
+    // Lines starting with "-" -> bullet points
+    const lines = html.split('\n');
+    let inList = false;
+    let formattedLines = [];
+    
+    for (let line of lines) {
+        let trimmed = line.trim();
+        if (trimmed.startsWith('- ')) {
+            if (!inList) {
+                formattedLines.push('<ul style="margin: 6px 0 6px 16px; padding-left: 0; list-style-type: disc;">');
+                inList = true;
+            }
+            formattedLines.push(`<li style="margin-bottom: 4px;">${trimmed.substring(2)}</li>`);
+        } else {
+            if (inList) {
+                formattedLines.push('</ul>');
+                inList = false;
+            }
+            formattedLines.push(line);
+        }
+    }
+    if (inList) {
+        formattedLines.push('</ul>');
+    }
+    
+    html = formattedLines.join('\n');
+    
+    // Link format: [Text](url) -> <a href="$2" class="bot-link" style="color:var(--cyan); font-weight:600; text-decoration:underline;">$1</a>
+    html = html.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" class="bot-link" style="color:var(--cyan); font-weight:600; text-decoration:underline;">$1</a>');
+    
+    // Replace newlines with <br> (except inside list tags)
+    html = html.replace(/\n/g, '<br>');
+    
+    return html;
 }
 
 async function sendMessage() {
@@ -168,6 +261,12 @@ async function sendMessage() {
 
     const query = input.value.trim();
     if (!query) return;
+
+    // Remove welcome card if it's the first real query
+    const welcome = messages.querySelector('.bot-welcome-container');
+    if (welcome) {
+        welcome.remove();
+    }
 
     // User message
     const userMsg = document.createElement('div');
@@ -195,14 +294,14 @@ async function sendMessage() {
 
         const botMsg = document.createElement('div');
         botMsg.className = 'message bot-message';
-        botMsg.textContent = data.response || "Sorry, I couldn't process that.";
+        botMsg.innerHTML = formatBotResponse(data.response || "Sorry, I couldn't process that.");
         messages.appendChild(botMsg);
         messages.scrollTop = messages.scrollHeight;
     } catch {
         typing.remove();
         const errMsg = document.createElement('div');
         errMsg.className = 'message bot-message';
-        errMsg.textContent = 'Error connecting to assistant.';
+        errMsg.innerHTML = 'Error connecting to assistant.';
         messages.appendChild(errMsg);
         messages.scrollTop = messages.scrollHeight;
     }
@@ -1090,6 +1189,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Quick view initialization and link attachment
     initQuickViewDOM();
     scanAndAttachQuickView();
+
+    // Chatbot icon initialization
+    initializeChatbotIcon();
 
     // Indices widget initialization
     initIndicesWidget();
@@ -2978,6 +3080,35 @@ function initializeLogoImages() {
     });
 }
 
+// Premium Chatbot Icon styling and logo integration
+function initializeChatbotIcon() {
+    const toggles = document.querySelectorAll('.chatbot-toggle');
+    toggles.forEach(toggle => {
+        // Replace emoji inside toggle button with premium 3D generated robot avatar image
+        toggle.innerHTML = `
+            <img src="/static/images/rp_bot_icon.png" alt="RP Assistant" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);">
+        `;
+        
+        // Apply clean border and styles to match premium layout
+        toggle.style.padding = '0';
+        toggle.style.overflow = 'visible';
+        toggle.style.background = 'transparent';
+        toggle.style.border = '2px solid #ffffff';
+        toggle.style.boxShadow = '0 8px 24px rgba(99, 102, 241, 0.2)';
+        
+        // Handle micro-animation on image hover
+        toggle.addEventListener('mouseenter', () => {
+            const img = toggle.querySelector('img');
+            if (img) img.style.transform = 'scale(1.1) rotate(-5deg)';
+        });
+        
+        toggle.addEventListener('mouseleave', () => {
+            const img = toggle.querySelector('img');
+            if (img) img.style.transform = 'scale(1) rotate(0)';
+        });
+    });
+}
+
 // Dynamic Mobile Menu setup for full responsiveness
 function setupMobileMenu() {
     const topBar = document.querySelector('.top-bar');
@@ -3074,4 +3205,5 @@ document.addEventListener('DOMContentLoaded', () => {
     updateIpoStatusBadges();
     initializeLogoImages();
     setupMobileMenu();
+    initializeChatbotIcon();
 });

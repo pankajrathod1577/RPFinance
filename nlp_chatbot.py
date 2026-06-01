@@ -12,6 +12,57 @@ KNOWN_TICKERS = {
     "AMD", "INTC", "BABA", "SPY", "QQQ", "DIA", "IWM"
 }
 
+NAME_TO_TICKER = {
+    "nifty 50": "NIFTY50.NSE",
+    "nifty50": "NIFTY50.NSE",
+    "nifty": "NIFTY50.NSE",
+    "nifty bank": "NIFTYBANK.NSE",
+    "niftybank": "NIFTYBANK.NSE",
+    "bank nifty": "NIFTYBANK.NSE",
+    "banknifty": "NIFTYBANK.NSE",
+    "sensex": "SENSEX.BSE",
+    "bse sensex": "SENSEX.BSE",
+    "reliance": "RELIANCE.NSE",
+    "reliance industries": "RELIANCE.NSE",
+    "tcs": "TCS.NSE",
+    "tata consultancy": "TCS.NSE",
+    "infosys": "INFY.NSE",
+    "infy": "INFY.NSE",
+    "hdfc": "HDFCBANK.NSE",
+    "hdfc bank": "HDFCBANK.NSE",
+    "icici": "ICICIBANK.NSE",
+    "icici bank": "ICICIBANK.NSE",
+    "sbi": "SBIN.NSE",
+    "state bank": "SBIN.NSE",
+    "suzlon": "SUZLON.NSE",
+    "tata motors": "TATAMOTORS.NSE",
+    "wipro": "WIPRO.NSE",
+    "bharti airtel": "BHARTIARTL.NSE",
+    "airtel": "BHARTIARTL.NSE",
+    "l&t": "LT.NSE",
+    "larsen": "LT.NSE",
+    "itc": "ITC.NSE",
+    "axis": "AXISBANK.NSE",
+    "axis bank": "AXISBANK.NSE",
+    "kotak": "KOTAKBANK.NSE",
+    "kotak bank": "KOTAKBANK.NSE",
+    "hindustan unilever": "HINDUNILVR.NSE",
+    "hul": "HINDUNILVR.NSE",
+    "maruti": "MARUTI.NSE",
+    "bajaj finance": "BAJFINANCE.NSE",
+    "sun pharma": "SUNPHARMA.NSE",
+    "idea": "IDEA.NSE",
+    "vodafone": "IDEA.NSE",
+    "vbl": "VBL.NSE",
+    "adani": "ADANIENT.NSE",
+    "adani enterprises": "ADANIENT.NSE",
+    "apple": "AAPL",
+    "microsoft": "MSFT",
+    "tesla": "TSLA",
+    "google": "GOOG",
+    "nvidia": "NVDA"
+}
+
 class Chatbot:
     def __init__(self):
         # API keys 
@@ -75,6 +126,35 @@ class Chatbot:
             "how do i log out": "If you’re logged in, click 'Logout' in the top-right corner to exit your account.",
             "where is the search bar": "The search bar is in the top-right corner of every page, next to the magnifying glass icon—use it to search stocks.",
 
+            # Smart Custom Responses
+            "best stocks to buy": "Based on our **AI Research Recommendations**, here are the top picks with strong indicators:\n- **RELIANCE.NSE** (Target: ₹1538.50, Stop Loss: ₹1280.00, Expected Profit: +13.2%)\n- **TCS.NSE** (Target: ₹2560.00, Stop Loss: ₹2180.00, Expected Profit: +11.5%)\n- **SUZLON.NSE** (Target: ₹65.83, Stop Loss: ₹49.13, Expected Profit: +14.43%)\n\nYou can view full details and trade them on the [Dashboard](/) page!",
+            "recommendations": "Based on our **AI Research Recommendations**, here are the top picks with strong indicators:\n- **RELIANCE.NSE** (Target: ₹1538.50, Stop Loss: ₹1280.00, Expected Profit: +13.2%)\n- **TCS.NSE** (Target: ₹2560.00, Stop Loss: ₹2180.00, Expected Profit: +11.5%)\n- **SUZLON.NSE** (Target: ₹65.83, Stop Loss: ₹49.13, Expected Profit: +14.43%)\n\nYou can view full details and trade them on the [Dashboard](/) page!",
+            "buy stocks": "Based on our **AI Research Recommendations**, here are the top picks with strong indicators:\n- **RELIANCE.NSE** (Target: ₹1538.50, Stop Loss: ₹1280.00, Expected Profit: +13.2%)\n- **TCS.NSE** (Target: ₹2560.00, Stop Loss: ₹2180.00, Expected Profit: +11.5%)\n- **SUZLON.NSE** (Target: ₹65.83, Stop Loss: ₹49.13, Expected Profit: +14.43%)\n\nYou can view full details and trade them on the [Dashboard](/) page!",
+            "stock suggestion": "Based on our **AI Research Recommendations**, here are the top picks with strong indicators:\n- **RELIANCE.NSE** (Target: ₹1538.50, Stop Loss: ₹1280.00, Expected Profit: +13.2%)\n- **TCS.NSE** (Target: ₹2560.00, Stop Loss: ₹2180.00, Expected Profit: +11.5%)\n- **SUZLON.NSE** (Target: ₹65.83, Stop Loss: ₹49.13, Expected Profit: +14.43%)\n\nYou can view full details and trade them on the [Dashboard](/) page!",
+            
+            "how to use algo trading": "To setup **Algo Trading**:\n- Go to the [Algo Trading](/algo_trading) page.\n- Enter a stock ticker (e.g., **RELIANCE.NSE**).\n- Input the Short Moving Average (e.g., 20) and Long Moving Average (e.g., 50) periods.\n- Click **Run Backtest** to see historical signals, accuracy, and price forecasting!",
+            "setup algo": "To setup **Algo Trading**:\n- Go to the [Algo Trading](/algo_trading) page.\n- Enter a stock ticker (e.g., **RELIANCE.NSE**).\n- Input the Short Moving Average (e.g., 20) and Long Moving Average (e.g., 50) periods.\n- Click **Run Backtest** to see historical signals, accuracy, and price forecasting!",
+            "algo trading": "To setup **Algo Trading**:\n- Go to the [Algo Trading](/algo_trading) page.\n- Enter a stock ticker (e.g., **RELIANCE.NSE**).\n- Input the Short Moving Average (e.g., 20) and Long Moving Average (e.g., 50) periods.\n- Click **Run Backtest** to see historical signals, accuracy, and price forecasting!",
+            "automated trading": "To setup **Algo Trading**:\n- Go to the [Algo Trading](/algo_trading) page.\n- Enter a stock ticker (e.g., **RELIANCE.NSE**).\n- Input the Short Moving Average (e.g., 20) and Long Moving Average (e.g., 50) periods.\n- Click **Run Backtest** to see historical signals, accuracy, and price forecasting!",
+            
+            "check my portfolio": "You can monitor all your active stock holdings, average buy prices, current market values, and real-time profit/loss percentages on the [Portfolio](/portfolio) page. If you are not logged in, please [Login](/auth?mode=login) to trade!",
+            "my portfolio": "You can monitor all your active stock holdings, average buy prices, current market values, and real-time profit/loss percentages on the [Portfolio](/portfolio) page. If you are not logged in, please [Login](/auth?mode=login) to trade!",
+            "portfolio holdings": "You can monitor all your active stock holdings, average buy prices, current market values, and real-time profit/loss percentages on the [Portfolio](/portfolio) page. If you are not logged in, please [Login](/auth?mode=login) to trade!",
+            "show my portfolio": "You can monitor all your active stock holdings, average buy prices, current market values, and real-time profit/loss percentages on the [Portfolio](/portfolio) page. If you are not logged in, please [Login](/auth?mode=login) to trade!",
+            
+            "how to buy": "To buy or sell stocks on RP Finance:\n- Search for any stock in the top navbar search bar.\n- Click the search result to open the detailed stock analysis page.\n- Enter the number of shares in the Trade Panel on the right and click **Buy** or **Sell**.\n- Make sure you are [Logged In](/auth?mode=login) and have sufficient cash balance.",
+            "how to trade": "To buy or sell stocks on RP Finance:\n- Search for any stock in the top navbar search bar.\n- Click the search result to open the detailed stock analysis page.\n- Enter the number of shares in the Trade Panel on the right and click **Buy** or **Sell**.\n- Make sure you are [Logged In](/auth?mode=login) and have sufficient cash balance.",
+            "place order": "To buy or sell stocks on RP Finance:\n- Search for any stock in the top navbar search bar.\n- Click the search result to open the detailed stock analysis page.\n- Enter the number of shares in the Trade Panel on the right and click **Buy** or **Sell**.\n- Make sure you are [Logged In](/auth?mode=login) and have sufficient cash balance.",
+            "buy stock": "To buy or sell stocks on RP Finance:\n- Search for any stock in the top navbar search bar.\n- Click the search result to open the detailed stock analysis page.\n- Enter the number of shares in the Trade Panel on the right and click **Buy** or **Sell**.\n- Make sure you are [Logged In](/auth?mode=login) and have sufficient cash balance.",
+            
+            "watchlist": "You can track your favorite stocks in one place, view their live prices, and instantly see their daily gains/losses on the [Watchlist](/watchlist) page.",
+            "show my watchlist": "You can track your favorite stocks in one place, view their live prices, and instantly see their daily gains/losses on the [Watchlist](/watchlist) page.",
+            "check my watchlist": "You can track your favorite stocks in one place, view their live prices, and instantly see their daily gains/losses on the [Watchlist](/watchlist) page.",
+            
+            "help": "I can assist you with:\n- Stock Prices: Ask for any Indian/US stock (e.g., 'TCS', 'AAPL') or index ('Nifty 50').\n- Market Research: Ask for 'Best stocks to buy'.\n- Automation: Ask for 'Algo Trading'.\n- Navigation: Ask how to reach the Portfolio, Watchlist, or Tutorials page.",
+            "menu": "I can assist you with:\n- Stock Prices: Ask for any Indian/US stock (e.g., 'TCS', 'AAPL') or index ('Nifty 50').\n- Market Research: Ask for 'Best stocks to buy'.\n- Automation: Ask for 'Algo Trading'.\n- Navigation: Ask how to reach the Portfolio, Watchlist, or Tutorials page.",
+            "what can you do": "I can assist you with:\n- Stock Prices: Ask for any Indian/US stock (e.g., 'TCS', 'AAPL') or index ('Nifty 50').\n- Market Research: Ask for 'Best stocks to buy'.\n- Automation: Ask for 'Algo Trading'.\n- Navigation: Ask how to reach the Portfolio, Watchlist, or Tutorials page.",
+
             # Contextual Follow-ups
             "tell me more": "Can you specify what you’d like to know more about? I can tell you about the stock market, RP Finance features, or navigation!",
             "what else": "What else are you curious about? I can explain stock terms, website features, or how to navigate the site."
@@ -83,12 +163,11 @@ class Chatbot:
         # List of suggested questions for fallback
         self.suggestions = [
             "What is the stock market?",
-            "How do I start investing?",
-            "What is RP Finance?",
-            "How do I set up algo trading?",
-            "How do I go to the Dashboard?",
-            "How do I find the Contact page?",
-            "AAPL"  # Example ticker to hint at stock search
+            "Show NIFTY 50 price",
+            "Best stocks to buy",
+            "How to use Algo Trading",
+            "Check my portfolio",
+            "How do I buy stock?"
         ]
 
         # Track the last response for contextual follow-ups
@@ -107,6 +186,13 @@ class Chatbot:
         return ticker
 
     def extract_ticker(self, query_str):
+        query_lower = query_str.lower().strip()
+        # Scan for common index/company names first
+        for name, tk in NAME_TO_TICKER.items():
+            # Check if name exists as a word or substring in the query
+            if re.search(r'\b' + re.escape(name) + r'\b', query_lower):
+                return tk
+
         # Find all alphanumeric words
         words = re.findall(r'[a-zA-Z0-9\.\^]+', query_str)
         
