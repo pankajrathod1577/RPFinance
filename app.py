@@ -12,13 +12,15 @@ import threading
 import yfinance as yf
 from concurrent.futures import ThreadPoolExecutor
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
 # ── Auto-detection for PythonAnywhere Free Tier (Offline/Simulated Mode) ──────
 USE_SIMULATED_DATA = False
 
 def check_external_apis():
     global USE_SIMULATED_DATA
     try:
-        resp = requests.get("https://www.google.com", timeout=1.5)
+        resp = requests.get("https://httpbin.org/get", timeout=3)
         if resp.status_code == 200:
             USE_SIMULATED_DATA = False
         else:
@@ -404,7 +406,10 @@ def background_price_updater():
         time.sleep(60)
 
 # Run updater thread
-threading.Thread(target=background_price_updater, daemon=True).start()
+try:
+    threading.Thread(target=background_price_updater, daemon=True).start()
+except Exception as e:
+    print(f'Background thread could not start: {e}')
 
 def is_indian_market_open():
     import datetime
@@ -1384,7 +1389,10 @@ def get_rich_stock_details(ticker, api_key=None):
 # ── App Setup ─────────────────────────────────────────────────────────────────
 app = Flask(__name__)
 app.secret_key = 'rp_finance_secret_2024'
+_session_dir = os.path.join(BASE_DIR, 'flask_session')
+os.makedirs(_session_dir, exist_ok=True)
 app.config['SESSION_TYPE'] = 'filesystem'
+app.config['SESSION_FILE_DIR'] = _session_dir
 Session(app)
 chatbot = Chatbot()
 chatbot.live_feed = LIVE_FEED
@@ -1396,7 +1404,6 @@ NEWS_API_KEY          = "50dcf43690214250b84a164a5c52fc33"
 MARKET_TICKERS = [{"name": data["name"], "ticker": ticker} for ticker, data in LIVE_FEED.items()]
 
 # ── DB ────────────────────────────────────────────────────────────────────────
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 def get_db():
     db_path = os.path.join(BASE_DIR, 'database.db')

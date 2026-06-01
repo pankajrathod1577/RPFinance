@@ -1561,7 +1561,7 @@
         }
 
         function updateInfoBar(idx) {
-            if (idx === undefined || idx < 0 || !chartData) return;
+            if (idx === undefined | < 0 || !chartData) return;
             const dataCount = chartData.dates.length;
             
             if (idx >= 0 && idx < dataCount) {
@@ -1726,8 +1726,8 @@
             const chartColor = isBullish ? '#00d97e' : '#ff4d6a';
 
             // Price Chart Setup
-            const hasOverlays = showEMA9 || showSMA20;
-            const priceHeight = (showMACD || showRSI) ? 210 : 300;
+            const hasOverlays = showEMA9 |;
+            const priceHeight = (showMACD |) ? 210 : 300;
             
             let seriesData = [];
             
@@ -2363,7 +2363,7 @@
         async function executeDetailsTrade(action) {
             const ticker = "{{ ticker }}";
             const shares = document.getElementById('details-shares').value;
-            if (!shares || Number(shares) <= 0) {
+            if (!shares || shares <= 0) {
                 return showToast('Enter a valid share count.', 'error');
             }
             
@@ -2706,7 +2706,7 @@
                 document.getElementById('val-trend-long-dot').style.backgroundColor = longColor;
 
                 // Market Cap size formatting
-                const mcapInCr = Math.floor(rand.nextRange(1000, (backendCapSize || capSize) === 'LARGE CAP' ? 1200000 : (backendCapSize || capSize) === 'MID CAP' ? 150000 : 20000));
+                const mcapInCr = Math.floor(rand.nextRange(1000, (backendCapSize |) === 'LARGE CAP' ? 1200000 : (backendCapSize |) === 'MID CAP' ? 150000 : 20000));
                 document.getElementById('val-perf-mcap').textContent = backendMCapVal ? backendMCapVal : ('Rs ' + mcapInCr.toLocaleString('en-IN') + ' Cr');
 
                 // Returns
