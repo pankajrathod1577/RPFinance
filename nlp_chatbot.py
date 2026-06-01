@@ -221,8 +221,21 @@ class Chatbot:
             if getattr(self, 'use_simulated_data', False):
                 try:
                     import random
+                    try:
+                        from app import INDIAN_COMPANIES, US_COMPANIES
+                    except ImportError:
+                        INDIAN_COMPANIES = {}
+                        US_COMPANIES = {}
                     base = ticker.split('.')[0]
-                    name = base
+                    company_name = INDIAN_COMPANIES.get(base, US_COMPANIES.get(base, base))
+                    is_index = base in ['NIFTY50', 'NIFTYBANK', 'SENSEX', 'FINNIFTY', 'MIDCPNIFTY']
+                    if ticker.endswith('.NSE'):
+                        display_name = f"{company_name} (NSE)" if not is_index else company_name
+                    elif ticker.endswith('.BSE'):
+                        display_name = f"{company_name} (BSE)" if not is_index else company_name
+                    else:
+                        display_name = company_name
+                        
                     random.seed(hash(ticker))
                     price = round(random.uniform(50.0, 2000.0), 2)
                     prev_close = round(price * random.uniform(0.95, 1.05), 2)
@@ -230,7 +243,7 @@ class Chatbot:
                     
                     self.live_feed[ticker] = {
                         "ticker": ticker,
-                        "name": f"{name} (Simulated)",
+                        "name": display_name,
                         "price": price,
                         "yf_price": price,
                         "change": change_pct,
@@ -245,7 +258,7 @@ class Chatbot:
                         "pe_ratio": f"{random.uniform(10.0, 45.0):.2f}",
                         "price_to_book": f"{random.uniform(1.5, 8.0):.2f}",
                         "dividend_yield": f"{random.uniform(0.0, 5.0):.2f}%",
-                        "description": f"Simulated data for {name} to run offline / on PythonAnywhere Free Tier."
+                        "description": f"{display_name} stock representational data for offline / cloud environment."
                     }
                     random.seed()
                 except Exception:

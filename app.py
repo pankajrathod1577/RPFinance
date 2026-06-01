@@ -19,10 +19,29 @@ USE_SIMULATED_DATA = False
 
 def check_external_apis():
     global USE_SIMULATED_DATA
+    # Force simulated mode if running on Render or other known cloud providers
+    if os.environ.get('RENDER') or os.environ.get('PYTHON_ANYWHERE') or os.environ.get('VERCEL') or os.environ.get('HEROKU') or os.environ.get('PORT'):
+        USE_SIMULATED_DATA = True
+        print("Cloud deployment detected via environment variables. Forcing Simulated Mode.")
+        return
+        
     try:
         resp = requests.get("https://httpbin.org/get", timeout=3)
         if resp.status_code == 200:
-            USE_SIMULATED_DATA = False
+            # Check if Yahoo Finance is actually reachable (not blocked/rate-limited)
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+            }
+            yf_resp = requests.get("https://query1.finance.yahoo.com/v8/finance/chart/^NSEI?interval=1m&range=1d", headers=headers, timeout=3)
+            if yf_resp.status_code == 200:
+                res = yf_resp.json()
+                meta = res.get('chart', {}).get('result')
+                if meta and isinstance(meta, list) and meta[0] is not None:
+                    USE_SIMULATED_DATA = False
+                    print("Yahoo Finance API is reachable. Real-time mode enabled.")
+                    return
+            print("Yahoo Finance is blocked/unreachable. Switching to Simulated Mode.")
+            USE_SIMULATED_DATA = True
         else:
             USE_SIMULATED_DATA = True
     except Exception:
@@ -63,7 +82,8 @@ INDIAN_COMPANIES = {
     "MIDCPNIFTY": "NIFTY MIDCAP SELECT",
     "AUBANK": "AU Small Finance Bank Ltd",
     "TATAMOTOR": "Tata Motors Ltd",
-    "TATAMOTORS": "Tata Motors Ltd"
+    "TATAMOTORS": "Tata Motors Ltd",
+    "SUZLON": "Suzlon Energy Ltd"
 }
 
 BASE_PRICES = {
@@ -99,7 +119,8 @@ BASE_PRICES = {
     "MIDCPNIFTY": 12200.00,
     "AUBANK": 634.00,
     "TATAMOTOR": 950.00,
-    "TATAMOTORS": 950.00
+    "TATAMOTORS": 950.00,
+    "SUZLON": 57.53
 }
 
 US_BASE_PRICES = {
@@ -241,20 +262,22 @@ def fetch_real_prices():
     """Background task to fetch actual stock prices from yfinance in parallel and update LIVE_FEED."""
     global USE_SIMULATED_DATA, SIMULATED_MODE_COOLDOWN
     if USE_SIMULATED_DATA:
+        current_time_bucket = int(time.time() / 5)
         for app_ticker in list(LIVE_FEED.keys()):
             try:
-                data = LIVE_FEED[app_ticker]
-                price = data["price"]
-                drift = random.uniform(-0.005, 0.005)
-                new_price = round(price * (1 + drift), 2)
-                prev_close = data["prev_close"]
+                base_sym = app_ticker.split('.')[0]
+                price_base = BASE_PRICES.get(base_sym, US_BASE_PRICES.get(base_sym, 100.0))
+                local_rand = random.Random(f"update_feed_{app_ticker}_{current_time_bucket}")
+                drift = local_rand.uniform(-0.002, 0.002)
+                new_price = round(price_base * (1 + drift), 2)
+                prev_close = price_base
                 change_pct = round(((new_price - prev_close) / prev_close) * 100, 2) if prev_close > 0 else 0.0
-                data.update({
+                LIVE_FEED[app_ticker].update({
                     "price": new_price,
                     "yf_price": new_price,
                     "change": change_pct,
-                    "high": max(data["high"], new_price),
-                    "low": min(data["low"], new_price),
+                    "high": round(max(new_price, prev_close) * 1.01, 2),
+                    "low": round(min(new_price, prev_close) * 0.99, 2),
                 })
             except Exception:
                 pass
@@ -285,8 +308,13 @@ def fetch_real_prices():
                 return
 
             res = r.json()
-            meta = res.get('chart', {}).get('result', [{}])[0].get('meta', {})
+            result_list = res.get('chart', {}).get('result')
+            if not result_list or not isinstance(result_list, list) or result_list[0] is None:
+                failed_tickers.append(yf_ticker)
+                return
+            meta = result_list[0].get('meta', {})
             if not meta:
+                failed_tickers.append(yf_ticker)
                 return
 
             app_tickers = ticker_map[yf_ticker]
@@ -431,18 +459,28 @@ def update_live_prices():
     """Update live prices from yfinance, or simulate micro-fluctuations if simulated mode is on."""
     if USE_SIMULATED_DATA:
         # Simulate micro-fluctuations at all times to allow local testing and demo
+        current_time_bucket = int(time.time() / 5)
         for ticker, data in LIVE_FEED.items():
-            curr_p = data["price"]
-            drift = random.uniform(-0.0003, 0.0003)
-            new_p = round(curr_p * (1 + drift), 2)
-            prev_close = data["prev_close"]
-            change_pct = round(((new_p - prev_close) / prev_close) * 100, 2) if prev_close > 0 else 0.0
-            data["price"] = new_p
-            data["change"] = change_pct
-            data["high"] = max(data["high"], new_p)
-            data["low"] = min(data["low"], new_p)
             try:
-                vol_raw = int(data["volume"].replace(',', '')) + random.randint(5, 50)
+                base_sym = ticker.split('.')[0]
+                price_base = BASE_PRICES.get(base_sym, US_BASE_PRICES.get(base_sym, 100.0))
+                
+                # Deterministic seed using ticker and 5-second time bucket for cross-worker stability
+                local_rand = random.Random(f"update_feed_{ticker}_{current_time_bucket}")
+                
+                drift = local_rand.uniform(-0.002, 0.002)
+                new_p = round(price_base * (1 + drift), 2)
+                prev_close = price_base
+                change_pct = round(((new_p - prev_close) / prev_close) * 100, 2) if prev_close > 0 else 0.0
+                
+                data["price"] = new_p
+                data["change"] = change_pct
+                data["high"] = round(max(new_p, prev_close) * 1.01, 2)
+                data["low"] = round(min(new_p, prev_close) * 0.99, 2)
+                
+                # Base volume from initial feed or default
+                vol_base = 100000
+                vol_raw = vol_base + local_rand.randint(100, 10000)
                 data["volume"] = f"{vol_raw:,}"
             except:
                 pass
@@ -461,7 +499,14 @@ def fetch_simulated_ticker(app_ticker):
     try:
         ticker = app_ticker.upper().strip()
         base = ticker.split('.')[0]
-        name = base
+        company_name = INDIAN_COMPANIES.get(base, US_COMPANIES.get(base, base))
+        is_index = base in ['NIFTY50', 'NIFTYBANK', 'SENSEX', 'FINNIFTY', 'MIDCPNIFTY']
+        if app_ticker.endswith('.NSE'):
+            display_name = f"{company_name} (NSE)" if not is_index else company_name
+        elif app_ticker.endswith('.BSE'):
+            display_name = f"{company_name} (BSE)" if not is_index else company_name
+        else:
+            display_name = company_name
         
         # Seed local random generator for consistency
         local_rand = random.Random(f"sim_feed_{ticker}")
@@ -475,7 +520,7 @@ def fetch_simulated_ticker(app_ticker):
         
         LIVE_FEED[app_ticker] = {
             "ticker": app_ticker,
-            "name": f"{name} (Simulated)",
+            "name": display_name,
             "price": price,
             "yf_price": price,
             "change": change_pct,
@@ -490,7 +535,7 @@ def fetch_simulated_ticker(app_ticker):
             "pe_ratio": f"{local_rand.uniform(12.0, 35.0):.2f}",
             "price_to_book": f"{local_rand.uniform(1.2, 6.0):.2f}",
             "dividend_yield": f"{local_rand.uniform(0.0, 3.5):.2f}%",
-            "description": f"Simulated data for {name} to run offline / on cloud environments."
+            "description": f"{display_name} stock representational data for offline / cloud environment."
         }
         return True
     except Exception:
@@ -513,9 +558,13 @@ def fetch_and_add_to_live_feed(app_ticker):
             return fetch_simulated_ticker(app_ticker)
 
         res = r.json()
-        meta = res.get('chart', {}).get('result', [{}])[0].get('meta', {})
+        result_list = res.get('chart', {}).get('result')
+        if not result_list or not isinstance(result_list, list) or result_list[0] is None:
+            return fetch_simulated_ticker(app_ticker)
+            
+        meta = result_list[0].get('meta', {})
         if not meta:
-            return False
+            return fetch_simulated_ticker(app_ticker)
 
         def to_float(val, default_val=0.0):
             if val is None: return default_val
